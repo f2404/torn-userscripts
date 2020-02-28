@@ -1,21 +1,32 @@
 // ==UserScript==
 // @name         Torn: Faction: Simplified log view
 // @namespace    lugburz.faction.simplified_log_view
-// @version      0.1
+// @version      0.2
 // @description  Group similar messages in the faction armory log and provide a summary ("used x items").
 // @author       Lugburz
 // @match        https://www.torn.com/factions.php?step=your*
 // @require      https://greasyfork.org/scripts/390917-dkk-torn-utilities/code/DKK%20Torn%20Utilities.js?version=744690
 // @grant        none
 // ==/UserScript==
-var armory_text = "one of the faction's";
+
+var armory_used_text = "one of the faction's";
+var armory_deposited_text = "deposited 1 x";
 
 function maybe_update_row(row, n, from_time, to_time, to_date, msg_html) {
-    if (n == 1) {
-        row.find("span.info").html(msg_html.replace(armory_text, "<b>" + n + "x</b>").replace("items.", "item."));
-    } else if (n > 1) {
-        row.find("span.date").text(from_time + " - " + to_time + " " + to_date);
-        row.find("span.info").html(msg_html.replace(armory_text, "<b>" + n + "x</b>"));
+    if (msg_html.includes(armory_used_text)) {
+        // used
+        if (n == 1) {
+            row.find("span.info").html(msg_html.replace(armory_used_text, "<b>" + n + "x</b>").replace("items.", "item."));
+        } else if (n > 1) {
+            row.find("span.date").text(from_time + " - " + to_time + " " + to_date);
+            row.find("span.info").html(msg_html.replace(armory_used_text, "<b>" + n + "x</b>"));
+        }
+    } else {
+        // deposited
+        if (n > 1) {
+            row.find("span.date").text(from_time + " - " + to_time + " " + to_date);
+            row.find("span.info").html(msg_html.replace(armory_deposited_text, "deposited <b>" + n + "x</b>"));
+        }
     }
 }
 
@@ -43,7 +54,7 @@ function simplify() {
             from_date = $(this).find("span").find(date).text();
             n++;
             $(this).remove();
-        } else if ($(this).find(info).text().includes(armory_text)) {
+        } else if ($(this).find(info).text().includes(armory_used_text) || $(this).find(info).text().includes(armory_deposited_text)) {
             maybe_update_row(row, n, from_time, to_time, to_date, msg_html);
 
             msg_html = $(this).find(info).html();
@@ -72,3 +83,4 @@ function simplify() {
 
     $("#tab4-4").ready(simplify);
 })();
+
