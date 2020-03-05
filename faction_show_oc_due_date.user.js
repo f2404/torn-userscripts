@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Faction: Show OC due date
 // @namespace    lugburz.faction.show_oc_due_date
-// @version      0.2.1
+// @version      0.3
 // @description  Show when OC's are due, in addition to time left that Torn shows.
 // @author       Lugburz
 // @match        https://www.torn.com/factions.php?step=your*
@@ -14,6 +14,9 @@ var USE_TCT = false
 
 // Whether to replace the text in the "Status" column or append to it
 var REPLACE = false
+
+// Whether to highlight your team in the OC list
+var HIGHLIGHT = true
 
 
 
@@ -32,6 +35,11 @@ function format_date(d) {
 }
 
 function update() {
+    let my_name = "";
+    if (HIGHLIGHT) {
+        my_name = $("#sidebarroot").find("a[class^='menu-value']").html();
+    }
+
     $(".crimes-list > li").each(function(index) {
         let status = $(this).find(".status");
         if (typeof status !== 'undefined') {
@@ -50,6 +58,15 @@ function update() {
                     let html = $(status).html();
                     $(status).html(format_date(d) + "<br>" + html);
                 }
+            }
+        }
+
+        if (HIGHLIGHT && my_name) {
+            let team = $(this).find(".team");
+            if (typeof team !== 'undefined' && typeof team.html() !== 'undefined' && team.html().includes(my_name)) {
+                team.html(function(index) {
+                    $(this).addClass("bold");
+                });
             }
         }
     });
