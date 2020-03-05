@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Faction: Show OC due date
 // @namespace    lugburz.faction.show_oc_due_date
-// @version      0.3
+// @version      0.3.1
 // @description  Show when OC's are due, in addition to time left that Torn shows.
 // @author       Lugburz
 // @match        https://www.torn.com/factions.php?step=your*
@@ -64,9 +64,7 @@ function update() {
         if (HIGHLIGHT && my_name) {
             let team = $(this).find(".team");
             if (typeof team !== 'undefined' && typeof team.html() !== 'undefined' && team.html().includes(my_name)) {
-                team.html(function(index) {
-                    $(this).addClass("bold");
-                });
+                $(this).addClass("bg-green");
             }
         }
     });
