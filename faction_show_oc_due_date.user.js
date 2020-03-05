@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Faction: Show OC due date
 // @namespace    lugburz.faction.show_oc_due_date
-// @version      0.1
+// @version      0.2
 // @description  Show when OC's are due, in addition to time left that Torn shows.
 // @author       Lugburz
 // @match        https://www.torn.com/factions.php?step=your*
@@ -22,14 +22,12 @@ function pad(num, size) {
 }
 
 function format_date(d) {
-    let m = d.getUTCMonth() + 1;
-
     if (USE_TCT) {
-        return pad(d.getUTCHours(), 2) + ":" + pad(d.getUTCMinutes(), 2) + " " +
-            pad(d.getUTCDate(), 2) + "/" + pad(m, 2) + "/" + d.getUTCFullYear().toString().slice(-2) + " TCT";
+        let m = d.getUTCMonth() + 1;
+        return pad(d.getUTCHours(), 2) + ":" + pad(d.getUTCMinutes(), 2) + " " + pad(d.getUTCDate(), 2) + "/" + pad(m, 2) + " TCT";
     }
 
-    let options = {day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit'};
+    let options = {day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'};
     return d.toLocaleDateString(undefined, options);
 }
 
@@ -49,7 +47,7 @@ function update() {
                     $(status).html("due at " + format_date(d));
                 } else {
                     let html = $(status).html();
-                    $(status).html(html + "<br><br>due at " + format_date(d));
+                    $(status).html(format_date(d) + "<br>" + html);
                 }
             }
         }
