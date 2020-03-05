@@ -62,8 +62,8 @@ function update() {
         }
 
         if (HIGHLIGHT && my_name) {
-            let team = $(this).find(".team");
-            if (typeof team !== 'undefined' && typeof team.html() !== 'undefined' && team.html().includes(my_name)) {
+            let details = $(this).find(".details-wrap");
+            if (typeof details !== 'undefined' && typeof details.text() !== 'undefined' && details.text().includes(my_name)) {
                 $(this).addClass("bg-green");
             }
         }
