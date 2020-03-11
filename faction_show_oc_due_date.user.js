@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Faction: Show OC due date
 // @namespace    lugburz.faction.show_oc_due_date
-// @version      0.3.2
+// @version      0.3.3
 // @description  Show when OC's are due, in addition to time left that Torn shows.
 // @author       Lugburz
 // @match        https://www.torn.com/factions.php?step=your*
@@ -43,11 +43,11 @@ function update() {
     $(".crimes-list > li").each(function(index) {
         let status = $(this).find(".status");
         if (typeof status !== 'undefined' && status !== null && $(status).text()) {
-            let found = $(status).text().match(/((\d+)h )?(\d+)min left\s$/);
+            let found = $(status).text().match(/^\n(\s+)?((\d+)h )?(\d+)min left\s$/);
 
             if (found !== undefined && found !== null) {
-                let hours = found[2] || 0;
-                let mins = found[3] || 0;
+                let hours = found[3] || 0;
+                let mins = found[4] || 0;
 
                 let d = new Date(Date.now());
                 d.setTime(d.getTime() + hours*60*60*1000 + mins*60*1000);
