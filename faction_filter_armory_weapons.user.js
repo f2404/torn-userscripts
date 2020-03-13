@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Faction: Filter armory weapons
 // @namespace    lugburz.faction.filter_armory_weapons
-// @version      0.1
+// @version      0.2
 // @description  Filter weapons by type in faction armory.
 // @author       Lugburz
 // @match        https://www.torn.com/factions.php?step=your*
@@ -23,15 +23,15 @@ function showHideWeapons(checked, name) {
     });
 }
 
-function addCheckboxes() {
+function addDivs() {
     if (!$(location).attr('href').includes('sub=weapons')) {
         return;
     }
 
-    let primCB = '<input type="checkbox" id="weapon-primary" name="Primary"><label for="Primary"> Primary </label>';
-    let secondCB = '<input type="checkbox" id="weapon-secondary" name="Secondary"><label for="Secondary"> Secondary </label>';
-    let meleeCB = '<input type="checkbox" id="weapon-melee" name="Melee"><label for="Melee"> Melee </label>';
-    let myDiv = '<div class="title-black top-round t-overflow"><span>Show weapon types: </span>' + primCB + secondCB + meleeCB + '</div';
+    let primCB = '<input type="checkbox" style="margin-left: 5px; margin-right: 5px" id="weapon-primary" name="Primary"><label for="Primary">Primary</label>';
+    let secondCB = '<input type="checkbox" style="margin-left: 5px; margin-right: 5px" id="weapon-secondary" name="Secondary"><label for="Secondary">Secondary</label>';
+    let meleeCB = '<input type="checkbox" style="margin-left: 5px; margin-right: 5px" id="weapon-melee" name="Melee"><label for="Melee">Melee</label>';
+    let myDiv = '<div class="title-black top-round t-overflow"><span>Show weapon types:</span>' + primCB + secondCB + meleeCB + '</div';
     $("div.armoury-tabs").prepend(myDiv);
 
     let types = ['primary', 'secondary', 'melee'];
@@ -59,8 +59,8 @@ function addCheckboxes() {
     // Your code here...
     ajax((page, json, uri) => {
         if (page != "factions" || !json) return;
-        $("#armory-weapons").ready(addCheckboxes);
+        $("#armory-weapons").ready(addDivs);
     });
 
-    $("#armoury-weapons").ready(addCheckboxes);
+    $("#armoury-weapons").ready(addDivs);
 })();
