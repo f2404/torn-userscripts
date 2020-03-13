@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Faction: Filter armory weapons
 // @namespace    lugburz.faction.filter_armory_weapons
-// @version      0.2
+// @version      0.2.1
 // @description  Filter weapons by type in faction armory.
 // @author       Lugburz
 // @match        https://www.torn.com/factions.php?step=your*
@@ -32,7 +32,7 @@ function addDivs() {
     let secondCB = '<input type="checkbox" style="margin-left: 5px; margin-right: 5px" id="weapon-secondary" name="Secondary"><label for="Secondary">Secondary</label>';
     let meleeCB = '<input type="checkbox" style="margin-left: 5px; margin-right: 5px" id="weapon-melee" name="Melee"><label for="Melee">Melee</label>';
     let myDiv = '<div class="title-black top-round t-overflow"><span>Show weapon types:</span>' + primCB + secondCB + meleeCB + '</div';
-    $("div.armoury-tabs").prepend(myDiv);
+    $("#armoury-weapons").prepend(myDiv);
 
     let types = ['primary', 'secondary', 'melee'];
     types.forEach(function(item, index, array) {
