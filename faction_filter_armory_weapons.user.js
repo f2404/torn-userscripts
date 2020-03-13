@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Faction: Filter armory weapons
 // @namespace    lugburz.faction.filter_armory_weapons
-// @version      0.3
+// @version      0.3.1
 // @description  Filter weapons and armor by type in faction armory.
 // @author       Lugburz
 // @match        https://www.torn.com/factions.php?step=your*
@@ -24,7 +24,7 @@ function showHideItems(checked, cb_name, cb_id) {
             if (cb_name.localeCompare('Body') == 0) {
                 // there're a lot of names for body armor...
                 matches = (typeof name !== 'undefined' && name !== null &&
-                           ($(name).text().includes('Vest') || $(name).text().includes('Jacket') || $(name).text().includes('Armor') || $(name).text().includes('Armour')));
+                           ($(name).text().includes('Vest') || $(name).text().includes('Jacket') || $(name).text().includes('Mail') || $(name).text().includes('Armor') || $(name).text().includes('Armour')));
             } else {
                 matches = (typeof name !== 'undefined' && name !== null && $(name).text().includes(cb_name));
             }
