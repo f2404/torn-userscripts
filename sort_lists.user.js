@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Sort lists
 // @namespace    lugburz.sort_lists
-// @version      0.1.3
+// @version      0.2
 // @description  Sort lists (such as blacklist, friendlist, faction members list) by various columns.
 // @author       Lugburz
 // @match        https://www.torn.com/blacklist.php*
@@ -71,13 +71,36 @@ function doSort(users, column, ascending) {
 
             return compare (aText, bText, ascending);
         });
+    // 'Last Action' script support
+    } else if ('member-icons'.localeCompare(column) == 0) {
+        // Do not show arrows if no 'Last Action'
+        if ($('.title-black > .'+column).text() === 'undefined' || !$('.title-black > .'+column).text().includes('Last Action'))
+            return users;
+
+        let sortedByLastAction = Array.prototype.sort.bind(users);
+        sortedByLastAction(function (a, b) {
+            let aText = $(a).find('.last-action').text().trim();
+            let bText = $(b).find('.last-action').text().trim();
+
+            let days = aText.match(/((\d+) day)?/)[2] || 0
+            let hours = aText.match(/((\d+) hour)?/)[2] || 0
+            let mins = aText.match(/((\d+) minute)?/)[2] || 0
+            let aMins = Number(days)*24*60 + Number(hours)*60 + Number(mins)
+
+            days = bText.match(/((\d+) day)?/)[2] || 0
+            hours = bText.match(/((\d+) hour)?/)[2] || 0
+            mins = bText.match(/((\d+) minute)?/)[2] || 0
+            let bMins = Number(days)*24*60 + Number(hours)*60 + Number(mins)
+
+            return compare (Number(aMins), Number(bMins), ascending);
+        });
     } else {
         // shouldn't happen
         return users;
     }
 
     let divPrefix = '.title-black > .';
-    let columns = [ 'level', 'lvl', 'title', 'desk', 'days', 'status'].forEach((elem) => {
+    let columns = [ 'level', 'lvl', 'title', 'desk', 'days', 'status', 'member-icons'].forEach((elem) => {
         $(divPrefix+elem).removeClass('headerSortUp');
         $(divPrefix+elem).removeClass('headerSortDown');
     });
@@ -117,7 +140,7 @@ function addMemberlistSort() {
     let ascending = true;
     let last_sort = '';
 
-    let columns = ['desk', 'lvl', 'days', 'status'].forEach((column) => {
+    let columns = ['desk', 'lvl', 'days', 'status', 'member-icons'].forEach((column) => {
         $('ul.title-black > li.'+column).addClass('headerSortable');
         $('ul.title-black > li.'+column).on('click', function() {
             if (column != last_sort) ascending = true;
