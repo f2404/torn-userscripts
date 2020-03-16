@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Sort lists
 // @namespace    lugburz.sort_lists
-// @version      0.1.2
+// @version      0.1.3
 // @description  Sort lists (such as blacklist, friendlist, faction members list) by various columns.
 // @author       Lugburz
 // @match        https://www.torn.com/blacklist.php*
@@ -55,8 +55,9 @@ function doSort(users, column, ascending) {
     } else if ('title'.localeCompare(column) == 0 || 'desk'.localeCompare(column) == 0) {
         let sortedByName = Array.prototype.sort.bind(users);
         sortedByName(function (a, b) {
-            let aText = $(a).find('.name').attr('data-placeholder');
-            let bText = $(b).find('.name').attr('data-placeholder');
+            // works with honors enabled or disabled
+            let aText = $(a).find('.name').attr('data-placeholder') || $(a).find('.name').text();
+            let bText = $(b).find('.name').attr('data-placeholder') || $(b).find('.name').text();
             if (typeof aText !== 'undefined') aText = aText.toLowerCase();
             if (typeof bText !== 'undefined') bText = bText.toLowerCase();
 
