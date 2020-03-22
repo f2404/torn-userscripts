@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Vault: More options
 // @namespace    lugburz.vault.more_options
-// @version      0.1
+// @version      0.1.1
 // @description  Add 'Upkeep' button that automatically inputs the amount needed to pay upkeep.
 // @author       Lugburz
 // @match        https://www.torn.com/properties.php*
@@ -14,7 +14,7 @@ function addRentButton() {
     let jqBtnId = '#' + btnId;
 
     let upkeep = -1;
-    let found = $('ul.options-list > li.upkeep-prop').text().match(/\(\$(\d+)\)/);
+    let found = $('ul.options-list > li.upkeep-prop').text().match(/\(\$(\d+.+?)\)/);
     if (typeof found !== 'undefined' && found !== null) {
         upkeep = found[1];
     }
