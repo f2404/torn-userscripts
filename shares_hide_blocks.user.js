@@ -1,10 +1,11 @@
 // ==UserScript==
 // @name         Torn: Stocks: Hide blocks
 // @namespace    lugburz.stocks.hide_blocks
-// @version      0.1.1
+// @version      0.1.2
 // @description  Allows to hide certain stock blocks from the list.
 // @author       Lugburz
 // @match        https://www.torn.com/stockexchange.php?step=portfolio
+// @match        https://www.torn.com/laptop.php*
 // @require      https://greasyfork.org/scripts/390917-dkk-torn-utilities/code/DKK%20Torn%20Utilities.js?version=744690
 // @grant        GM_setValue
 // @grant        GM_getValue
