@@ -1,10 +1,11 @@
 // ==UserScript==
 // @name         Torn: Stocks: Hide blocks
 // @namespace    lugburz.stocks.hide_blocks
-// @version      0.1
+// @version      0.1.1
 // @description  Allows to hide certain stock blocks from the list.
 // @author       Lugburz
 // @match        https://www.torn.com/stockexchange.php?step=portfolio
+// @require      https://greasyfork.org/scripts/390917-dkk-torn-utilities/code/DKK%20Torn%20Utilities.js?version=744690
 // @grant        GM_setValue
 // @grant        GM_getValue
 // ==/UserScript==
@@ -27,8 +28,8 @@ function showHideBlocks() {
         let blockId = $(this).attr('id');
         let liId = 'show-' + blockId;
 
-        $(this).find('ul.item > li.info > div.length-wrap > div.second-row > span.action').append(
-            '<span id="hideBtn" class="action"><a href="#" class="t-blue h t-hide" role="button">Hide</a></span>');
+        $(this).find('ul.item > li.logo').append(
+            '<a href="#" id="hideBtn" class="t-blue h t-hide" role="button" style="position: absolute; top: 5px; right: 5px;">Hide</a>');
 
         let html = '<li id="' + liId + '" class="info"><div class="qualify-wrap" style="height: 22px; line-height: 22px; padding: 0 7px;">The <b>' +
             name.toUpperCase() + '</b> block (<b>' + count + '</b> shares) is hidden <span id="showBtn" class="action">' +
@@ -57,5 +58,10 @@ function showHideBlocks() {
     'use strict';
 
     // Your code here...
+    ajax((page, json, uri) => {
+        if (page != "stockexchange") return;
+        $('ul.stock-cont').ready(showHideBlocks);
+    });
+
     $('ul.stock-cont').ready(showHideBlocks);
 })();
