@@ -1,11 +1,12 @@
 // ==UserScript==
 // @name         Torn: Sort lists
 // @namespace    lugburz.sort_lists
-// @version      0.3
-// @description  Sort lists (such as blacklist, friendlist, faction members list) by various columns.
+// @version      0.4
+// @description  Sort lists (such as blacklist, friendlist, userlist, faction members list, stocks) by various columns.
 // @author       Lugburz
 // @match        https://www.torn.com/blacklist.php*
 // @match        https://www.torn.com/friendlist.php*
+// @match        https://www.torn.com/userlist.php*
 // @match        https://www.torn.com/factions.php*
 // @match        https://www.torn.com/stockexchange.php*
 // @require      https://greasyfork.org/scripts/390917-dkk-torn-utilities/code/DKK%20Torn%20Utilities.js?version=744690
@@ -128,16 +129,29 @@ function doSort(items, column, ascending, divPrefix = '.title-black > .') {
     return items;
 }
 
-// Blacklist, friendlist
+// Blacklist, friendlist, userlist
 function addUserlistSort() {
-    let user_list = $('ul.user-info-blacklist-wrap');
-    let users = $(user_list).children('li');
     let ascending = true;
     let last_sort = '';
+
+    // for friendlist and blacklist
+    let user_list = $('ul.user-info-blacklist-wrap');
+    let users = $(user_list).children('li');
+
+    // for userlist (search results)
+    if (users.length == 0) {
+        user_list = $('ul.user-info-list-wrap');
+        users = $(user_list).children('li');
+    }
 
     let columns = ['title', 'level', 'status'].forEach((column) => {
         $('div.title-black > div.'+column).addClass('headerSortable');
         $('div.'+column).on('click', function() {
+            // discard old data
+            if(!$(users).is(':visible')) {
+                return;
+            }
+
             if (column != last_sort) ascending = true;
             last_sort = column;
             users = doSort(users, column, ascending);
@@ -191,7 +205,11 @@ function addStocklistSort() {
     // Your code here...
     ajax((page, json, uri) => {
         if (page == "userlist") {
-            $('ul.user-info-blacklist-wrap').ready(addUserlistSort);
+            if ($(location).attr('href').includes('userlist.php')) {
+                $('ul.user-info-list-wrap').ready(addUserlistSort);
+            } else {
+                $('ul.user-info-blacklist-wrap').ready(addUserlistSort);
+            }
         } else if (page == "factions") {
             $('ul.member-list').ready(addMemberlistSort);
         } else if (page == "stockexchange") {
@@ -206,3 +224,4 @@ function addStocklistSort() {
         $('ul.stock-list').ready(addStocklistSort);
     }
 })();
+
