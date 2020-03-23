@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Sort lists
 // @namespace    lugburz.sort_lists
-// @version      0.4
+// @version      0.5
 // @description  Sort lists (such as blacklist, friendlist, userlist, faction members list, stocks) by various columns.
 // @author       Lugburz
 // @match        https://www.torn.com/blacklist.php*
@@ -9,6 +9,7 @@
 // @match        https://www.torn.com/userlist.php*
 // @match        https://www.torn.com/factions.php*
 // @match        https://www.torn.com/stockexchange.php*
+// @match        https://www.torn.com/companies.php*
 // @require      https://greasyfork.org/scripts/390917-dkk-torn-utilities/code/DKK%20Torn%20Utilities.js?version=744690
 // @grant        GM_addStyle
 // ==/UserScript==
@@ -54,7 +55,8 @@ function doSort(items, column, ascending, divPrefix = '.title-black > .') {
 
             return compare(Number(aText), Number(bText), ascending);
         });
-    } else if ('title'.localeCompare(column) == 0 || 'desk'.localeCompare(column) == 0 || 'name'.localeCompare(column) == 0) {
+    } else if ('title'.localeCompare(column) == 0 || 'desk'.localeCompare(column) == 0 ||
+               'name'.localeCompare(column) == 0 || 'employee'.localeCompare(column) == 0) {
         let sortedByName = Array.prototype.sort.bind(items);
         sortedByName(function (a, b) {
             // works with honors enabled or disabled
@@ -115,7 +117,7 @@ function doSort(items, column, ascending, divPrefix = '.title-black > .') {
         return items;
     }
 
-    let columns = [ 'level', 'lvl', 'title', 'desk', 'name', 'days', 'status', 'member-icons', 'price', 'owned', 'change'].forEach((elem) => {
+    [ 'level', 'lvl', 'title', 'desk', 'name', 'days', 'status', 'member-icons', 'price', 'owned', 'change'].forEach((elem) => {
         $(divPrefix+elem).removeClass('headerSortUp');
         $(divPrefix+elem).removeClass('headerSortDown');
     });
@@ -199,6 +201,25 @@ function addStocklistSort() {
     });
 }
 
+// Company
+function addCompanylistSort() {
+    let user_list = $('ul.employee-list');
+    let users = $(user_list).children('li');
+    let ascending = true;
+    let last_sort = '';
+
+    let columns = ['employee', 'days'].forEach((column) => {
+        $('ul.employee-list-title > li.'+column).addClass('headerSortable');
+        $('ul.employee-list-title > li.'+column).on('click', function() {
+            if (column != last_sort) ascending = true;
+            last_sort = column;
+            users = doSort(users, column, ascending);
+            ascending = !ascending;
+            $(user_list).append(users);
+        });
+    });
+}
+
 (function() {
     'use strict';
 
@@ -214,6 +235,8 @@ function addStocklistSort() {
             $('ul.member-list').ready(addMemberlistSort);
         } else if (page == "stockexchange") {
             $('ul.stock-list').ready(addStocklistSort);
+        } else if (page == "companies") {
+            $('ul.employee-list').ready(addCompanylistSort);
         }
     });
 
@@ -222,6 +245,7 @@ function addStocklistSort() {
         $('ul.member-list').ready(addMemberlistSort);
     } else if ($(location).attr('href').includes('stockexchange.php')) {
         $('ul.stock-list').ready(addStocklistSort);
+    } else if ($(location).attr('href').includes('companies.php')) {
+        $('ul.employee-list').ready(addCompanylistSort);
     }
 })();
-
