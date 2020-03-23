@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Sort lists
 // @namespace    lugburz.sort_lists
-// @version      0.5
+// @version      0.5.1
 // @description  Sort lists (such as blacklist, friendlist, userlist, faction members list, stocks) by various columns.
 // @author       Lugburz
 // @match        https://www.torn.com/blacklist.php*
@@ -10,6 +10,7 @@
 // @match        https://www.torn.com/factions.php*
 // @match        https://www.torn.com/stockexchange.php*
 // @match        https://www.torn.com/companies.php*
+// @match        https://www.torn.com/joblist.php*
 // @require      https://greasyfork.org/scripts/390917-dkk-torn-utilities/code/DKK%20Torn%20Utilities.js?version=744690
 // @grant        GM_addStyle
 // ==/UserScript==
@@ -112,6 +113,14 @@ function doSort(items, column, ascending, divPrefix = '.title-black > .') {
 
             return compare(Number(aText), Number(bText), ascending);
         });
+    } else if ('rank'.localeCompare(column) == 0) {
+        let sortedByStatus = Array.prototype.sort.bind(items);
+        sortedByStatus(function (a, b) {
+            let aText = $(a).find('.'+column).text().replace('Rank:', '').trim();
+            let bText = $(b).find('.'+column).text().replace('Rank:', '').trim();
+
+            return compare (aText, bText, ascending);
+        });
     } else {
         // shouldn't happen
         return items;
@@ -201,7 +210,7 @@ function addStocklistSort() {
     });
 }
 
-// Company
+// Company (your company)
 function addCompanylistSort() {
     let user_list = $('ul.employee-list');
     let users = $(user_list).children('li');
@@ -211,6 +220,25 @@ function addCompanylistSort() {
     let columns = ['employee', 'days'].forEach((column) => {
         $('ul.employee-list-title > li.'+column).addClass('headerSortable');
         $('ul.employee-list-title > li.'+column).on('click', function() {
+            if (column != last_sort) ascending = true;
+            last_sort = column;
+            users = doSort(users, column, ascending);
+            ascending = !ascending;
+            $(user_list).append(users);
+        });
+    });
+}
+
+// Joblist (someone else's company)
+function addJoblistSort() {
+    let user_list = $('ul.employees-list');
+    let users = $(user_list).children('li');
+    let ascending = true;
+    let last_sort = '';
+
+    let columns = ['employee', 'rank', 'lvl'].forEach((column) => {
+        $('div.title-black > ul.title > li.'+column).addClass('headerSortable');
+        $('div.title-black > ul.title > li.'+column).on('click', function() {
             if (column != last_sort) ascending = true;
             last_sort = column;
             users = doSort(users, column, ascending);
@@ -237,6 +265,8 @@ function addCompanylistSort() {
             $('ul.stock-list').ready(addStocklistSort);
         } else if (page == "companies") {
             $('ul.employee-list').ready(addCompanylistSort);
+        } else if (page == "joblist") {
+            $('ul.employees-list').ready(addJoblistSort);
         }
     });
 
@@ -247,5 +277,7 @@ function addCompanylistSort() {
         $('ul.stock-list').ready(addStocklistSort);
     } else if ($(location).attr('href').includes('companies.php')) {
         $('ul.employee-list').ready(addCompanylistSort);
+    } else if ($(location).attr('href').includes('joblist.php')) {
+        $('ul.employees-list').ready(addCompanylistSort);
     }
 })();
