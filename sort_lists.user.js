@@ -1,12 +1,13 @@
 // ==UserScript==
 // @name         Torn: Sort lists
 // @namespace    lugburz.sort_lists
-// @version      0.5.1
-// @description  Sort lists (such as blacklist, friendlist, userlist, faction members list, stocks) by various columns.
+// @version      0.5.2
+// @description  Sort lists (such as blacklist, friendlist, userlist, faction members, company employees, stocks) by various columns.
 // @author       Lugburz
 // @match        https://www.torn.com/blacklist.php*
 // @match        https://www.torn.com/friendlist.php*
 // @match        https://www.torn.com/userlist.php*
+// @match        https://www.torn.com/page.php*
 // @match        https://www.torn.com/factions.php*
 // @match        https://www.torn.com/stockexchange.php*
 // @match        https://www.torn.com/companies.php*
@@ -254,11 +255,9 @@ function addJoblistSort() {
     // Your code here...
     ajax((page, json, uri) => {
         if (page == "userlist") {
-            if ($(location).attr('href').includes('userlist.php')) {
-                $('ul.user-info-list-wrap').ready(addUserlistSort);
-            } else {
-                $('ul.user-info-blacklist-wrap').ready(addUserlistSort);
-            }
+            $('ul.user-info-blacklist-wrap').ready(addUserlistSort);
+        } else if (page == "page") {
+            $('ul.user-info-list-wrap').ready(addUserlistSort);
         } else if (page == "factions") {
             $('ul.member-list').ready(addMemberlistSort);
         } else if (page == "stockexchange") {
