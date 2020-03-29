@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Stocks: Hide blocks
 // @namespace    lugburz.stocks.hide_blocks
-// @version      0.1.2
+// @version      0.1.3
 // @description  Allows to hide certain stock blocks from the list.
 // @author       Lugburz
 // @match        https://www.torn.com/stockexchange.php?step=portfolio
@@ -22,15 +22,19 @@ function showHideFirstId(show, firstId, secondId) {
 }
 
 function showHideBlocks() {
-    $('ul.stock-cont > li').each(function(index) {
-        let count = $(this).find('ul.item > li.info > div.price-wrap > div.first-row').html();
+    $('ul.stock-cont > li.item-wrap').each(function(index) {
+        if ($(this).find('ul.item > li.logo').find('#hideBtn').length > 0) {
+            // already added
+            return;
+        }
+
+        let count = $(this).find('ul.item > li.info > div.b-price-wrap > div.first-row').html();
         count = count.replace('<span class="bold">Shares:</span>', '').trim();
         let name = $(this).attr('data-stock');
         let blockId = $(this).attr('id');
         let liId = 'show-' + blockId;
 
-        $(this).find('ul.item > li.logo').append(
-            '<a href="#" id="hideBtn" class="t-blue h t-hide" role="button" style="position: absolute; top: 5px; right: 5px;">Hide</a>');
+        $(this).find('ul.item > li.logo').append('<a href="#" id="hideBtn" class="t-blue h t-hide" role="button" style="position: absolute; top: 5px; right: 5px;">Hide</a>');
 
         let html = '<li id="' + liId + '" class="info"><div class="qualify-wrap" style="height: 22px; line-height: 22px; padding: 0 7px;">The <b>' +
             name.toUpperCase() + '</b> block (<b>' + count + '</b> shares) is hidden <span id="showBtn" class="action">' +
@@ -66,3 +70,4 @@ function showHideBlocks() {
 
     $('ul.stock-cont').ready(showHideBlocks);
 })();
+
