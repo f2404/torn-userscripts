@@ -1,11 +1,11 @@
 // ==UserScript==
 // @name         Torn: Faction: Show OC due date
 // @namespace    lugburz.faction.show_oc_due_date
-// @version      0.3.4
+// @version      0.3.5
 // @description  Show when OC's are due, in addition to time left that Torn shows.
 // @author       Lugburz
 // @match        https://www.torn.com/factions.php?step=your*
-// @require      https://greasyfork.org/scripts/390917-dkk-torn-utilities/code/DKK%20Torn%20Utilities.js?version=744690
+// @require      https://github.com/f2404/torn-userscripts/raw/master/lib/lugburz_lib.js
 // @grant        none
 // ==/UserScript==
 
@@ -73,10 +73,11 @@ function update() {
 (function() {
     'use strict';
 
-    ajax((page, json, uri) => {
+    ajax((page) => {
         if (page != "factions") return;
         $("ul.crimes-list").ready(update);
     });
 
     $("ul.crimes-list").ready(update);
 })();
+
