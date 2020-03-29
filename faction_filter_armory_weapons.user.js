@@ -1,11 +1,11 @@
 // ==UserScript==
 // @name         Torn: Faction: Filter armory weapons
 // @namespace    lugburz.faction.filter_armory_weapons
-// @version      0.4
+// @version      0.4.1
 // @description  Filter weapons and armor by type in faction armory.
 // @author       Lugburz
 // @match        https://www.torn.com/factions.php?step=your*
-// @require      https://greasyfork.org/scripts/390917-dkk-torn-utilities/code/DKK%20Torn%20Utilities.js?version=744690
+// @require      https://github.com/f2404/torn-userscripts/raw/master/lib/lugburz_lib.js
 // @grant        GM_setValue
 // @grant        GM_getValue
 // ==/UserScript==
@@ -117,12 +117,9 @@ function addArmorDivs() {
     'use strict';
 
     // Your code here...
-    ajax((page, json, uri) => {
-        if (page != "factions" || !json) return;
+    ajax((page) => {
+        if (page != "factions") return;
         $("#armory-weapons").ready(addWeaponDivs);
-    });
-    ajax((page, json, uri) => {
-        if (page != "factions" || !json) return;
         $("#armory-armour").ready(addArmorDivs);
     });
 
