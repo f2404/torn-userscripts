@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Sort lists
 // @namespace    lugburz.sort_lists
-// @version      0.5.4
+// @version      0.5.5
 // @description  Sort lists (such as blacklist, friendlist, userlist, faction members, company employees, stocks) by various columns.
 // @author       Lugburz
 // @match        https://www.torn.com/blacklist.php*
@@ -199,8 +199,8 @@ function doFactionDepSort(items, column, ascending) {
         sortedByName(function (a, b) {
             // avoid conflicts with other scripts
             if ($(a).find('.name').hasClass('btFaction') || $(b).find('.name').hasClass('btFaction')) return 0;
-            if ($(a).attr('id') == 'surplusValue' || $(b).attr('id') == 'surplusValue') return 0;
-            if ($(a).attr('id') == 'surplusInfo' || $(b).attr('id') == 'surplusInfo') return 0;
+            if ($(a).attr('id') == 'surplusValue' || $(a).attr('id') == 'surplusInfo') return 0;
+            if ($(b).attr('id') == 'surplusValue' || $(b).attr('id') == 'surplusInfo') return 0;
 
             // works with honors enabled or disabled
             let aText = $(a).find('.name').attr('data-placeholder') || $(a).find('.name').text();
@@ -221,24 +221,26 @@ function doFactionDepSort(items, column, ascending) {
     }
 
     if (column.includes('money')) {
-        $('div.money-wrap > div.info > span.bold').removeClass('headerSortUp');
+        $('div.money-wrap > div.userlist-wrapper > div.info > span.bold').removeClass('headerSortUp');
+        $('div.money-wrap > div.userlist-wrapper > div.info > span.bold').removeClass('headerSortDown');
 
         if (ascending) {
-            if ('name-money'.localeCompare(column) == 0) $('div.money-wrap > div.userlist-wrapper > div.info > span.bold').addClass('headerSortDown');
-            else if ('money'.localeCompare(column) == 0) $('div.money-wrap > div.userlist-wrapper > div.info > span.bold.amount').addClass('headerSortDown');
+            if ('name-money'.localeCompare(column) == 0) $('div.money-wrap > div.userlist-wrapper > div.info').find('span.bold:first').addClass('headerSortDown');
+            else if ('money'.localeCompare(column) == 0) $('div.money-wrap > div.userlist-wrapper > div.info').find('span.bold.amount:first').addClass('headerSortDown');
         } else {
-            if ('name-money'.localeCompare(column) == 0) $('div.money-wrap > div.userlist-wrapper > div.info > span.bold').addClass('headerSortUp');
-            else if ('money'.localeCompare(column) == 0) $('div.money-wrap > div.userlist-wrapper > div.info > span.bold.amount').addClass('headerSortUp');
+            if ('name-money'.localeCompare(column) == 0) $('div.money-wrap > div.userlist-wrapper > div.info').find('span.bold:first').addClass('headerSortUp');
+            else if ('money'.localeCompare(column) == 0) $('div.money-wrap > div.userlist-wrapper > div.info').find('span.bold.amount:first').addClass('headerSortUp');
         }
     } else if (column.includes('points')) {
-        $('div.points-wrap > div.info > span.bold').removeClass('headerSortUp');
+        $('div.point-wrap > div.userlist-wrapper > div.info > span.bold').removeClass('headerSortUp');
+        $('div.point-wrap > div.userlist-wrapper > div.info > span.bold').removeClass('headerSortDown');
 
         if (ascending) {
-            if ('name-points'.localeCompare(column) == 0) $('div.point-wrap > div.userlist-wrapper > div.info > span.bold').addClass('headerSortDown');
-            else if ('points'.localeCompare(column) == 0) $('div.point-wrap > div.userlist-wrapper > div.info > span.bold.amount').addClass('headerSortDown');
+            if ('name-points'.localeCompare(column) == 0) $('div.point-wrap > div.userlist-wrapper > div.info').find('span.bold:first').addClass('headerSortDown');
+            else if ('points'.localeCompare(column) == 0) $('div.point-wrap > div.userlist-wrapper > div.info').find('span.bold.amount:first').addClass('headerSortDown');
         } else {
-            if ('name-points'.localeCompare(column) == 0) $('div.point-wrap > div.userlist-wrapper > div.info > span.bold').addClass('headerSortUp');
-            else if ('points'.localeCompare(column) == 0) $('div.point-wrap > div.userlist-wrapper > div.info > span.bold.amount').addClass('headerSortUp');
+            if ('name-points'.localeCompare(column) == 0) $('div.point-wrap > div.userlist-wrapper > div.info').find('span.bold:first').addClass('headerSortUp');
+            else if ('points'.localeCompare(column) == 0) $('div.point-wrap > div.userlist-wrapper > div.info').find('span.bold.amount:first').addClass('headerSortUp');
         }
     }
 
@@ -252,17 +254,17 @@ function addFactionMoneyDepSort() {
     let last_sort = '';
 
     $('div.money-wrap > div.userlist-wrapper > div.info > span.bold').addClass('headerSortable');
-    $('div.money-wrap > div.userlist-wrapper > div.info > span.bold').on('click', function() {
-        if ('name' != last_sort) ascending = true;
-        last_sort = column;
-        users = doSort(users, 'name-money', ascending);
+    $('div.money-wrap > div.userlist-wrapper > div.info').find('span.bold:first').on('click', function() {
+        if ('name-money' != last_sort) ascending = true;
+        last_sort = 'name-money';
+        users = doFactionDepSort(users, 'name-money', ascending);
         ascending = !ascending;
         $(user_list).append(users);
     });
-    $('div.money-wrap > div.userlist-wrapper > div.info > span.bold.amount').on('click', function() {
+    $('div.money-wrap > div.userlist-wrapper > div.info').find('span.bold.amount:first').on('click', function() {
         if ('money' != last_sort) ascending = true;
-        last_sort = column;
-        users = doSort(users, 'money', ascending);
+        last_sort = 'money';
+        users = doFactionDepSort(users, 'money', ascending);
         ascending = !ascending;
         $(user_list).append(users);
     });
@@ -274,17 +276,17 @@ function addFactionPointsDepSort() {
     let last_sort = '';
 
     $('div.point-wrap > div.userlist-wrapper > div.info > span.bold').addClass('headerSortable');
-    $('div.point-wrap > div.userlist-wrapper > div.info > span.bold').on('click', function() {
-        if ('name' != last_sort) ascending = true;
-        last_sort = column;
-        users = doSort(users, 'name-points', ascending);
+    $('div.point-wrap > div.userlist-wrapper > div.info').find('span.bold:first').on('click', function() {
+        if ('name-points' != last_sort) ascending = true;
+        last_sort = 'name-points';
+        users = doFactionDepSort(users, 'name-points', ascending);
         ascending = !ascending;
         $(user_list).append(users);
     });
-    $('div.point-wrap > div.userlist-wrapper > div.info > span.bold.amount').on('click', function() {
+    $('div.point-wrap > div.userlist-wrapper > div.info').find('span.bold.amount:first').on('click', function() {
         if ('points' != last_sort) ascending = true;
-        last_sort = column;
-        users = doSort(users, 'points', ascending);
+        last_sort = 'points';
+        users = doFactionDepSort(users, 'points', ascending);
         ascending = !ascending;
         $(user_list).append(users);
     });
