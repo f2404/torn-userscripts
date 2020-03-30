@@ -197,6 +197,11 @@ function doFactionDepSort(items, column, ascending) {
     if ('name-money'.localeCompare(column) == 0 || 'name-points'.localeCompare(column) == 0) {
         let sortedByName = Array.prototype.sort.bind(items);
         sortedByName(function (a, b) {
+            // avoid conflicts with other scripts
+            if ($(a).find('.name').hasClass('btFaction') || $(b).find('.name').hasClass('btFaction')) return 0;
+            if ($(a).attr('id') == 'surplusValue' || $(b).attr('id') == 'surplusValue') return 0;
+            if ($(a).attr('id') == 'surplusInfo' || $(b).attr('id') == 'surplusInfo') return 0;
+
             // works with honors enabled or disabled
             let aText = $(a).find('.name').attr('data-placeholder') || $(a).find('.name').text();
             let bText = $(b).find('.name').attr('data-placeholder') || $(b).find('.name').text();
