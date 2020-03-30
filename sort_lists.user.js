@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Sort lists
 // @namespace    lugburz.sort_lists
-// @version      0.5.2
+// @version      0.5.3
 // @description  Sort lists (such as blacklist, friendlist, userlist, faction members, company employees, stocks) by various columns.
 // @author       Lugburz
 // @match        https://www.torn.com/blacklist.php*
@@ -127,7 +127,7 @@ function doSort(items, column, ascending, divPrefix = '.title-black > .') {
         return items;
     }
 
-    [ 'level', 'lvl', 'title', 'desk', 'name', 'days', 'status', 'member-icons', 'price', 'owned', 'change'].forEach((elem) => {
+    [ 'level', 'lvl', 'title', 'desk', 'name', 'days', 'status', 'member-icons', 'price', 'owned', 'change' ].forEach((elem) => {
         $(divPrefix+elem).removeClass('headerSortUp');
         $(divPrefix+elem).removeClass('headerSortDown');
     });
@@ -191,6 +191,100 @@ function addMemberlistSort() {
         });
     });
 }
+
+// Faction control (money & points)
+function doFactionDepSort(items, column, ascending) {
+    if ('name-money'.localeCompare(column) == 0 || 'name-points'.localeCompare(column) == 0) {
+        let sortedByName = Array.prototype.sort.bind(items);
+        sortedByName(function (a, b) {
+            // works with honors enabled or disabled
+            let aText = $(a).find('.name').attr('data-placeholder') || $(a).find('.name').text();
+            let bText = $(b).find('.name').attr('data-placeholder') || $(b).find('.name').text();
+            if (typeof aText !== 'undefined') aText = aText.toLowerCase();
+            if (typeof bText !== 'undefined') bText = bText.toLowerCase();
+
+            return compare(aText, bText, ascending);
+        });
+    } else if ('money'.localeCompare(column) == 0 || 'points'.localeCompare(column) == 0) {
+        let sortedByPrice = Array.prototype.sort.bind(items);
+        sortedByPrice(function (a, b) {
+            let aText = $(a).find('.'+column).attr('data-value');
+            let bText = $(b).find('.'+column).attr('data-value');
+
+            return compare(Number(aText), Number(bText), ascending);
+        });
+    }
+
+    if (column.includes('money')) {
+        $('div.money-wrap > div.info > span.bold').removeClass('headerSortUp');
+
+        if (ascending) {
+            if ('name-money'.localeCompare(column) == 0) $('div.money-wrap > div.userlist-wrapper > div.info > span.bold').addClass('headerSortDown');
+            else if ('money'.localeCompare(column) == 0) $('div.money-wrap > div.userlist-wrapper > div.info > span.bold.amount').addClass('headerSortDown');
+        } else {
+            if ('name-money'.localeCompare(column) == 0) $('div.money-wrap > div.userlist-wrapper > div.info > span.bold').addClass('headerSortUp');
+            else if ('money'.localeCompare(column) == 0) $('div.money-wrap > div.userlist-wrapper > div.info > span.bold.amount').addClass('headerSortUp');
+        }
+    } else if (column.includes('points')) {
+        $('div.points-wrap > div.info > span.bold').removeClass('headerSortUp');
+
+        if (ascending) {
+            if ('name-points'.localeCompare(column) == 0) $('div.point-wrap > div.userlist-wrapper > div.info > span.bold').addClass('headerSortDown');
+            else if ('points'.localeCompare(column) == 0) $('div.point-wrap > div.userlist-wrapper > div.info > span.bold.amount').addClass('headerSortDown');
+        } else {
+            if ('name-points'.localeCompare(column) == 0) $('div.point-wrap > div.userlist-wrapper > div.info > span.bold').addClass('headerSortUp');
+            else if ('points'.localeCompare(column) == 0) $('div.point-wrap > div.userlist-wrapper > div.info > span.bold.amount').addClass('headerSortUp');
+        }
+    }
+
+    return items;
+}
+
+function addFactionMoneyDepSort() {
+    let user_list = $('ul.user-info-list-wrap.money-depositors');
+    let users = $(user_list).children('li.depositor');
+    let ascending = true;
+    let last_sort = '';
+
+    $('div.money-wrap > div.userlist-wrapper > div.info > span.bold').addClass('headerSortable');
+    $('div.money-wrap > div.userlist-wrapper > div.info > span.bold').on('click', function() {
+        if ('name' != last_sort) ascending = true;
+        last_sort = column;
+        users = doSort(users, 'name-money', ascending);
+        ascending = !ascending;
+        $(user_list).append(users);
+    });
+    $('div.money-wrap > div.userlist-wrapper > div.info > span.bold.amount').on('click', function() {
+        if ('money' != last_sort) ascending = true;
+        last_sort = column;
+        users = doSort(users, 'money', ascending);
+        ascending = !ascending;
+        $(user_list).append(users);
+    });
+}
+function addFactionPointsDepSort() {
+    let user_list = $('ul.user-info-list-wrap.points-depositors');
+    let users = $(user_list).children('li.depositor');
+    let ascending = true;
+    let last_sort = '';
+
+    $('div.point-wrap > div.userlist-wrapper > div.info > span.bold').addClass('headerSortable');
+    $('div.point-wrap > div.userlist-wrapper > div.info > span.bold').on('click', function() {
+        if ('name' != last_sort) ascending = true;
+        last_sort = column;
+        users = doSort(users, 'name-points', ascending);
+        ascending = !ascending;
+        $(user_list).append(users);
+    });
+    $('div.point-wrap > div.userlist-wrapper > div.info > span.bold.amount').on('click', function() {
+        if ('points' != last_sort) ascending = true;
+        last_sort = column;
+        users = doSort(users, 'points', ascending);
+        ascending = !ascending;
+        $(user_list).append(users);
+    });
+}
+// ===
 
 // Stocks
 function addStocklistSort() {
@@ -260,6 +354,11 @@ function addJoblistSort() {
             $('ul.user-info-list-wrap').ready(addUserlistSort);
         } else if (page == "factions") {
             $('ul.member-list').ready(addMemberlistSort);
+
+            if ($(location).attr('href').includes('tab=controls')) {
+                $('ul.user-info-list-wrap.money-depositors').ready(addFactionMoneyDepSort);
+                $('ul.user-info-list-wrap.points-depositors').ready(addFactionPointsDepSort);
+            }
         } else if (page == "stockexchange") {
             $('ul.stock-list').ready(addStocklistSort);
         } else if (page == "companies") {
@@ -269,9 +368,13 @@ function addJoblistSort() {
         }
     });
 
-    //$('ul.container-body-list').ready(a);
     if ($(location).attr('href').includes('factions.php')) {
         $('ul.member-list').ready(addMemberlistSort);
+
+        if ($(location).attr('href').includes('tab=controls')) {
+            $('ul.user-info-list-wrap.money-depositors').ready(addFactionMoneyDepSort);
+            $('ul.user-info-list-wrap.points-depositors').ready(addFactionPointsDepSort);
+        }
     } else if ($(location).attr('href').includes('stockexchange.php')) {
         $('ul.stock-list').ready(addStocklistSort);
     } else if ($(location).attr('href').includes('companies.php')) {
