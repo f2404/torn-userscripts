@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Sort lists
 // @namespace    lugburz.sort_lists
-// @version      0.5.6
+// @version      0.5.7
 // @description  Sort lists (such as blacklist, friendlist, userlist, faction members, company employees, stocks) by various columns.
 // @author       Lugburz
 // @match        https://www.torn.com/blacklist.php*
@@ -203,8 +203,8 @@ function doFactionDepSort(items, column, ascending) {
             if ($(b).attr('id') == 'surplusInfo' || $(b).attr('id') == 'surplusInfo1') return 0;
 
             // works with honors enabled or disabled
-            let aText = $(a).find('.name').attr('data-placeholder') || $(a).find('.name').text();
-            let bText = $(b).find('.name').attr('data-placeholder') || $(b).find('.name').text();
+            let aText = $(a).find('.name').find('img').attr('title') || $(a).find('.name').text();
+            let bText = $(b).find('.name').fing('img').attr('title') || $(b).find('.name').text();
             if (typeof aText !== 'undefined') aText = aText.toLowerCase();
             if (typeof bText !== 'undefined') bText = bText.toLowerCase();
 
