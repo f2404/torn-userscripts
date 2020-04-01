@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Sort lists
 // @namespace    lugburz.sort_lists
-// @version      0.5.7
+// @version      0.5.8
 // @description  Sort lists (such as blacklist, friendlist, userlist, faction members, company employees, stocks) by various columns.
 // @author       Lugburz
 // @match        https://www.torn.com/blacklist.php*
@@ -62,10 +62,10 @@ function doSort(items, column, ascending, divPrefix = '.title-black > .') {
         let sortedByName = Array.prototype.sort.bind(items);
         sortedByName(function (a, b) {
             // works with honors enabled or disabled
-            let aText = $(a).find('.name').attr('data-placeholder') || $(a).find('.name').text();
-            let bText = $(b).find('.name').attr('data-placeholder') || $(b).find('.name').text();
-            if (typeof aText !== 'undefined') aText = aText.toLowerCase();
-            if (typeof bText !== 'undefined') bText = bText.toLowerCase();
+            let aText = $(a).find('.name').find('img').attr('title') || $(a).find('.name:first').text();
+            let bText = $(b).find('.name').find('img').attr('title') || $(b).find('.name:first').text();
+            if (typeof aText !== 'undefined') aText = aText.trim().toLowerCase();
+            if (typeof bText !== 'undefined') bText = bText.trim().toLowerCase();
 
             return compare(aText, bText, ascending);
         });
@@ -198,15 +198,15 @@ function doFactionDepSort(items, column, ascending) {
         let sortedByName = Array.prototype.sort.bind(items);
         sortedByName(function (a, b) {
             // avoid conflicts with other scripts
-            if ($(a).find('.name').hasClass('btFaction') || $(b).find('.name').hasClass('btFaction')) return 0;
+            if ($(a).find('.name:first').hasClass('btFaction') || $(b).find('.name:first').hasClass('btFaction')) return 0;
             if ($(a).attr('id') == 'surplusInfo' || $(a).attr('id') == 'surplusInfo1') return 0;
             if ($(b).attr('id') == 'surplusInfo' || $(b).attr('id') == 'surplusInfo1') return 0;
 
             // works with honors enabled or disabled
-            let aText = $(a).find('.name').find('img').attr('title') || $(a).find('.name').text();
-            let bText = $(b).find('.name').fing('img').attr('title') || $(b).find('.name').text();
-            if (typeof aText !== 'undefined') aText = aText.toLowerCase();
-            if (typeof bText !== 'undefined') bText = bText.toLowerCase();
+            let aText = $(a).find('.name').find('img').attr('title') || $(a).find('.name:first').text();
+            let bText = $(b).find('.name').find('img').attr('title') || $(b).find('.name:first').text();
+            if (typeof aText !== 'undefined') aText = aText.trim().toLowerCase();
+            if (typeof bText !== 'undefined') bText = bText.trim().toLowerCase();
 
             return compare(aText, bText, ascending);
         });
