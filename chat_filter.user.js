@@ -1,7 +1,7 @@
 // ==UserScript==
-// @name         Chat: Filter
+// @name         Torn: Filter chats
 // @namespace    lugburz.filter_chat
-// @version      0.2
+// @version      0.2.1
 // @description  Add filtering by keyword to chats (Global, Trade, Faction, Travel).
 // @author       Lugburz
 // @match        https://www.torn.com/*
