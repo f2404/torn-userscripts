@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Bazaar Auto Price
 // @namespace    tos
-// @version      0.7
+// @version      0.7.1
 // @description  description
 // @author       tos, Lugburz
 // @match        *.torn.com/bazaar.php*
@@ -84,12 +84,13 @@ const observer_old = new MutationObserver((mutations) => {
 })
 
 function addOneFocusHandler(elem, itemID) {
-    $(elem).one('focus', function(e) {
+    $(elem).on('focus', function(e) {
         this.value = ''
         if (this.value === '') {
             lmp(itemID).then((price) => {
                 this.value = price
                 this.dispatchEvent(event)
+                if(price) $(elem).off('focus')
             });
         }
     });
