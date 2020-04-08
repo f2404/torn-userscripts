@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Chats: Add maximize button
 // @namespace    lugburz.chats.add_maximize_button
-// @version      0.2
+// @version      0.2.1
 // @description  Add maximize button to all chat windows.
 // @author       Lugburz
 // @match        https://www.torn.com/*
@@ -120,7 +120,7 @@ function addOnClick(box) {
 const observer = new MutationObserver((mutations) => {
     for (const mutation of mutations) {
         for (const node of mutation.addedNodes) {
-            if (isBoxVisible(node)) {
+            if ($(node).find('div[class^=chat-box-title_]').size() > 0) {
                 addMaxButton(node, true);
                 addOnClick(node);
             }
