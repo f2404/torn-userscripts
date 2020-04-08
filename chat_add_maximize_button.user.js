@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Chats: Add maximize button
 // @namespace    lugburz.chats.add_maximize_button
-// @version      0.1
+// @version      0.2
 // @description  Add maximize button to all chat windows.
 // @author       Lugburz
 // @match        https://www.torn.com/*
@@ -11,6 +11,9 @@
 // Number of pixels to increase chat window dimensions by.
 var WIDTH = 600;
 var HEIGHT = 200;
+// Whether or not to allow only one maximized chat window.
+// If set to true, all other chat window will be unmaximized.
+var ONLY_ONE = true;
 
 GM_addStyle(`
 .maximize_ {
@@ -19,9 +22,27 @@ GM_addStyle(`
   float: right;
   height: 34px;
   background: url(/images/v2/chat/tab_icons.svg);
-  background-position-x: -580px;
+  background-position-x: -582px;
 }
 `);
+
+function isBoxVisible(box) {
+    return $(box).find('div[class^=chat-box-content_]').size() > 0;
+}
+
+function isBoxMaximized(box) {
+    const title = $(box).find('div[class^=chat-box-title_]');
+    return $(title).find('div.maximize_').attr('maximized') > 0;
+}
+
+function unmaxAll() {
+    const boxes = $('#chatRoot').find('div[class^=chat-box_]');
+    $(boxes).each(function() {
+        if (isBoxVisible($(this)) && isBoxMaximized($(this))) {
+            maxUnmax($(this), false);
+        }
+    });
+}
 
 function maxUnmax(box, doMax) {
     const content = $(box).find('div[class^=chat-box-content_]');
@@ -37,6 +58,9 @@ function maxUnmax(box, doMax) {
         $(textarea).width($(textarea).width() + WIDTH);
         $(title).parent().width($(title).parent().width() + WIDTH);
         $(title).parent().css("max-width", $(title).parent().width() + WIDTH);
+
+        $(title).find('div.maximize_').attr('maximized', 1);
+        $(title).find('div.maximize_').attr('title', 'Unmaximize chat');
     } else {
         $(box).css('width', 'auto');
         $(content).width($(content).width() - WIDTH);
@@ -44,6 +68,9 @@ function maxUnmax(box, doMax) {
         $(content).find('div[class^=viewport_]').height($(content).find('div[class^=viewport_]').height() - HEIGHT);
         $(textarea).width($(textarea).width() - WIDTH);
         $(title).parent().width($(title).parent().width() - WIDTH);
+
+        $(title).find('div.maximize_').attr('maximized', 0);
+        $(title).find('div.maximize_').attr('title', 'Maximize chat');
     }
 }
 
@@ -55,18 +82,16 @@ function addMaxButton(box, force=false) {
 
         $(title).find('div.maximize_').on('click', function() {
             event.stopPropagation();
-            if ($(title).find('div.maximize_').attr('maximized') > 0) {
+            if (isBoxMaximized(box)) {
                 maxUnmax($(box), false);
-                $(title).find('div.maximize_').attr('maximized', 0);
-                $(title).find('div.maximize_').attr('title', 'Maximize chat');
             } else {
+                if (ONLY_ONE)
+                    unmaxAll();
                 maxUnmax($(box), true);
-                $(title).find('div.maximize_').attr('maximized', 1);
-                $(title).find('div.maximize_').attr('title', 'Unmaximize chat');
             }
         });
 
-        if (force || $(box).find('div[class^=chat-box-content_]').size() > 0) {
+        if (force || isBoxVisible(box)) {
             $(title).find('div.maximize_').show();
         } else {
             $(title).find('div.maximize_').hide();
@@ -77,12 +102,12 @@ function addMaxButton(box, force=false) {
 function addOnClick(box) {
     const title = $(box).find('div[class^=chat-box-title_]');
     $(title).on('click', function() {
-        if ($(box).find('div[class^=chat-box-content_]').size() == 0) {
+        if (!isBoxVisible(box)) {
             // chat is hidden -> showing
             $(title).find('div.maximize_').show();
         } else {
             // chat is shown -> hiding
-            if ($(title).find('div.maximize_').attr('maximized') > 0) {
+            if (isBoxMaximized(box)) {
                 $(box).css("width", "auto");
                 $(title).find('div.maximize_').attr('maximized', 0);
                 $(title).find('div.maximize_').attr('title', 'Maximize chat');
@@ -95,7 +120,7 @@ function addOnClick(box) {
 const observer = new MutationObserver((mutations) => {
     for (const mutation of mutations) {
         for (const node of mutation.addedNodes) {
-            if ($(node).find('div[class^=chat-box-title_]').size() > 0) {
+            if (isBoxVisible(node)) {
                 addMaxButton(node, true);
                 addOnClick(node);
             }
