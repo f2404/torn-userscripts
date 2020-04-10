@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Loot timer on NPC profile
 // @namespace    lugburz.show_timer_on_npc_profile
-// @version      0.1.1
+// @version      0.1.2
 // @description  Add a countdown timer to desired loot level on the NPC profile page.
 // @author       Lugburz
 // @match        https://www.torn.com/profiles.php*
@@ -48,40 +48,42 @@ async function getTimings(id) {
     return timings[id]["timings"][LOOT_LEVEL]["ts"];
 }
 
+function process(ts) {
+    if (ts < 0)
+        return;
+
+    // ts is s, Date is ms
+    const due = new Date(ts * 1000);
+
+    var x = setInterval(function() {
+        const now = new Date().getTime();
+        const left = due - now;
+        if (left < 0) {
+            clearInterval(x);
+            return;
+        }
+
+        // Time calculations for days, hours, minutes and seconds
+        const hours = Math.floor((left % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((left % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((left  % (1000 * 60)) / 1000);
+
+        // Display the result
+        const span = $('#profileroot').find('div.profile-status').find('div.profile-container').find('div.description').find('span.sub-desc');
+        let html = $(span).html();
+        const n = html.indexOf('(');
+        html = html.substring(0, n != -1 ? n-1 : html.length);
+        $(span).html(html + " (Till loot level " + ROMAN[LOOT_LEVEL-1] + ": " + (hours > 0 ? hours + "h " : '') +
+                     (minutes > 0 ? minutes + "m " : '') + seconds + "s)");
+    }, 1000);
+}
+
 (function() {
     'use strict';
 
     // Your code here...
     const profileId = RegExp(/XID=(\d+)/).exec($(location).attr('href'))[1];
     if (IDs.includes(Number(profileId))) {
-        getTimings(profileId).then((ts) => {
-            if (ts < 0)
-                return;
-
-            // ts is s, Date is ms
-            const due = new Date(ts * 1000);
-
-            var x = setInterval(function() {
-                const now = new Date().getTime();
-                const left = due - now;
-                if (left < 0)
-                    return;
-
-                // Time calculations for days, hours, minutes and seconds
-                const hours = Math.floor((left % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                const minutes = Math.floor((left % (1000 * 60 * 60)) / (1000 * 60));
-                const seconds = Math.floor((left  % (1000 * 60)) / 1000);
-
-                // Display the result
-                const span = $('#profileroot').find('div.profile-status').find('div.profile-container').find('div.description').find('span.sub-desc');
-                let html = $(span).html();
-                const n = html.indexOf('(');
-                html = html.substring(0, n != -1 ? n-1 : html.length);
-                $(span).html(html + " (Till loot level " + ROMAN[LOOT_LEVEL-1] + ": " + (hours > 0 ? hours + "h " : '') +
-                             (minutes > 0 ? minutes + "m " : '') + seconds + "s)");
-
-                time--;
-            }, 1000);
-        });
+        getTimings(profileId).then(ts => process(ts));
     }
 })();
