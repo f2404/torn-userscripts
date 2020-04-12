@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Racing: Show speed
 // @namespace    lugburz.racing.show_speed
-// @version      0.1.2
+// @version      0.1.3
 // @description  Show car's current speed.
 // @author       Lugburz
 // @match        https://www.torn.com/loader.php?sid=racing*
@@ -11,21 +11,34 @@
 
 var period = 1000;
 var last_compl = -1.0;
+var x = 0;
+
+function maybeClear() {
+    if (x != 0 ) {
+        clearInterval(x);
+        last_compl = -1.0;
+        x = 0;
+    }
+}
 
 function showSpeed() {
-    if ($('#racingdetails').find('#speed_mph').size() > 0)
+    if ($('#racingdetails').size() < 1 || $('#racingdetails').find('#speed_mph').size() > 0)
         return;
 
     // save some space
     $('#racingdetails').find('li.pd-name').each(function() {
-        if ($(this).text() == 'Position:') $(this).text('Pos.:');
-        if ($(this).text() == 'Completion:') $(this).text('Compl.:');
+        if ($(this).text() == 'Position:') $(this).text('Pos:');
+        if ($(this).text() == 'Completion:') $(this).text('Compl:');
     });
     $('#racingdetails').append('<li id="speed_mph" class="pd-val"></li>');
 
-    let x = setInterval(function() {
-        if ($('#racingupdatesnew').find('div.track-info').size() < 1)
+    maybeClear();
+
+    x = setInterval(function() {
+        if ($('#racingupdatesnew').find('div.track-info').size() < 1) {
+            maybeClear();
             return;
+        }
 
         let laps = $('#racingupdatesnew').find('div.title-black').text().split(" - ")[1].split(" ")[0];
         let len = $('#racingupdatesnew').find('div.track-info').attr('data-length').replace('mi', '');
