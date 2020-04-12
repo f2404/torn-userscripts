@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Racing: Show speed
 // @namespace    lugburz.racing.show_speed
-// @version      0.1
+// @version      0.1.1
 // @description  Show car's current speed.
 // @author       Lugburz
 // @match        https://www.torn.com/loader.php?sid=racing*
@@ -16,6 +16,11 @@ function showSpeed() {
     if ($('#racingdetails').find('#speed_mph').size() > 0)
         return;
 
+    // save some space
+    $('#racingdetails').find('li.pd-name').each(function() {
+        if ($(this).text() == 'Position:') $(this).text('Pos.:');
+        if ($(this).text() == 'Completion:') $(this).text('Compl.:');
+    });
     $('#racingdetails').append('<li id="speed_mph" class="pd-val"></li>');
 
     let x = setInterval(function() {
