@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Racing: Show speed
 // @namespace    lugburz.racing.show_speed
-// @version      0.1.1
+// @version      0.1.2
 // @description  Show car's current speed.
 // @author       Lugburz
 // @match        https://www.torn.com/loader.php?sid=racing*
@@ -27,11 +27,12 @@ function showSpeed() {
         if ($('#racingupdatesnew').find('div.track-info').size() < 1)
             return;
 
+        let laps = $('#racingupdatesnew').find('div.title-black').text().split(" - ")[1].split(" ")[0];
         let len = $('#racingupdatesnew').find('div.track-info').attr('data-length').replace('mi', '');
         let compl = $('#racingdetails').find('li.pd-completion').text().replace('%', '');
 
         if (last_compl >= 0) {
-            let speed = (compl - last_compl) / 100 * len * 60 * 60 * 1000 / period;
+            let speed = (compl - last_compl) / 100 * laps * len * 60 * 60 * 1000 / period;
             $('#speed_mph').text(speed.toFixed(2) + 'mph');
         }
         last_compl = compl;
