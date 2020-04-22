@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Filter chats
 // @namespace    lugburz.filter_chat
-// @version      0.2.2
+// @version      0.2.3
 // @description  Add filtering by keyword to chats.
 // @author       Lugburz
 // @match        https://www.torn.com/*
@@ -53,7 +53,7 @@ function addChatFilter(box, chat) {
     'use strict';
 
     // Your code here...
-    const chats = ['global', 'trade', 'faction', 'company', 'travel', 'hospital', 'jail'];
+    const chats = ['global', 'trade', 'faction', 'company', 'travel', 'hospital', 'jail', 'new-players'];
     chats.forEach(function(chat) {
         const box = $('#chatRoot').find('div[class^=chat-box_][class*='+chat+'_]');
         $(box).bind('DOMNodeInserted', function() {
