@@ -1,19 +1,65 @@
 // ==UserScript==
 // @name         Torn: Filter chats
 // @namespace    lugburz.filter_chat
-// @version      0.2.3
-// @description  Add filtering by keyword to chats.
+// @version      0.2.4
+// @description  Add filtering by keywords to chats. Use double quotes to apply AND rule and no quotes for OR rule.
 // @author       Lugburz
 // @match        https://www.torn.com/*
 // @grant        GM_setValue
 // @grant        GM_getValue
 // ==/UserScript==
 
+function parse(keyword) {
+    if (keyword == null || keyword == '')
+        return [null, null];
+
+    const ands = keyword.match(/\"[^\""]*\"/g);
+	if (ands != null) {
+		for (let i=0; i<ands.length; i++) {
+			keyword = keyword.replace(ands[i], '');
+		}
+    }
+
+    keyword = keyword.trim();
+    if (keyword == null || keyword == '')
+        return [ands, null];
+
+    const ors = keyword.split(" ");
+
+    return [ands, ors];
+}
+
+function checkAnds(ands, msg) {
+	if (ands != null) {
+		for (let i=0; i<ands.length; i++) {
+            const el = ands[i].replace(/\"/g, '');
+			if (!msg.toLowerCase().includes(el.toLowerCase()))
+                return false;
+		}
+    }
+    return true;
+}
+
+function checkOrs(ors, msg) {
+    if (ors == null)
+        return true;
+
+    for (let i=0; i<ors.length; i++) {
+        if (msg.toLowerCase().includes(ors[i].toLowerCase()))
+            return true;
+    }
+    return false;
+}
+
 function filter(content, keyword) {
+    const p = parse(keyword);
+    const ands = p[0];
+    const ors = p[1];
+
     const msgs = $(content).find('div[class^=message_]');
     $(msgs).each(function() {
         const msg = $(this).text();
-        if (msg.toLowerCase().includes(keyword.toLowerCase()))
+        if (checkAnds(ands, msg) && checkOrs(ors, msg))
             $(this).show();
         else
             $(this).hide();
