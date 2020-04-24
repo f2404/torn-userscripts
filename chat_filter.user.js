@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Torn: Filter chats
 // @namespace    lugburz.filter_chat
-// @version      0.2.4
-// @description  Add filtering by keywords to chats. Use double quotes to apply AND rule and no quotes for OR rule.
+// @version      0.2.5
+// @description  Add filtering by keywords to chats. Use double quotes to apply AND rule and no quotes for OR rule; use ! to apply a NOT rule.
 // @author       Lugburz
 // @match        https://www.torn.com/*
 // @grant        GM_setValue
@@ -11,37 +11,47 @@
 
 function parse(keyword) {
     if (keyword == null || keyword == '')
-        return [null, null];
+        return [null, null, null];
 
     const ands = keyword.match(/\"[^\""]*\"/g);
-	if (ands != null) {
-		for (let i=0; i<ands.length; i++) {
-			keyword = keyword.replace(ands[i], '');
-		}
+    if (ands != null) {
+        for (let i=0; i<ands.length; i++) {
+            keyword = keyword.replace(ands[i], '');
+        }
     }
 
     keyword = keyword.trim();
     if (keyword == null || keyword == '')
-        return [ands, null];
+        return [ands, null, null];
 
-    const ors = keyword.split(" ");
+    let nots = [];
+    let ors = [];
+    const tmp = keyword.split(" ");
+    if (tmp != null) {
+        for (let i=0; i<tmp.length; i++) {
+            if (tmp[i].startsWith('!') && tmp[i].length > 1)
+                nots.push(tmp[i].substring(1));
+            else
+                ors.push(tmp[i]);
+        }
+    }
 
-    return [ands, ors];
+    return [ands, ors, nots];
 }
 
 function checkAnds(ands, msg) {
-	if (ands != null) {
-		for (let i=0; i<ands.length; i++) {
+    if (ands && ands.length) {
+        for (let i=0; i<ands.length; i++) {
             const el = ands[i].replace(/\"/g, '');
-			if (!msg.toLowerCase().includes(el.toLowerCase()))
+            if (!msg.toLowerCase().includes(el.toLowerCase()))
                 return false;
-		}
+        }
     }
     return true;
 }
 
 function checkOrs(ors, msg) {
-    if (ors == null)
+    if (!ors || !ors.length)
         return true;
 
     for (let i=0; i<ors.length; i++) {
@@ -51,15 +61,26 @@ function checkOrs(ors, msg) {
     return false;
 }
 
+function checkNots(nots, msg) {
+    if (nots && nots.length) {
+        for (let i=0; i<nots.length; i++) {
+            if (msg.toLowerCase().includes(nots[i].toLowerCase()))
+                return false;
+        }
+    }
+    return true;
+}
+
 function filter(content, keyword) {
     const p = parse(keyword);
     const ands = p[0];
     const ors = p[1];
+    const nots = p[2];
 
     const msgs = $(content).find('div[class^=message_]');
     $(msgs).each(function() {
         const msg = $(this).text();
-        if (checkAnds(ands, msg) && checkOrs(ors, msg))
+        if (checkAnds(ands, msg) && checkOrs(ors, msg) && checkNots(nots, msg))
             $(this).show();
         else
             $(this).hide();
