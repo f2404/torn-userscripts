@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Bazaar Auto Price
 // @namespace    tos
-// @version      0.7.1
-// @description  description
+// @version      0.7.2
+// @description  Auto set bazaar prices on money field click.
 // @author       tos, Lugburz
 // @match        *.torn.com/bazaar.php*
 // @grant        GM_xmlhttpRequest
@@ -60,37 +60,34 @@ async function lmp(itemID) {
     else return lowest_market_price - 5
 }
 
-const observer_old = new MutationObserver((mutations) => {
-  for (const mutation of mutations) {
-    for (const node of mutation.addedNodes) {
-      if (node.classList && node.classList.contains('input-money-group')) {
-        const li = node.closest('li.clearfix') || node.closest('li[id^=item]')
-        const input = node.querySelector('.input-money[type=text]')
-        if (li) {
-          const itemID = li.querySelector('img').src.split('items/')[1].split('/medium')[0]
-          input.addEventListener('focus', function(e) {
-            if (this.id.includes('price-item')) this.value = ''
-            if (this.value === '') {
-              lmp(itemID).then((price) => {
-                this.value = price
-                this.dispatchEvent(event)
-              })
-            }
-          })
-        }
-      }
+// HACK to simulate input value change
+// https://github.com/facebook/react/issues/11488#issuecomment-347775628
+function reactInputHack(inputjq, value) {
+    // get js object from jquery
+    const input = $(inputjq).get(0);
+
+    let lastValue = 0;
+    input.value = value;
+    let event = new Event('input', { bubbles: true });
+    // hack React15
+    event.simulated = true;
+    // hack React16 内部定义了descriptor拦截value，此处重置状态
+    let tracker = input._valueTracker;
+    if (tracker) {
+        tracker.setValue(lastValue);
     }
-  }
-})
+    input.dispatchEvent(event);
+}
 
 function addOneFocusHandler(elem, itemID) {
     $(elem).on('focus', function(e) {
-        this.value = ''
+        this.value = '';
         if (this.value === '') {
             lmp(itemID).then((price) => {
-                this.value = price
-                this.dispatchEvent(event)
-                if(price) $(elem).off('focus')
+                //this.value = price;
+                reactInputHack(this, price);
+                this.dispatchEvent(event);
+                if(price) $(elem).off('focus');
             });
         }
     });
@@ -122,6 +119,6 @@ const observer = new MutationObserver((mutations) => {
   }
 });
 
-//const wrapper = document.querySelector('#bazaar-page-wrap')
 const wrapper = document.querySelector('#bazaarroot')
 observer.observe(wrapper, { subtree: true, childList: true })
+
