@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Bazaar Auto Price
 // @namespace    tos
-// @version      0.7.2
-// @description  Auto set bazaar prices on money field click.
+// @version      0.7.3
+// @description  Auto set bazaar prices on money input field click.
 // @author       tos, Lugburz
 // @match        *.torn.com/bazaar.php*
 // @grant        GM_xmlhttpRequest
@@ -112,6 +112,14 @@ const observer = new MutationObserver((mutations) => {
                 if (input && img) {
                     const itemID = img.src.split('items/')[1].split('/medium')[0];
                     addOneFocusHandler($(input), itemID);
+
+                    // input amount
+                    const input_amount = $(node).find('div.amount').find('.clear-all[type=text]');
+                    const inv_amount = $(node).find('div.name-wrap').find('span.t-hide').text();
+                    const amount = inv_amount == '' ? 1 : inv_amount.replace('x', '').trim();
+                    $(input_amount).on('focus', function() {
+                        reactInputHack(input_amount, amount);
+                    });
                 }
             }
         }
@@ -121,4 +129,3 @@ const observer = new MutationObserver((mutations) => {
 
 const wrapper = document.querySelector('#bazaarroot')
 observer.observe(wrapper, { subtree: true, childList: true })
-
