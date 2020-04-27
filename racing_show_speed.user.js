@@ -1,12 +1,13 @@
 // ==UserScript==
-// @name         Torn: Racing: Show speed
-// @namespace    lugburz.racing.show_speed
-// @version      0.1.3
-// @description  Show car's current speed.
+// @name         Torn: Racing enhancements
+// @namespace    lugburz.racing_enhancements
+// @version      0.1.4
+// @description  Show car's current speed, precise skill, official race penalty.
 // @author       Lugburz
 // @match        https://www.torn.com/loader.php?sid=racing*
-// @require      https://github.com/f2404/torn-userscripts/raw/master/lib/lugburz_lib.js
-// @grant        none
+// @require      https://github.com/f2404/torn-userscripts/raw/8bbe1e8c2120fe3bfa01b374c5646c8e770c2b27/lib/lugburz_lib.js
+// @grant        GM_setValue
+// @grant        GM_getValue
 // ==/UserScript==
 
 var period = 1000;
@@ -52,15 +53,51 @@ function showSpeed() {
     }, period);
 }
 
-(function() {
-    'use strict';
+function formatDate(date) {
+    return pad(date.getUTCHours(), 2) + ':' + pad(date.getUTCMinutes(), 2) + ':' + pad(date.getUTCSeconds(), 2);
+}
 
-    // Your code here...
-    ajax((page) => {
-        if (page != "loader") return;
-        $("#racingupdatesnew").ready(showSpeed);
-    });
+function showPenalty() {
+    if ($('#racingAdditionalContainer').find('div.msg.right-round').size() > 0) {
+        const penalty = GM_getValue('leavepenalty') * 1000;
+        const now = Date.now();
+        if (penalty > now) {
+            const date = new Date(penalty);
+            $('#racingAdditionalContainer').find('div.msg.right-round').text('You may join an official race at ' + formatDate(date) + '.');
+        }
+    }
+}
 
+function parseRacingData(data) {
+    const skill = data['user']['racinglevel'];
+    if ($('#racingMainContainer').find('div.skill').size() > 0)
+        $('#racingMainContainer').find('div.skill').text(Number(skill).toFixed(4));
+
+    const timeEnded = data['timeData']['timeEnded'];
+    const cooldown = data['timeData']['cooldown'];
+    if ($('#racingupdatesnew').find('div.drivers-list.right').find('div.title-black').size() > 0) {
+        if ($('#raceEnd').size() < 1) {
+            const span = '<span id="raceEnd"><span class=""></span></span>';
+            $('#racingupdatesnew').find('div.drivers-list.right').find('div.title-black').append(span);
+        }
+        const date = new Date((Number(timeEnded) + Number(cooldown)) * 1000);
+        $('#raceEnd').text('. Finish at ' + formatDate(date));
+    }
+
+    const leavepenalty = data['user']['leavepenalty'];
+    GM_setValue('leavepenalty', leavepenalty);
+}
+
+'use strict';
+
+// Your code here...
+ajax((page, xhr) => {
+    if (page != "loader") return;
     $("#racingupdatesnew").ready(showSpeed);
-})();
+    $('#racingAdditionalContainer').ready(showPenalty);
+    try {
+        parseRacingData(JSON.parse(xhr.responseText));
+    } catch (e) {}
+});
 
+$("#racingupdatesnew").ready(showSpeed);
