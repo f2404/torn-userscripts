@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Bazaar Auto Price
 // @namespace    tos
-// @version      0.7.3
+// @version      0.7.4
 // @description  Auto set bazaar prices on money input field click.
 // @author       tos, Lugburz
 // @match        *.torn.com/bazaar.php*
@@ -42,22 +42,8 @@ async function lmp(itemID) {
   if(APIERROR === true) return 'API key error'
   const prices = await torn_api(`market.${itemID}.bazaar`)
   if (prices.error) {APIERROR = true; return 'API key error'}
-  let lowest_market_price = null
-  let SEprices = null
-  for (const market in prices) {
-    for (const lid in prices[market]) {
-      if (lowest_market_price === null) lowest_market_price = prices[market][2].cost
-      else if (prices[market][lid].cost < lowest_market_price) lowest_market_price = prices[market][2].cost
-        if (SEprices === null) SEprices = prices[market][0].cost
-      else if (prices[market][0].cost < SEprices) SEprices = prices[market][0].cost
-    }
-  }
-     if(itemID === '106' || itemID === '329' || itemID === '330' || itemID === '331' || itemID === '283' || itemID === '336' || itemID === '428' || itemID === '588' ||
-        itemID === '240' || itemID === '367' || itemID === '654' || itemID === '332' || itemID === '652' || itemID === '334' || itemID === '653')
-     {
-         return SEprices
-     }
-    else return lowest_market_price - 5
+  const lowest_market_price = prices['bazaar'][0].cost
+  return lowest_market_price - 5
 }
 
 // HACK to simulate input value change
