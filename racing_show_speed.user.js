@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Racing enhancements
 // @namespace    lugburz.racing_enhancements
-// @version      0.1.4
+// @version      0.1.5
 // @description  Show car's current speed, precise skill, official race penalty.
 // @author       Lugburz
 // @match        https://www.torn.com/loader.php?sid=racing*
@@ -58,7 +58,8 @@ function formatDate(date) {
 }
 
 function showPenalty() {
-    if ($('#racingAdditionalContainer').find('div.msg.right-round').size() > 0) {
+    if ($('#racingAdditionalContainer').find('div.msg.right-round').size() > 0 &&
+        $('#racingAdditionalContainer').find('div.msg.right-round').text().trim().startsWith('You have recently left')) {
         const penalty = GM_getValue('leavepenalty') * 1000;
         const now = Date.now();
         if (penalty > now) {
