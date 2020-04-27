@@ -73,17 +73,6 @@ function parseRacingData(data) {
     if ($('#racingMainContainer').find('div.skill').size() > 0)
         $('#racingMainContainer').find('div.skill').text(Number(skill).toFixed(4));
 
-    const timeEnded = data['timeData']['timeEnded'];
-    const cooldown = data['timeData']['cooldown'];
-    if ($('#racingupdatesnew').find('div.drivers-list.right').find('div.title-black').size() > 0) {
-        if ($('#raceEnd').size() < 1) {
-            const span = '<span id="raceEnd"><span class=""></span></span>';
-            $('#racingupdatesnew').find('div.drivers-list.right').find('div.title-black').append(span);
-        }
-        const date = new Date((Number(timeEnded) + Number(cooldown)) * 1000);
-        $('#raceEnd').text('. Finish at ' + formatDate(date));
-    }
-
     const leavepenalty = data['user']['leavepenalty'];
     GM_setValue('leavepenalty', leavepenalty);
 }
