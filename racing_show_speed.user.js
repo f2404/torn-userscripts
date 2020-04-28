@@ -8,6 +8,7 @@
 // @require      https://github.com/f2404/torn-userscripts/raw/8bbe1e8c2120fe3bfa01b374c5646c8e770c2b27/lib/lugburz_lib.js
 // @grant        GM_setValue
 // @grant        GM_getValue
+// @run-at       document-body
 // ==/UserScript==
 
 var period = 1000;
