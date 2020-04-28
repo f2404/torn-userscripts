@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Racing enhancements
 // @namespace    lugburz.racing_enhancements
-// @version      0.1.5
+// @version      0.1.6
 // @description  Show car's current speed, precise skill, official race penalty.
 // @author       Lugburz
 // @match        https://www.torn.com/loader.php?sid=racing*
@@ -28,6 +28,7 @@ function showSpeed() {
 
     // save some space
     $('#racingdetails').find('li.pd-name').each(function() {
+        if ($(this).text() == 'Name:') $(this).hide();
         if ($(this).text() == 'Position:') $(this).text('Pos:');
         if ($(this).text() == 'Completion:') $(this).text('Compl:');
     });
