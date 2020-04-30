@@ -1,19 +1,24 @@
 // ==UserScript==
 // @name         Torn: Racing enhancements
 // @namespace    lugburz.racing_enhancements
-// @version      0.1.6
+// @version      0.1.7
 // @description  Show car's current speed, precise skill, official race penalty.
 // @author       Lugburz
 // @match        https://www.torn.com/loader.php?sid=racing*
 // @require      https://github.com/f2404/torn-userscripts/raw/8bbe1e8c2120fe3bfa01b374c5646c8e770c2b27/lib/lugburz_lib.js
 // @grant        GM_setValue
 // @grant        GM_getValue
+// @grant        GM_notification
 // @run-at       document-body
 // ==/UserScript==
+
+// Whether notifications are allowed.
+var NOTIFICATIONS = true;
 
 var period = 1000;
 var last_compl = -1.0;
 var x = 0;
+var penaltyNotif = 0;
 
 function maybeClear() {
     if (x != 0 ) {
@@ -71,13 +76,35 @@ function showPenalty() {
     }
 }
 
+function updateSkill(level) {
+    const skill = Number(level).toFixed(4);
+    const prev = GM_getValue('racinglevel');
+
+    if (prev !== "undefined" && typeof prev !== "undefined" && level > prev) {
+        GM_notification("Your racing skill has increased by " + Number(level - prev).toFixed(4) + "!", "Torn: Racing enhancements");
+    }
+    GM_setValue('racinglevel', level);
+
+    if ($('#racingMainContainer').find('div.skill').size() > 0) {
+        $('#racingMainContainer').find('div.skill').text(skill);
+    }
+}
+
 function parseRacingData(data) {
-    const skill = data['user']['racinglevel'];
-    if ($('#racingMainContainer').find('div.skill').size() > 0)
-        $('#racingMainContainer').find('div.skill').text(Number(skill).toFixed(4));
+    const my_name = $("#sidebarroot").find("a[class^='menu-value']").html();
+
+    updateSkill(data['user']['racinglevel']);
 
     const leavepenalty = data['user']['leavepenalty'];
     GM_setValue('leavepenalty', leavepenalty);
+
+    if (penaltyNotif) clearTimeout(penaltyNotif);
+    const penaltyLeft = leavepenalty * 1000 - Date.now();
+    if (penaltyLeft > 0) {
+        penaltyNotif = setTimeout(function() {
+            GM_notification("You may join an official race now.", "Torn: Racing enhancements");
+        }, penaltyLeft);
+    }
 }
 
 'use strict';
@@ -93,3 +120,4 @@ ajax((page, xhr) => {
 });
 
 $("#racingupdatesnew").ready(showSpeed);
+$('#racingAdditionalContainer').ready(showPenalty);
