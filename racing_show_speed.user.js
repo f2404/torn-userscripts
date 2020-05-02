@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Racing enhancements
 // @namespace    lugburz.racing_enhancements
-// @version      0.1.7
+// @version      0.1.8
 // @description  Show car's current speed, precise skill, official race penalty.
 // @author       Lugburz
 // @match        https://www.torn.com/loader.php?sid=racing*
@@ -80,7 +80,7 @@ function updateSkill(level) {
     const skill = Number(level).toFixed(4);
     const prev = GM_getValue('racinglevel');
 
-    if (prev !== "undefined" && typeof prev !== "undefined" && level > prev) {
+    if (NOTIFICATIONS && prev !== "undefined" && typeof prev !== "undefined" && level > prev) {
         GM_notification("Your racing skill has increased by " + Number(level - prev).toFixed(4) + "!", "Torn: Racing enhancements");
     }
     GM_setValue('racinglevel', level);
@@ -100,7 +100,7 @@ function parseRacingData(data) {
 
     if (penaltyNotif) clearTimeout(penaltyNotif);
     const penaltyLeft = leavepenalty * 1000 - Date.now();
-    if (penaltyLeft > 0) {
+    if (NOTIFICATIONS && penaltyLeft > 0) {
         penaltyNotif = setTimeout(function() {
             GM_notification("You may join an official race now.", "Torn: Racing enhancements");
         }, penaltyLeft);
