@@ -6,7 +6,7 @@
 // @author       Lugburz
 // @match        https://www.torn.com/loader.php?sid=racing*
 // @require      https://github.com/f2404/torn-userscripts/raw/8bbe1e8c2120fe3bfa01b374c5646c8e770c2b27/lib/lugburz_lib.js
-// updateURL     https://github.com/f2404/torn-userscripts/raw/master/racing_log_scraper.user.js
+// @updateURL    https://github.com/f2404/torn-userscripts/raw/master/racing_log_scraper.user.js
 // @connect      script.google.com
 // @connect      script.googleusercontent.com
 // @grant        GM_setValue
