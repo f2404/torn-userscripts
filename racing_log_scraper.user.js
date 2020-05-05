@@ -29,7 +29,7 @@ function stringToHash(string) {
 }
 
 function parseLog(json) {
-    if ($('#racingupdatesnew').find('div.title-black').first().text().trim() != 'Race info' || $('#infoSpot').text().trim() != 'Race finished') {
+    if ($('#racingupdatesnew').find('div.title-black').first().text().trim() != 'Race info' || json.timeData.status != 3) {
         return;
     }
 
