@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Racing: Log scraper
 // @namespace    lugburz.racing_log_scraper
-// @version      0.1.0
+// @version      0.1.1
 // @description  Collect anonymous racing stats data.
 // @author       Lugburz
 // @match        https://www.torn.com/loader.php?sid=racing*
@@ -29,7 +29,7 @@ function stringToHash(string) {
 }
 
 function parseLog(json) {
-    if ($('#racingupdatesnew').find('div.title-black').first().text().trim() != 'Race info') {
+    if ($('#racingupdatesnew').find('div.title-black').first().text().trim() != 'Race info' || $('#infoSpot').text().trim() != 'Race finished') {
         return;
     }
 
