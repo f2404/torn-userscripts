@@ -1,11 +1,12 @@
 // ==UserScript==
 // @name         Torn: Racing enhancements
 // @namespace    lugburz.racing_enhancements
-// @version      0.1.8
+// @version      0.2.0
 // @description  Show car's current speed, precise skill, official race penalty.
 // @author       Lugburz
 // @match        https://www.torn.com/loader.php?sid=racing*
-// @require      https://github.com/f2404/torn-userscripts/raw/8bbe1e8c2120fe3bfa01b374c5646c8e770c2b27/lib/lugburz_lib.js
+// @require      https://github.com/f2404/torn-userscripts/raw/30647929a55ccec24756d3b8a2598713db619f64/lib/lugburz_lib.js
+// @updateURL    https://github.com/f2404/torn-userscripts/raw/master/racing_show_speed.user.js
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @grant        GM_notification
@@ -14,6 +15,9 @@
 
 // Whether notifications are allowed.
 var NOTIFICATIONS = true;
+
+// Whether to show race result as soon as a race starts.
+var SHOW_RESULTS = false;
 
 var period = 1000;
 var last_compl = -1.0;
@@ -60,10 +64,6 @@ function showSpeed() {
     }, period);
 }
 
-function formatDate(date) {
-    return pad(date.getUTCHours(), 2) + ':' + pad(date.getUTCMinutes(), 2) + ':' + pad(date.getUTCSeconds(), 2);
-}
-
 function showPenalty() {
     if ($('#racingAdditionalContainer').find('div.msg.right-round').size() > 0 &&
         $('#racingAdditionalContainer').find('div.msg.right-round').text().trim().startsWith('You have recently left')) {
@@ -71,7 +71,7 @@ function showPenalty() {
         const now = Date.now();
         if (penalty > now) {
             const date = new Date(penalty);
-            $('#racingAdditionalContainer').find('div.msg.right-round').text('You may join an official race at ' + formatDate(date) + '.');
+            $('#racingAdditionalContainer').find('div.msg.right-round').text('You may join an official race at ' + formatTime(date) + '.');
         }
     }
 }
@@ -91,8 +91,6 @@ function updateSkill(level) {
 }
 
 function parseRacingData(data) {
-    const my_name = $("#sidebarroot").find("a[class^='menu-value']").html();
-
     updateSkill(data['user']['racinglevel']);
 
     const leavepenalty = data['user']['leavepenalty'];
@@ -104,6 +102,29 @@ function parseRacingData(data) {
         penaltyNotif = setTimeout(function() {
             GM_notification("You may join an official race now.", "Torn: Racing enhancements");
         }, penaltyLeft);
+    }
+
+    if (!SHOW_RESULTS)
+        return;
+
+    // show race results
+    if (data.timeData.status >= 3) {
+        const carsData = data.raceData.cars;
+        for (let playername in carsData) {
+            const intervals = decode64(carsData[playername]).split(',');
+            let raceTime = 0;
+            for (let i in intervals) {
+                raceTime += 1 * intervals[i];
+            }
+
+            $('#leaderBoard').children('li').each(function() {
+                const name = $(this).find('li.name').text().trim();
+                if (name == playername) {
+                    $(this).find('li.name').html($(this).find('li.name').html().replace(name, name + ' ' + formatTimeMsec(raceTime * 1000)));
+                    return false;
+                }
+            });
+        }
     }
 }
 
