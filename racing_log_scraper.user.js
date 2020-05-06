@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Racing: Log scraper
 // @namespace    lugburz.racing_log_scraper
-// @version      0.1.1
+// @version      0.1.2
 // @description  Collect anonymous racing stats data.
 // @author       Lugburz
 // @match        https://www.torn.com/loader.php?sid=racing*
@@ -28,6 +28,23 @@ function stringToHash(string) {
     return hash;
 }
 
+function anonymizeCarsData(data) {
+    const my_name = $("#sidebarroot").find("a[class^='menu-value']").html();
+
+    let i = 1;
+    for (let playername in data) {
+        if (playername == my_name) {
+            data['racer0'] = data[playername]; // always racer0
+        } else {
+            data['racer'+i] = data[playername];
+            i++;
+        }
+        delete data[playername];
+    }
+
+    return data;
+}
+
 function parseLog(json) {
     if ($('#racingupdatesnew').find('div.title-black').first().text().trim() != 'Race info' || json.timeData.status != 3) {
         return;
@@ -45,6 +62,9 @@ function parseLog(json) {
     const length = $('#racingupdatesnew').find('div.track-info').attr('data-length').trim().replace('mi', '');
     const wait_time = json.logData.waitTime;
     const user_id = json.user.userID;
+
+    const intervals_length = json.raceData.trackData.intervals.length;
+    const carsdata = JSON.stringify(anonymizeCarsData(json.raceData.cars));
 
     let time, car, place;
     const my_name = $("#sidebarroot").find("a[class^='menu-value']").html();
@@ -64,12 +84,14 @@ function parseLog(json) {
 
     const skill_before = GM_getValue('rs_cur_level');
     const skill_after = Number(json.user.racinglevel).toFixed(4);
-    GM_setValue('rs_prev_level', skill_before);
-    GM_setValue('rs_cur_level', skill_after);
+    if (skill_after > skill_before) {
+        GM_setValue('rs_prev_level', skill_before);
+        GM_setValue('rs_cur_level', skill_after);
+    }
 
     console.log('Uploading log ' + id + '...');
     const data = $.param({id: stringToHash(id+user_id), track: track, length: length, laps: laps, type: type, wait_time: wait_time, car: car, time: time, place: place,
-                          participants: participants, skill_before: skill_before, skill_after: skill_after});
+                          participants: participants, skill_before: skill_before, skill_after: skill_after, intervals_length: intervals_length, carsdata: carsdata});
     GM_xmlhttpRequest({
         method: "POST",
         url: URL,
