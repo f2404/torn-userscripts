@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Racing: Log scraper
 // @namespace    lugburz.racing_log_scraper
-// @version      0.1.2
+// @version      0.1.3
 // @description  Collect anonymous racing stats data.
 // @author       Lugburz
 // @match        https://www.torn.com/loader.php?sid=racing*
@@ -84,10 +84,8 @@ function parseLog(json) {
 
     const skill_before = GM_getValue('rs_cur_level');
     const skill_after = Number(json.user.racinglevel).toFixed(4);
-    if (skill_after > skill_before) {
-        GM_setValue('rs_prev_level', skill_before);
-        GM_setValue('rs_cur_level', skill_after);
-    }
+    GM_setValue('rs_prev_level', skill_before);
+    GM_setValue('rs_cur_level', skill_after);
 
     console.log('Uploading log ' + id + '...');
     const data = $.param({id: stringToHash(id+user_id), track: track, length: length, laps: laps, type: type, wait_time: wait_time, car: car, time: time, place: place,
