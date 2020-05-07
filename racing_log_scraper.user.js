@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Racing: Log scraper
 // @namespace    lugburz.racing_log_scraper
-// @version      0.1.3
+// @version      0.1.4
 // @description  Collect anonymous racing stats data.
 // @author       Lugburz
 // @match        https://www.torn.com/loader.php?sid=racing*
@@ -15,6 +15,8 @@
 // @grant        GM_xmlhttpRequest
 // @run-at       document-body
 // ==/UserScript==
+
+const SEND_USER_ID = true;
 
 // Convert to 32bit integer
 function stringToHash(string) {
@@ -88,8 +90,12 @@ function parseLog(json) {
     GM_setValue('rs_cur_level', skill_after);
 
     console.log('Uploading log ' + id + '...');
-    const data = $.param({id: stringToHash(id+user_id), track: track, length: length, laps: laps, type: type, wait_time: wait_time, car: car, time: time, place: place,
-                          participants: participants, skill_before: skill_before, skill_after: skill_after, intervals_length: intervals_length, carsdata: carsdata});
+    let data = $.param({id: stringToHash(id+user_id), track: track, length: length, laps: laps, type: type, wait_time: wait_time, car: car, time: time, place: place,
+                        participants: participants, skill_before: skill_before, skill_after: skill_after, intervals_length: intervals_length, carsdata: carsdata});
+    if (SEND_USER_ID) {
+        data += '&user_id=' + user_id;
+    }
+
     GM_xmlhttpRequest({
         method: "POST",
         url: URL,
