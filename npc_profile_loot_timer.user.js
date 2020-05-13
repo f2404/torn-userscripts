@@ -1,17 +1,18 @@
 // ==UserScript==
 // @name         Torn: Loot timer on NPC profile
 // @namespace    lugburz.show_timer_on_npc_profile
-// @version      0.1.2
+// @version      0.1.3
 // @description  Add a countdown timer to desired loot level on the NPC profile page.
 // @author       Lugburz
 // @match        https://www.torn.com/profiles.php*
+// @updateURL    https://github.com/f2404/torn-userscripts/raw/master/npc_profile_loot_timer.user.js
 // @grant        GM_xmlhttpRequest
 // ==/UserScript==
 
 // Desired loot lebel to track (4 by default)
 const LOOT_LEVEL = 4;
 
-const IDs = [4, 10, 15]; // Duke, Scrooge, Leslie
+const IDs = [4, 10, 15, 19]; // Duke, Scrooge, Leslie, Jimmy
 const ROMAN = ['I', 'II', 'III', 'IV', 'V'];
 
 const yata_api = async () => {
@@ -38,14 +39,14 @@ const yata_api = async () => {
 }
 
 async function getTimings(id) {
-    const timings = await yata_api();
-    if (timings.error)
+    const data = await yata_api();
+    if (data.error)
         return 'YATA API error';
     // no data on the id
-    if (!timings[id])
+    if (!data[id])
         return -1;
     // time till desired loot level
-    return timings[id]["timings"][LOOT_LEVEL]["ts"];
+    return data[id].timings[LOOT_LEVEL].ts;
 }
 
 function process(ts) {
@@ -66,7 +67,7 @@ function process(ts) {
         // Time calculations for days, hours, minutes and seconds
         const hours = Math.floor((left % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         const minutes = Math.floor((left % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((left  % (1000 * 60)) / 1000);
+        const seconds = Math.floor((left % (1000 * 60)) / 1000);
 
         // Display the result
         const span = $('#profileroot').find('div.profile-status').find('div.profile-container').find('div.description').find('span.sub-desc');
