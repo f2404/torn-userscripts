@@ -1,13 +1,14 @@
 // ==UserScript==
 // @name         Torn: Loot timer on NPC profile
 // @namespace    lugburz.show_timer_on_npc_profile
-// @version      0.2.0
+// @version      0.2.1
 // @description  Add a countdown timer to desired loot level on the NPC profile page and the sidebar.
 // @author       Lugburz
 // @match        https://www.torn.com/*
 // @require      https://github.com/f2404/torn-userscripts/raw/2be3e35359f9205eccf9c75ba241facf75a0f7d9/lib/lugburz_lib.js
 // @updateURL    https://github.com/f2404/torn-userscripts/raw/master/npc_profile_loot_timer.user.js
 // @grant        GM_xmlhttpRequest
+// @grant        GM_addStyle
 // ==/UserScript==
 
 // Desired loot lebel to track (4 by default)
@@ -16,7 +17,29 @@ const LOOT_LEVEL = 4;
 // Whether or not to show timer in sidebar
 const SIDEBAR_TIMERS = true;
 
+// Whether or not to change the timer color when it's close to running out
+const CHANGE_COLOR = true;
 
+
+
+GM_addStyle(`
+.timers-div {
+  background: #f2f2f2;
+  line-height: 16px;
+  padding: 8px 10px 0;
+  margin: 1px 0;
+  border-bottom-right-radius: 5px;
+  border-top-right-radius: 5px;
+  cursor: default;
+  overflow: hidden;
+  border-bottom: 1px solid #fff;
+}
+.orange-timer {
+  color: orange;
+}
+.red-timer {
+  color: red;
+}`);
 
 const IDS = [4, 10, 15, 19]; // Duke, Scrooge, Leslie, Jimmy
 const NAMES = ['Duke', 'Scrooge', 'Leslie', 'Jimmy'];
@@ -98,14 +121,14 @@ function addNpcTimers(data) {
     }
 
     if ($('#sidebarNpcTimers').size() < 1) {
-        let div = '<hr class="delimiter___neME6"><div id="sidebarNpcTimers"><p style="line-height: 20px; text-decoration: none;"><span style="font-weight: 700;">NPC Timers</span></p>';
+        let div = '<hr class="delimiter___neME6"><div id="sidebarNpcTimers"><span style="font-weight: 700;">NPC Timers</span>';
         for (let i = 0; i < IDS.length; i++) {
-            div += '<p style="line-height: 20px; text-decoration: none;" id="npcTimer' + IDS[i] + '"><a class="t-blue href desc" style="display:inline-block; width: 52px;" href="/profiles.php?XID=' +
+            div += '<p style="line-height: 20px; text-decoration: none;" id="npcTimer' + IDS[i] + '"><a class="t-blue href desc" style="display:inline-block; width: 52px;" href="/loader.php?sid=attack&user2ID=' +
                    IDS[i] + '">' + NAMES[i] + ': </a><span></span></p>';
         }
         div += '</div>';
         $('#sidebar').find('div[class^=toggle-content__]').find('div[class^=content___]').append(div);
-        //$(div).insertBefore($('#sidebar').find('hr[class^=delimiter__]').first());
+        //$(div).insertBefore($('#sidebar').find('h2[class^=header__]').eq(1)); // second header
     }
 
     for (let i = 0; i < IDS.length; i++) {
@@ -128,6 +151,17 @@ function addNpcTimers(data) {
                 // Display the result
                 const span = $(pId).find('span');
                 $(span).text(formatTimeSecWithLetters(left));
+
+                if (CHANGE_COLOR) {
+                    if (left < 5 * 60 * 1000) { // 5 minutes
+                        $(span).addClass('red-timer');
+                    } else if (left < 10 * 60 * 1000) { // 10 minutes
+                        $(span).addClass('orange-timer');
+                    } else {
+                        $(span).removeClass('orange-timer');
+                        $(span).removeClass('red-timer');
+                    }
+                }
             }, 1000);
         } else {
             $(pId).hide();
