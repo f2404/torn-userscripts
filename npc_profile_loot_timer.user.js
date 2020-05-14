@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Torn: Loot timer on NPC profile
 // @namespace    lugburz.show_timer_on_npc_profile
-// @version      0.2.2
-// @description  Add a countdown timer to desired loot level on the NPC profile page and the sidebar.
+// @version      0.2.3
+// @description  Add a countdown timer to desired loot level on the NPC profile page as well as on the sidebar and the topbar (optionally).
 // @author       Lugburz
 // @match        https://www.torn.com/*
 // @require      https://github.com/f2404/torn-userscripts/raw/2be3e35359f9205eccf9c75ba241facf75a0f7d9/lib/lugburz_lib.js
@@ -18,6 +18,9 @@ const LOOT_LEVEL = 4;
 
 // Whether or not to show timer in sidebar
 const SIDEBAR_TIMERS = true;
+
+// Whether or not to show timer in topbar
+const TOPBAR_TIMERS = true;
 
 // Whether or not to change the timer color when it's close to running out
 const CHANGE_COLOR = true;
@@ -148,9 +151,22 @@ function hideSidebarTimers(hide) {
         for (let i = 0; i < IDS.length; i++) {
             const id = IDS[i];
             const pId = '#npcTimer' + id;
-            $(pId).show();
+            if (!$(pId).attr('notavail')) $(pId).show();
         }
         $('#showHideTimers').text('[hide]');
+    }
+}
+
+function maybeChangeColors(span, left) {
+    if (CHANGE_COLOR) {
+        if (left < 5 * 60 * 1000) { // 5 minutes
+            $(span).addClass('red-timer');
+        } else if (left < 10 * 60 * 1000) { // 10 minutes
+            $(span).addClass('orange-timer');
+        } else {
+            $(span).removeClass('orange-timer');
+            $(span).removeClass('red-timer');
+        }
     }
 }
 
@@ -184,7 +200,7 @@ function addNpcTimers(data) {
         return;
     }
 
-    if ($('#sidebarNpcTimers').size() < 1) {
+    if (SIDEBAR_TIMERS && $('#sidebarNpcTimers').size() < 1) {
         let div = '<hr class="delimiter___neME6"><div id="sidebarNpcTimers"><span style="font-weight: 700;">NPC Timers</span><a id="showHideTimers" class="show-hide">[hide]</a>';
         for (let i = 0; i < IDS.length; i++) {
             div += '<p style="line-height: 20px; text-decoration: none;" id="npcTimer' + IDS[i] + '"><a class="t-blue href desc" style="display:inline-block; width: 52px;" href="/loader.php?sid=attack&user2ID=' +
@@ -200,12 +216,25 @@ function addNpcTimers(data) {
         });
     }
 
-    const hide = GM_getValue('hideSidebarTimers');
-    hideSidebarTimers(hide);
+    if (TOPBAR_TIMERS && $('#topbarNpcTimers').size() < 1) {
+        let div = '<div id="topbarNpcTimers" style="text-align: center;"><span style="font-weight: 700;">NPC Timers:</span>';
+        for (let i = 0; i < IDS.length; i++) {
+            div += '<span style="line-height: 20px; text-decoration: none;" id="npcTimerTop' + IDS[i] + '"><a class="t-blue href desc" style="display:inline-block; width: 52px;" href="/loader.php?sid=attack&user2ID=' +
+                   IDS[i] + '">' + NAMES[i] + ': </a><span></span></span>';
+        }
+        div += '</div>';
+        $('div.header-wrapper-bottom').prepend(div);
+    }
+
+    if (SIDEBAR_TIMERS) {
+        const hide = GM_getValue('hideSidebarTimers');
+        hideSidebarTimers(hide);
+    }
 
     for (let i = 0; i < IDS.length; i++) {
         const id = IDS[i];
         const pId = '#npcTimer' + id;
+        const spanId = '#npcTimerTop' + id;
         if (data[id]) {
             const name = NAMES[i];
             const ts = data[id].timings[LOOT_LEVEL].ts;
@@ -220,23 +249,25 @@ function addNpcTimers(data) {
                     return;
                 }
 
-                // Display the result
-                const span = $(pId).find('span');
-                $(span).text(formatTimeSecWithLetters(left));
-
-                if (CHANGE_COLOR) {
-                    if (left < 5 * 60 * 1000) { // 5 minutes
-                        $(span).addClass('red-timer');
-                    } else if (left < 10 * 60 * 1000) { // 10 minutes
-                        $(span).addClass('orange-timer');
-                    } else {
-                        $(span).removeClass('orange-timer');
-                        $(span).removeClass('red-timer');
-                    }
+                // Display the results
+                if (SIDEBAR_TIMERS) {
+                    $(pId).attr('notavail', '');
+                    const span = $(pId).find('span');
+                    $(span).text(formatTimeSecWithLetters(left));
+                    maybeChangeColors(span, left);
+                }
+                if (TOPBAR_TIMERS) {
+                    $(spanId).attr('notavail', '');
+                    const span = $(spanId).find('span');
+                    $(span).text(formatTimeSecWithLetters(left));
+                    maybeChangeColors(span, left);
                 }
             }, 1000);
         } else {
+            $(pId).attr('notavail', 1);
             $(pId).hide();
+            $(spanId).attr('notavail', 1);
+            $(spanId).hide();
         }
     }
 }
@@ -251,7 +282,7 @@ function addNpcTimers(data) {
             getTimings(profileId).then(ts => process(ts));
         }
     }
-    if (SIDEBAR_TIMERS && $('#sidebar').size() > 0) {
+    if (SIDEBAR_TIMERS && $('#sidebar').size() > 0 || TOPBAR_TIMERS && $('div.header-wrapper-bottom').size() > 0) {
         getAllTimings().then(data => addNpcTimers(data));
     }
 })();
