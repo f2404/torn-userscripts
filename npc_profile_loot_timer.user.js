@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Loot timer on NPC profile
 // @namespace    lugburz.show_timer_on_npc_profile
-// @version      0.2.1
+// @version      0.2.2
 // @description  Add a countdown timer to desired loot level on the NPC profile page and the sidebar.
 // @author       Lugburz
 // @match        https://www.torn.com/*
@@ -9,9 +9,11 @@
 // @updateURL    https://github.com/f2404/torn-userscripts/raw/master/npc_profile_loot_timer.user.js
 // @grant        GM_xmlhttpRequest
 // @grant        GM_addStyle
+// @grant        GM_setValue
+// @grant        GM_getValue
 // ==/UserScript==
 
-// Desired loot lebel to track (4 by default)
+// Desired loot level to track (4 by default)
 const LOOT_LEVEL = 4;
 
 // Whether or not to show timer in sidebar
@@ -39,6 +41,15 @@ GM_addStyle(`
 }
 .red-timer {
   color: red;
+}
+.show-hide {
+  color: #069;
+  text-decoration: none;
+  cursor: pointer;
+  float: right;
+  -webkit-transition: color .2s ease;
+  -o-transition: color .2s ease;
+  transition: color .2s ease;
 }`);
 
 const IDS = [4, 10, 15, 19]; // Duke, Scrooge, Leslie, Jimmy
@@ -68,32 +79,85 @@ const yata_api = async () => {
   })
 }
 
+function isCachedDataValid(id = '') {
+    const now = new Date().getTime();
+    const str_data = GM_getValue('cached_data');
+    let data = '';
+    try {
+        data = JSON.parse(str_data);
+    } catch (e) {
+        return false;
+    }
+
+    if (id && (!data[id] || data[id].timings[LOOT_LEVEL].ts * 1000 < now)) {
+        return false;
+    } else if (!id) {
+        for (let id in data) {
+            if (data[id].timings[LOOT_LEVEL].ts * 1000 < now) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
 async function getTimings(id) {
-    const data = await yata_api();
-    if (data.error) {
+    if (!isCachedDataValid(id)) {
+        console.log('Calling YATA id=' + id);
+        const data = await yata_api();
+        GM_setValue('cached_data', JSON.stringify(data));
+    }
+
+    const cached_data = JSON.parse(GM_getValue('cached_data'));
+    if (cached_data.error) {
         console.log('YATA API error');
         return -1;
     }
     // no data on the id
-    if (!data[id]) {
+    if (!cached_data[id]) {
         return -1;
     }
     // time till desired loot level
-    return data[id].timings[LOOT_LEVEL].ts;
+    return cached_data[id].timings[LOOT_LEVEL].ts;
 }
 
 async function getAllTimings() {
-    const data = await yata_api();
-    if (data.error) {
+    if (!isCachedDataValid()) {
+        console.log('Calling YATA');
+        const data = await yata_api();
+        GM_setValue('cached_data', JSON.stringify(data));
+    }
+
+    const cached_data = JSON.parse(GM_getValue('cached_data'));
+    if (cached_data.error) {
         console.log('YATA API error');
         return '';
     }
-    return data;
+    return cached_data;
+}
+
+function hideSidebarTimers(hide) {
+    if (hide) {
+        for (let i = 0; i < IDS.length; i++) {
+            const id = IDS[i];
+            const pId = '#npcTimer' + id;
+            $(pId).hide();
+        }
+        $('#showHideTimers').text('[show]');
+    } else {
+        for (let i = 0; i < IDS.length; i++) {
+            const id = IDS[i];
+            const pId = '#npcTimer' + id;
+            $(pId).show();
+        }
+        $('#showHideTimers').text('[hide]');
+    }
 }
 
 function process(ts) {
-    if (ts < 0)
+    if (ts < 0) {
         return;
+    }
 
     // ts is s, Date is ms
     const due = new Date(ts * 1000);
@@ -121,7 +185,7 @@ function addNpcTimers(data) {
     }
 
     if ($('#sidebarNpcTimers').size() < 1) {
-        let div = '<hr class="delimiter___neME6"><div id="sidebarNpcTimers"><span style="font-weight: 700;">NPC Timers</span>';
+        let div = '<hr class="delimiter___neME6"><div id="sidebarNpcTimers"><span style="font-weight: 700;">NPC Timers</span><a id="showHideTimers" class="show-hide">[hide]</a>';
         for (let i = 0; i < IDS.length; i++) {
             div += '<p style="line-height: 20px; text-decoration: none;" id="npcTimer' + IDS[i] + '"><a class="t-blue href desc" style="display:inline-block; width: 52px;" href="/loader.php?sid=attack&user2ID=' +
                    IDS[i] + '">' + NAMES[i] + ': </a><span></span></p>';
@@ -129,7 +193,15 @@ function addNpcTimers(data) {
         div += '</div>';
         $('#sidebar').find('div[class^=toggle-content__]').find('div[class^=content___]').append(div);
         //$(div).insertBefore($('#sidebar').find('h2[class^=header__]').eq(1)); // second header
+        $('#showHideTimers').on('click', function() {
+            const hide = $('#showHideTimers').text() == '[hide]';
+            GM_setValue('hideSidebarTimers', hide);
+            hideSidebarTimers(hide);
+        });
     }
+
+    const hide = GM_getValue('hideSidebarTimers');
+    hideSidebarTimers(hide);
 
     for (let i = 0; i < IDS.length; i++) {
         const id = IDS[i];
