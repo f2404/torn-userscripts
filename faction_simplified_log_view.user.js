@@ -1,16 +1,17 @@
 // ==UserScript==
 // @name         Torn: Faction: Simplified log view
 // @namespace    lugburz.faction.simplified_log_view
-// @version      0.2
+// @version      0.2.1
 // @description  Group similar messages in the faction armory log and provide a summary ("used x items").
 // @author       Lugburz
 // @match        https://www.torn.com/factions.php?step=your*
-// @require      https://greasyfork.org/scripts/390917-dkk-torn-utilities/code/DKK%20Torn%20Utilities.js?version=744690
+// @require      https://github.com/f2404/torn-userscripts/raw/master/lib/lugburz_lib.js
+// @updateURL    https://github.com/f2404/torn-userscripts/raw/master/faction_simplified_log_view.user.js
 // @grant        none
 // ==/UserScript==
 
-var armory_used_text = "one of the faction's";
-var armory_deposited_text = "deposited 1 x";
+const armory_used_text = "one of the faction's";
+const armory_deposited_text = "deposited 1 x";
 
 function maybe_update_row(row, n, from_time, to_time, to_date, msg_html) {
     if (msg_html.includes(armory_used_text)) {
@@ -31,23 +32,23 @@ function maybe_update_row(row, n, from_time, to_time, to_date, msg_html) {
 }
 
 function simplify() {
-    var n = 0
-    var msg_html = ""
-    var from_date = ""
-    var to_date = ""
-    var from_time = ""
-    var to_time = ""
-    var row = ""
+    let n = 0;
+    let msg_html = "";
+    let from_date = "";
+    let to_date = "";
+    let from_time = "";
+    let to_time = "";
+    let row = "";
 
-    var entries = $("#tab4-4").find("li");
+    const entries = $("#tab4-4").find("li");
     if (entries.length < 2) {
         return;
     }
 
     entries.each(function() {
-        var time = $(this).find("span")[1];
-        var date = $(this).find("span")[2];
-        var info = $(this).find("span.info");
+        const time = $(this).find("span")[1];
+        const date = $(this).find("span")[2];
+        const info = $(this).find("span.info");
 
         if ($(this).find(info).html().localeCompare(msg_html) == 0) {
             from_time = $(this).find("span").find(time).text();
@@ -76,11 +77,10 @@ function simplify() {
     'use strict';
 
     // Your code here...
-    ajax((page, json, uri) => {
-        if (page != "factions" || !json) return;
+    ajax((page) => {
+        if (page != "factions") return;
         $("#tab4-4").ready(simplify);
     });
 
     $("#tab4-4").ready(simplify);
 })();
-
