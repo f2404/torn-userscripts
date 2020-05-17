@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Faction: Show OC due date
 // @namespace    lugburz.faction.show_oc_due_date
-// @version      0.3.6
+// @version      0.3.7
 // @description  Show when OC's are due, in addition to time left that Torn shows.
 // @author       Lugburz
 // @match        https://www.torn.com/factions.php?step=your*
@@ -37,9 +37,9 @@ function format_date(d) {
 
 function update() {
     const avail = $("div.begin-wrap").find("ul.crimes-list").find("li.item-wrap").first().find("ul.plans-list").children("li").size();
-    if (avail > 0) {
+    if (avail > 0 && $("#membersAvail").size() < 1) {
         const msg = avail == 1 ? '1 member is' : `${avail} members are`;
-        const div = `<div class="cont-gray10 cont-toggle" style="border-radius: 5px;">${msg} available.</div>`;
+        const div = `<div id="membersAvail" class="cont-gray10 cont-toggle" style="border-radius: 5px;">${msg} available.</div>`;
         $(div).insertBefore($("div.faction-crimes-wrap").first());
     }
 
