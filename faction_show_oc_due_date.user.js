@@ -1,22 +1,23 @@
 // ==UserScript==
 // @name         Torn: Faction: Show OC due date
 // @namespace    lugburz.faction.show_oc_due_date
-// @version      0.3.5
+// @version      0.3.6
 // @description  Show when OC's are due, in addition to time left that Torn shows.
 // @author       Lugburz
 // @match        https://www.torn.com/factions.php?step=your*
 // @require      https://github.com/f2404/torn-userscripts/raw/master/lib/lugburz_lib.js
+// @updateURL    https://github.com/f2404/torn-userscripts/raw/master/faction_show_oc_due_date.user.js
 // @grant        none
 // ==/UserScript==
 
 // Whether to use Torn time (TCT) or local time
-var USE_TCT = false
+const USE_TCT = false;
 
 // Whether to replace the text in the "Status" column or append to it
-var REPLACE = false
+const REPLACE = false;
 
 // Whether to highlight your team in the OC list
-var HIGHLIGHT = true
+const HIGHLIGHT = true;
 
 
 
@@ -26,28 +27,35 @@ function pad(num, size) {
 
 function format_date(d) {
     if (USE_TCT) {
-        let m = d.getUTCMonth() + 1;
+        const m = d.getUTCMonth() + 1;
         return pad(d.getUTCHours(), 2) + ":" + pad(d.getUTCMinutes(), 2) + " " + pad(d.getUTCDate(), 2) + "/" + pad(m, 2) + " TCT";
     }
 
-    let options = {day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'};
+    const options = {day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'};
     return d.toLocaleDateString(undefined, options);
 }
 
 function update() {
+    const avail = $("div.begin-wrap").find("ul.crimes-list").find("li.item-wrap").first().find("ul.plans-list").children("li").size();
+    if (avail > 0) {
+        const msg = avail == 1 ? '1 member is' : `${avail} members are`;
+        const div = `<div class="cont-gray10 cont-toggle" style="border-radius: 5px;">${msg} available.</div>`;
+        $(div).insertBefore($("div.faction-crimes-wrap").first());
+    }
+
     let my_name = "";
     if (HIGHLIGHT) {
         my_name = $("#sidebarroot").find("a[class^='menu-value']").html();
     }
 
-    $(".crimes-list > li").each(function(index) {
-        let status = $(this).find(".status");
+    $("ul.crimes-list > li").each(function() {
+        const status = $(this).find(".status");
         if (typeof status !== 'undefined' && status !== null && $(status).text()) {
-            let found = $(status).text().match(/^\n(\s+)?((\d+)h )?(\d+)min left\s+$/);
+            const found = $(status).text().match(/^\n(\s+)?((\d+)h )?(\d+)min left\s+$/);
 
             if (found !== undefined && found !== null) {
-                let hours = found[3] || 0;
-                let mins = found[4] || 0;
+                const hours = found[3] || 0;
+                const mins = found[4] || 0;
 
                 let d = new Date(Date.now());
                 d.setTime(d.getTime() + hours*60*60*1000 + mins*60*1000);
@@ -62,7 +70,7 @@ function update() {
         }
 
         if (HIGHLIGHT && my_name) {
-            let team = $(this).find(".team");
+            const team = $(this).find(".team");
             if (typeof team !== 'undefined' && typeof team.html() !== 'undefined' && team.html().includes(my_name)) {
                 $(this).addClass("bg-green");
             }
@@ -80,4 +88,3 @@ function update() {
 
     $("ul.crimes-list").ready(update);
 })();
-
