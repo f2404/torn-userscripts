@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Miniprofile: Show last action
 // @namespace    lugburz.miniprofile.show_last_action
-// @version      0.1.2
+// @version      0.1.3
 // @description  Show last action in miniprofile.
 // @author       Lugburz
 // @match        https://www.torn.com/*
@@ -24,6 +24,8 @@ function secondsToDhms(seconds) {
     return dDisplay + hDisplay + mDisplay + sDisplay;
 }
 
+var lastAction = '';
+
 // intercept miniprofile fetch() responses
 const constantMock = unsafeWindow.fetch;
 unsafeWindow.fetch = function() {
@@ -35,7 +37,11 @@ unsafeWindow.fetch = function() {
                     try {
                         const json = JSON.parse(text);
                         console.log('userID=' + json.user.userID + ' lastAction=' + json.user.lastAction.seconds);
-                        $('#miniProfileLastAction').text(secondsToDhms(json.user.lastAction.seconds) + ' ago');
+                        if ($('#miniProfileLastAction').size() > 0) {
+                            $('#miniProfileLastAction').text(secondsToDhms(json.user.lastAction.seconds) + ' ago');
+                        } else {
+                            lastAction = secondsToDhms(json.user.lastAction.seconds) + ' ago';
+                        }
                     } catch (e) {
                         console.log(e);
                     }
@@ -59,6 +65,10 @@ const observer = new MutationObserver(function(mutations) {
                     if (id) {
                         id = id.replace(/\/?profiles.php\?XID=/, '');
                         $(this).append('<div style="color: #555;  font-size: 12px; line-height: 14px;""><b>Last action:</b> <span id="miniProfileLastAction"></span></div>');
+                        if (lastAction) {
+                            $('#miniProfileLastAction').text(lastAction);
+                            lastAction = '';
+                        }
                     }
                 }
             });
