@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Racing: Log scraper
 // @namespace    lugburz.racing_log_scraper
-// @version      0.1.4
+// @version      0.1.5
 // @description  Collect anonymous racing stats data.
 // @author       Lugburz
 // @match        https://www.torn.com/loader.php?sid=racing*
@@ -68,8 +68,10 @@ function parseLog(json) {
     const intervals_length = json.raceData.trackData.intervals.length;
     const carsdata = JSON.stringify(anonymizeCarsData(json.raceData.cars));
 
+    // no sidebar in phone mode
+    const my_name = $("#sidebarroot").find("a[class^='menu-value']").html() || json.user.playername;
+
     let time, car, place;
-    const my_name = $("#sidebarroot").find("a[class^='menu-value']").html();
     $('#leaderBoard').find('ul.driver-item').each(function() {
         if ($(this).find('li.name').text().split(' ')[0].trim() == my_name) {
             time = $(this).find('li.time').text().trim();
