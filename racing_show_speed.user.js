@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Racing enhancements
 // @namespace    lugburz.racing_enhancements
-// @version      0.2.2
+// @version      0.2.3
 // @description  Show car's current speed, precise skill, official race penalty.
 // @author       Lugburz
 // @match        https://www.torn.com/*
@@ -111,27 +111,76 @@ function parseRacingData(data) {
     GM_setValue('leavepenalty', leavepenalty);
     checkPenalty();
 
-    if (!SHOW_RESULTS)
-        return;
-
-    // show race results
+    // calc, sort & show race results
     if (data.timeData.status >= 3) {
         const carsData = data.raceData.cars;
-        for (let playername in carsData) {
+        const trackIntervals = data.raceData.trackData.intervals.length;
+        let results = [], crashes = [];
+
+        for (const playername in carsData) {
             const intervals = decode64(carsData[playername]).split(',');
             let raceTime = 0;
             for (let i in intervals) {
                 raceTime += 1 * intervals[i];
             }
 
-            $('#leaderBoard').children('li').each(function() {
-                const name = $(this).find('li.name').text().trim();
-                if (name == playername) {
-                    $(this).find('li.name').html($(this).find('li.name').html().replace(name, name + ' ' + formatTimeMsec(raceTime * 1000)));
-                    return false;
-                }
-            });
+            if (intervals.length / trackIntervals == data.laps) {
+                results.push([playername, raceTime]);
+            } else {
+                crashes.push([playername, raceTime]);
+            }
         }
+
+        // sort by time
+        results.sort(compare);
+        addExportButton(results, crashes);
+
+        if (SHOW_RESULTS) {
+            showResults(results);
+            showResults(crashes, results.length);
+        }
+    }
+}
+
+// compare by time
+function compare(a, b) {
+    if (a[1] > b[1]) return 1;
+    if (b[1] > a[1]) return -1;
+
+    return 0;
+}
+
+function showResults(results, start = 0) {
+    for (let i = 0; i < results.length; i++) {
+        $('#leaderBoard').children('li').each(function() {
+            const name = $(this).find('li.name').text().trim();
+            if (name == results[i][0]) {
+                const p = i + start + 1;
+                const place = p == 1 ? '1st' : (p == 2 ? '2nd' : (p == 3 ? '3rd' : p + 'th'));
+                $(this).find('li.name').html($(this).find('li.name').html().replace(name, name + ' ' + place + ' ' + formatTimeMsec(results[i][1] * 1000)));
+                return false;
+            }
+        });
+    }
+}
+
+function addExportButton(results, crashes) {
+    if ($("#racingupdatesnew").size() > 0 && $('#downloadAsCsv').size() < 1) {
+        let csv = '';
+        for (let i = 0; i < results.length; i++) {
+            const timeStr = formatTimeMsec(results[i][1] * 1000);
+            csv += [i+1, results[i][0], timeStr].join(',') + '\n';
+        }
+        for (let i = 0; i < crashes.length; i++) {
+            const timeStr = formatTimeMsec(crashes[i][1] * 1000);
+            csv += [results.length + i + 1, crashes[i][0], timeStr].join(',') + '\n';
+        }
+
+        const myblob = new Blob([csv], {type: 'application/octet-stream'});
+        const myurl = window.URL.createObjectURL(myblob);
+        const div = '<div style="font-size: 12px; line-height: 24px; padding-left: 10px; background: repeating-linear-gradient(90deg,#242424,#242424 2px,#2e2e2e 0,#2e2e2e 4px);border-radius: 5px;">' +
+              `<a id="downloadAsCsv" href="${myurl}" download="results.csv">Download results as CSV</a></div>`;
+        $('#racingupdatesnew').prepend(div);
     }
 }
 
