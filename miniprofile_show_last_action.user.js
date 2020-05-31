@@ -1,12 +1,11 @@
 // ==UserScript==
 // @name         Torn: Miniprofile: Show last action
 // @namespace    lugburz.miniprofile.show_last_action
-// @version      0.1.3
+// @version      0.1.4
 // @description  Show last action in miniprofile.
 // @author       Lugburz
 // @match        https://www.torn.com/*
 // @updateURL    https://github.com/f2404/torn-userscripts/raw/master/miniprofile_show_last_action.user.js
-// @grant        GM_addStyle
 // @grant        unsafeWindow
 // ==/UserScript==
 
@@ -37,10 +36,9 @@ unsafeWindow.fetch = function() {
                     try {
                         const json = JSON.parse(text);
                         console.log('userID=' + json.user.userID + ' lastAction=' + json.user.lastAction.seconds);
+                        lastAction = json.user.lastAction.seconds != 'Unknown' ? secondsToDhms(json.user.lastAction.seconds) + ' ago' : json.user.lastAction.seconds;
                         if ($('#miniProfileLastAction').size() > 0) {
-                            $('#miniProfileLastAction').text(secondsToDhms(json.user.lastAction.seconds) + ' ago');
-                        } else {
-                            lastAction = secondsToDhms(json.user.lastAction.seconds) + ' ago';
+                            $('#miniProfileLastAction').text(lastAction);
                         }
                     } catch (e) {
                         console.log(e);
