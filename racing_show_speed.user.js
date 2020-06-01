@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Racing enhancements
 // @namespace    lugburz.racing_enhancements
-// @version      0.2.3
+// @version      0.2.4
 // @description  Show car's current speed, precise skill, official race penalty.
 // @author       Lugburz
 // @match        https://www.torn.com/*
@@ -127,7 +127,7 @@ function parseRacingData(data) {
             if (intervals.length / trackIntervals == data.laps) {
                 results.push([playername, raceTime]);
             } else {
-                crashes.push([playername, raceTime]);
+                crashes.push([playername, 'crashed']);
             }
         }
 
@@ -157,7 +157,8 @@ function showResults(results, start = 0) {
             if (name == results[i][0]) {
                 const p = i + start + 1;
                 const place = p == 1 ? '1st' : (p == 2 ? '2nd' : (p == 3 ? '3rd' : p + 'th'));
-                $(this).find('li.name').html($(this).find('li.name').html().replace(name, name + ' ' + place + ' ' + formatTimeMsec(results[i][1] * 1000)));
+                const result = typeof results[i][1] === 'number' ? formatTimeMsec(results[i][1] * 1000) : results[i][1];
+                $(this).find('li.name').html($(this).find('li.name').html().replace(name, name + ' ' + place + ' ' + result));
                 return false;
             }
         });
@@ -172,8 +173,7 @@ function addExportButton(results, crashes) {
             csv += [i+1, results[i][0], timeStr].join(',') + '\n';
         }
         for (let i = 0; i < crashes.length; i++) {
-            const timeStr = formatTimeMsec(crashes[i][1] * 1000);
-            csv += [results.length + i + 1, crashes[i][0], timeStr].join(',') + '\n';
+            csv += [results.length + i + 1, crashes[i][0], crashes[i][1]].join(',') + '\n';
         }
 
         const myblob = new Blob([csv], {type: 'application/octet-stream'});
