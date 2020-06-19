@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Loot timer on NPC profile
 // @namespace    lugburz.show_timer_on_npc_profile
-// @version      0.2.7
+// @version      0.2.8
 // @description  Add a countdown timer to desired loot level on the NPC profile page as well as on the sidebar and the topbar (optionally).
 // @author       Lugburz
 // @match        https://www.torn.com/*
@@ -212,7 +212,7 @@ function addNpcTimers(data) {
     }
 
     if (TOPBAR_TIMERS && $('#topbarNpcTimers').size() < 1) {
-        let div = '<div id="topbarNpcTimers" class="container" style="line-height: 28px;"><span style="font-weight: 700; padding-left: 190px;">' +
+        let div = '<div id="topbarNpcTimers" class="container" style="line-height: 28px;"><span style="font-weight: 700;">' +
             'NPC Timers&nbsp;<a id="showHideTopbarTimers" class="t-blue href desc" style="cursor: pointer; display:inline-block; width: 45px;">[hide]</a></span>';
         Object.keys(NPCS).forEach(name => {
             div += '<span style="text-decoration: none;" id="npcTimerTop' + NPCS[name] + '"><a class="t-blue href desc" style="display:inline-block;" href="/loader.php?sid=attack&user2ID=' +
@@ -230,6 +230,8 @@ function addNpcTimers(data) {
             GM_setValue('hideTopbarTimers', hide);
             hideTimers(hide, data, false);
         });
+        // phone or desktop mode
+        $('#topbarNpcTimers').find('span').first().css('padding-left', $('#tcLogo').height() < 50 ? '4px' : '190px');
     }
 
     if (SIDEBAR_TIMERS) {
