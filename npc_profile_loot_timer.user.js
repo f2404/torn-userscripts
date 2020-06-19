@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Loot timer on NPC profile
 // @namespace    lugburz.show_timer_on_npc_profile
-// @version      0.2.6
+// @version      0.2.7
 // @description  Add a countdown timer to desired loot level on the NPC profile page as well as on the sidebar and the topbar (optionally).
 // @author       Lugburz
 // @match        https://www.torn.com/*
@@ -140,10 +140,15 @@ async function getAllTimings() {
     return cached_data;
 }
 
-function hideSidebarTimers(hide, yataData) {
+function hideTimers(hide, yataData, sidebar = true) {
     log(yataData)
-    Object.values(NPCS).forEach(id => (hide || yataData[id] === undefined) ? $(`#npcTimer${id}`).hide() : $(`#npcTimer${id}`).show())
-    $('#showHideTimers').text(`[${hide ? 'show' : 'hide'}]`);
+    if (sidebar) {
+        Object.values(NPCS).forEach(id => (hide || yataData[id] === undefined) ? $(`#npcTimer${id}`).hide() : $(`#npcTimer${id}`).show())
+        $('#showHideTimers').text(`[${hide ? 'show' : 'hide'}]`);
+    } else {
+        Object.values(NPCS).forEach(id => (hide || yataData[id] === undefined) ? $(`#npcTimerTop${id}`).hide() : $(`#npcTimerTop${id}`).show())
+        $('#showHideTopbarTimers').text(`[${hide ? 'show' : 'hide'}]`);
+    }
 }
 
 function maybeChangeColors(span, left) {
@@ -202,15 +207,16 @@ function addNpcTimers(data) {
         $('#showHideTimers').on('click', function () {
             const hide = $('#showHideTimers').text() == '[hide]';
             GM_setValue('hideSidebarTimers', hide);
-            hideSidebarTimers(hide, data);
+            hideTimers(hide, data);
         });
     }
 
     if (TOPBAR_TIMERS && $('#topbarNpcTimers').size() < 1) {
-        let div = '<div id="topbarNpcTimers" style="text-align: center;"><span style="font-weight: 700;">NPC Timers:</span>';
+        let div = '<div id="topbarNpcTimers" class="container" style="line-height: 28px;"><span style="font-weight: 700; padding-left: 190px;">' +
+            'NPC Timers&nbsp;<a id="showHideTopbarTimers" class="t-blue href desc" style="cursor: pointer; display:inline-block; width: 45px;">[hide]</a></span>';
         Object.keys(NPCS).forEach(name => {
-            div += '<span style="line-height: 20px; text-decoration: none;" id="npcTimerTop' + NPCS[name] + '"><a class="t-blue href desc" style="display:inline-block; width: 52px;" href="/loader.php?sid=attack&user2ID=' +
-                NPCS[name] + '">' + name + ': </a><span></span></span>';
+            div += '<span style="text-decoration: none;" id="npcTimerTop' + NPCS[name] + '"><a class="t-blue href desc" style="display:inline-block;" href="/loader.php?sid=attack&user2ID=' +
+                NPCS[name] + '">' + name + ':&nbsp;</a><span style="display:inline-block; width: 80px;"></span></span>';
         });
         div += '</div>';
         if ($('div.header-wrapper-bottom').find('div.container').size() > 0) {
@@ -219,11 +225,20 @@ function addNpcTimers(data) {
         } else {
             $('div.header-wrapper-bottom').prepend(div);
         }
+        $('#showHideTopbarTimers').on('click', function () {
+            const hide = $('#showHideTopbarTimers').text() == '[hide]';
+            GM_setValue('hideTopbarTimers', hide);
+            hideTimers(hide, data, false);
+        });
     }
 
     if (SIDEBAR_TIMERS) {
         const hide = GM_getValue('hideSidebarTimers');
-        hideSidebarTimers(hide, data);
+        hideTimers(hide, data);
+    }
+    if (TOPBAR_TIMERS) {
+        const hide = GM_getValue('hideTopbarTimers');
+        hideTimers(hide, data, false);
     }
 
     Object.keys(NPCS).forEach(name => {
