@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Loot timer on NPC profile
 // @namespace    lugburz.show_timer_on_npc_profile
-// @version      0.2.8
+// @version      0.2.9
 // @description  Add a countdown timer to desired loot level on the NPC profile page as well as on the sidebar and the topbar (optionally).
 // @author       Lugburz
 // @match        https://www.torn.com/*
@@ -164,6 +164,10 @@ function maybeChangeColors(span, left) {
     }
 }
 
+function formatTimeSec(msec) {
+    return formatTimeMsec(msec).replace(/\..+/, '');
+}
+
 function process(ts) {
     if (ts < 0) {
         return;
@@ -193,6 +197,8 @@ function addNpcTimers(data) {
     if (!data)
         return;
 
+    const isMobile = ($('#tcLogo').height() < 50);
+
     log('Adding NPC Timers for:')
     log(NPCS)
     if (SIDEBAR_TIMERS && $('#sidebarNpcTimers').size() < 1) {
@@ -216,7 +222,7 @@ function addNpcTimers(data) {
             'NPC Timers&nbsp;<a id="showHideTopbarTimers" class="t-blue href desc" style="cursor: pointer; display:inline-block; width: 45px;">[hide]</a></span>';
         Object.keys(NPCS).forEach(name => {
             div += '<span style="text-decoration: none;" id="npcTimerTop' + NPCS[name] + '"><a class="t-blue href desc" style="display:inline-block;" href="/loader.php?sid=attack&user2ID=' +
-                NPCS[name] + '">' + name + ':&nbsp;</a><span style="display:inline-block; width: 80px;"></span></span>';
+                `${NPCS[name]}">${name}:&nbsp;</a><span style="display:inline-block; width: ${isMobile? 50 : 80}px;"></span></span>`;
         });
         div += '</div>';
         if ($('div.header-wrapper-bottom').find('div.container').size() > 0) {
@@ -231,7 +237,7 @@ function addNpcTimers(data) {
             hideTimers(hide, data, false);
         });
         // phone or desktop mode
-        $('#topbarNpcTimers').find('span').first().css('padding-left', $('#tcLogo').height() < 50 ? '4px' : '190px');
+        $('#topbarNpcTimers').find('span').first().css('padding-left', isMobile ? '4px' : '190px');
     }
 
     if (SIDEBAR_TIMERS) {
@@ -270,7 +276,7 @@ function addNpcTimers(data) {
                 if (TOPBAR_TIMERS) {
                     $(spanId).attr('notavail', '');
                     const span = $(spanId).find('span');
-                    $(span).text(formatTimeSecWithLetters(left));
+                    $(span).text(isMobile ? formatTimeSec(left) : formatTimeSecWithLetters(left));
                     maybeChangeColors(span, left);
                 }
             }, 1000);
