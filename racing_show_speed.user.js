@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Racing enhancements
 // @namespace    lugburz.racing_enhancements
-// @version      0.2.4
+// @version      0.2.5
 // @description  Show car's current speed, precise skill, official race penalty.
 // @author       Lugburz
 // @match        https://www.torn.com/*
@@ -14,13 +14,13 @@
 // ==/UserScript==
 
 // Whether to show notifications.
-const NOTIFICATIONS = true;
+const NOTIFICATIONS = GM_getValue('showNotifChk') != 0;
 
 // Whether to show race result as soon as a race starts.
-const SHOW_RESULTS = true;
+const SHOW_RESULTS = GM_getValue('showResultsChk') != 0;
 
 // Whether to show current speed.
-const SHOW_SPEED = true;
+const SHOW_SPEED = GM_getValue('showSpeedChk') != 0;
 
 var period = 1000;
 var last_compl = -1.0;
@@ -156,11 +156,45 @@ function showResults(results, start = 0) {
             const name = $(this).find('li.name').text().trim();
             if (name == results[i][0]) {
                 const p = i + start + 1;
-                const place = p == 1 ? '1st' : (p == 2 ? '2nd' : (p == 3 ? '3rd' : p + 'th'));
+                let place;
+                if (p != 11 && (p%10) == 1)
+                    place = p + 'st';
+                else if (p != 12 && (p%10) == 2)
+                    place = p + 'nd';
+                else if (p != 13 && (p%10) == 3)
+                    place = p + 'rd';
+                else
+                    place = p + 'th';
+
                 const result = typeof results[i][1] === 'number' ? formatTimeMsec(results[i][1] * 1000) : results[i][1];
                 $(this).find('li.name').html($(this).find('li.name').html().replace(name, name + ' ' + place + ' ' + result));
                 return false;
             }
+        });
+    }
+}
+
+function addSettingsDiv() {
+    if ($("#racingupdatesnew").size() > 0 && $('#racingEnhSettings').size() < 1) {
+        const div = '<div style="font-size: 12px; line-height: 24px; padding-left: 10px; padding-right: 10px; background: repeating-linear-gradient(90deg,#242424,#242424 2px,#2e2e2e 0,#2e2e2e 4px); border-radius: 5px;">' +
+              '<a id="racingEnhSettings" style="text-align: right; cursor: pointer;">Settings</a>' +
+              '<div id="racingEnhSettingsContainer" style="display: none;"><ul style="color: #ddd;">' +
+              '<li><input type="checkbox" style="margin-left: 5px; margin-right: 5px" id="showSpeedChk"><label>Show current speed</label></li>' +
+              '<li><input type="checkbox" style="margin-left: 5px; margin-right: 5px" id="showNotifChk"><label>Show notifications</label></li>' +
+              '<li><input type="checkbox" style="margin-left: 5px; margin-right: 5px" id="showResultsChk"><label>Show results</label></li></ul></div></div>';
+        $('#racingupdatesnew').prepend(div);
+
+        $('#racingEnhSettingsContainer').find('input[type=checkbox]').each(function() {
+            $(this).prop('checked', GM_getValue($(this).attr('id')) != 0);
+        });
+
+        $('#racingEnhSettings').on('click', function() {
+            $('#racingEnhSettingsContainer').toggle();
+        });
+        $('#racingEnhSettingsContainer').on('click', 'input', function() {
+            const id = $(this).attr('id');
+            const checked = $(this).prop('checked');
+            GM_setValue(id, checked ? 1 : 0);
         });
     }
 }
@@ -178,9 +212,8 @@ function addExportButton(results, crashes) {
 
         const myblob = new Blob([csv], {type: 'application/octet-stream'});
         const myurl = window.URL.createObjectURL(myblob);
-        const div = '<div style="font-size: 12px; line-height: 24px; padding-left: 10px; background: repeating-linear-gradient(90deg,#242424,#242424 2px,#2e2e2e 0,#2e2e2e 4px);border-radius: 5px;">' +
-              `<a id="downloadAsCsv" href="${myurl}" download="results.csv">Download results as CSV</a></div>`;
-        $('#racingupdatesnew').prepend(div);
+        const exportBtn = `<a id="downloadAsCsv" href="${myurl}" style="float: right;" download="results.csv">Download results as CSV</a>`;
+        $(exportBtn).insertAfter('#racingEnhSettings');
     }
 }
 
@@ -189,6 +222,7 @@ function addExportButton(results, crashes) {
 // Your code here...
 ajax((page, xhr) => {
     if (page != "loader") return;
+    $("#racingupdatesnew").ready(addSettingsDiv);
     $("#racingupdatesnew").ready(showSpeed);
     $('#racingAdditionalContainer').ready(showPenalty);
     try {
@@ -196,7 +230,9 @@ ajax((page, xhr) => {
     } catch (e) {}
 });
 
+$("#racingupdatesnew").ready(addSettingsDiv);
 $("#racingupdatesnew").ready(showSpeed);
 $('#racingAdditionalContainer').ready(showPenalty);
 
 checkPenalty();
+
