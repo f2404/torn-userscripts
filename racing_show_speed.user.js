@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Racing enhancements
 // @namespace    lugburz.racing_enhancements
-// @version      0.2.5
+// @version      0.2.6
 // @description  Show car's current speed, precise skill, official race penalty.
 // @author       Lugburz
 // @match        https://www.torn.com/*
@@ -120,12 +120,18 @@ function parseRacingData(data) {
         for (const playername in carsData) {
             const intervals = decode64(carsData[playername]).split(',');
             let raceTime = 0;
-            for (let i in intervals) {
-                raceTime += 1 * intervals[i];
-            }
+            let bestLap = 9999999999;
 
             if (intervals.length / trackIntervals == data.laps) {
-                results.push([playername, raceTime]);
+                for (let i = 0; i < data.laps; i++) {
+                    let lapTime = 0;
+                    for (let j = 0; j < trackIntervals; j++) {
+                        lapTime += Number(intervals[i * trackIntervals + j]);
+                    }
+                    bestLap = Math.min(bestLap, lapTime);
+                    raceTime += Number(lapTime);
+                }
+                results.push([playername, raceTime, bestLap]);
             } else {
                 crashes.push([playername, 'crashed']);
             }
@@ -167,7 +173,8 @@ function showResults(results, start = 0) {
                     place = p + 'th';
 
                 const result = typeof results[i][1] === 'number' ? formatTimeMsec(results[i][1] * 1000) : results[i][1];
-                $(this).find('li.name').html($(this).find('li.name').html().replace(name, name + ' ' + place + ' ' + result));
+                const bestLap = formatTimeMsec(results[i][2] * 1000);
+                $(this).find('li.name').html($(this).find('li.name').html().replace(name, name + ' ' + place + ' ' + result + ' (best: ' + bestLap + ')'));
                 return false;
             }
         });
