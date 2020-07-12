@@ -1,11 +1,11 @@
 // ==UserScript==
 // @name         Torn: Racing enhancements
 // @namespace    lugburz.racing_enhancements
-// @version      0.2.6
+// @version      0.2.7
 // @description  Show car's current speed, precise skill, official race penalty.
 // @author       Lugburz
 // @match        https://www.torn.com/*
-// @require      https://github.com/f2404/torn-userscripts/raw/30647929a55ccec24756d3b8a2598713db619f64/lib/lugburz_lib.js
+// @require      https://github.com/f2404/torn-userscripts/raw/31f4faa6da771b7a16cf732c1a78970506effeeb/lib/lugburz_lib.js
 // @updateURL    https://github.com/f2404/torn-userscripts/raw/master/racing_show_speed.user.js
 // @grant        GM_setValue
 // @grant        GM_getValue

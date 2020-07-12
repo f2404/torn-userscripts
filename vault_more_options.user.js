@@ -1,11 +1,11 @@
 // ==UserScript==
 // @name         Torn: Vault: More options
 // @namespace    lugburz.vault.more_options
-// @version      0.1.3
+// @version      0.1.4
 // @description  Add 'Upkeep' button that automatically inputs the amount needed to pay upkeep.
 // @author       Lugburz
 // @match        https://www.torn.com/properties.php*
-// @require      https://github.com/f2404/torn-userscripts/raw/master/lib/lugburz_lib.js
+// @require      https://github.com/f2404/torn-userscripts/raw/31f4faa6da771b7a16cf732c1a78970506effeeb/lib/lugburz_lib.js
 // @updateURL    https://github.com/f2404/torn-userscripts/raw/master/vault_more_options.user.js
 // @grant        none
 // ==/UserScript==
