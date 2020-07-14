@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Loot timer on NPC profile
 // @namespace    lugburz.show_timer_on_npc_profile
-// @version      0.2.9
+// @version      0.2.10
 // @description  Add a countdown timer to desired loot level on the NPC profile page as well as on the sidebar and the topbar (optionally).
 // @author       Lugburz
 // @match        https://www.torn.com/*
@@ -13,9 +13,6 @@
 // @grant        GM_getValue
 // ==/UserScript==
 
-// Desired loot level to track (4 by default)
-const LOOT_LEVEL = 4;
-
 // Whether or not to show timer in sidebar
 const SIDEBAR_TIMERS = true;
 
@@ -26,7 +23,13 @@ const TOPBAR_TIMERS = true;
 const CHANGE_COLOR = true;
 
 // The NPC's to watch. Remove any that you don't want
-const NPCS = { 'Duke': 4, 'Scrooge': 10, 'Leslie': 15, 'Jimmy': 19 };
+// Format: 'NPC_name': { id: NPC_id, loot_level: desired_loot_level_for_this_NPC }
+const NPCS = {
+    'Duke': { id: 4, loot_level: 4 },
+    'Scrooge': { id: 10, loot_level: 4 },
+    'Leslie': { id: 15, loot_level: 4 },
+    'Jimmy': { id: 19, loot_level: 4 }
+};
 
 
 GM_addStyle(`
@@ -83,6 +86,16 @@ const yata_api = async () => {
     })
 }
 
+function getLootLevel(id) {
+    let loot_level = 0
+    Object.values(NPCS).forEach(npc => {
+        if (npc.id == id) {
+            loot_level = npc.loot_level;
+        }
+    });
+    return loot_level;
+}
+
 function isCachedDataValid(id = '') {
     const now = new Date().getTime();
     const str_data = GM_getValue('cached_data');
@@ -93,11 +106,15 @@ function isCachedDataValid(id = '') {
         return false;
     }
 
-    if (id && (!data[id] || data[id].timings[LOOT_LEVEL].ts * 1000 < now)) {
-        return false;
-    } else if (!id) {
+    if (id) {
+        const loot_level = getLootLevel(id);
+        if (!loot_level || !data[id] || data[id].timings[loot_level].ts * 1000 < now) {
+            return false;
+        }
+    } else {
         for (let id in data) {
-            if (data[id].timings[LOOT_LEVEL].ts * 1000 < now) {
+            const loot_level = getLootLevel(id);
+            if (!loot_level || data[id].timings[loot_level].ts * 1000 < now) {
                 return false;
             }
         }
@@ -122,7 +139,8 @@ async function getTimings(id) {
         return -1;
     }
     // time till desired loot level
-    return cached_data[id].timings[LOOT_LEVEL].ts;
+    const loot_level = getLootLevel(id);
+    return cached_data[id].timings[loot_level].ts;
 }
 
 async function getAllTimings() {
@@ -143,10 +161,10 @@ async function getAllTimings() {
 function hideTimers(hide, yataData, sidebar = true) {
     log(yataData)
     if (sidebar) {
-        Object.values(NPCS).forEach(id => (hide || yataData[id] === undefined) ? $(`#npcTimer${id}`).hide() : $(`#npcTimer${id}`).show())
+        Object.values(NPCS).forEach(npc => (hide || yataData[npc.id] === undefined) ? $(`#npcTimer${npc.id}`).hide() : $(`#npcTimer${npc.id}`).show())
         $('#showHideTimers').text(`[${hide ? 'show' : 'hide'}]`);
     } else {
-        Object.values(NPCS).forEach(id => (hide || yataData[id] === undefined) ? $(`#npcTimerTop${id}`).hide() : $(`#npcTimerTop${id}`).show())
+        Object.values(NPCS).forEach(npc => (hide || yataData[npc.id] === undefined) ? $(`#npcTimerTop${npc.id}`).hide() : $(`#npcTimerTop${npc.id}`).show())
         $('#showHideTopbarTimers').text(`[${hide ? 'show' : 'hide'}]`);
     }
 }
@@ -168,7 +186,7 @@ function formatTimeSec(msec) {
     return formatTimeMsec(msec).replace(/\..+/, '');
 }
 
-function process(ts) {
+function process(ts, loot_level) {
     if (ts < 0) {
         return;
     }
@@ -187,9 +205,11 @@ function process(ts) {
         // Display the result
         const span = $('#profileroot').find('div.profile-status').find('div.profile-container').find('div.description').find('span.sub-desc');
         let html = $(span).html();
-        const n = html.indexOf('(');
-        html = html.substring(0, n != -1 ? n - 1 : html.length);
-        $(span).html(html + " (Till loot level " + ROMAN[LOOT_LEVEL - 1] + ": " + formatTimeSecWithLetters(left) + ")");
+        if (html) {
+            const n = html.indexOf('(');
+            html = html.substring(0, n != -1 ? n - 1 : html.length);
+            $(span).html(html + " (Till loot level " + ROMAN[loot_level - 1] + ": " + formatTimeSecWithLetters(left) + ")");
+        }
     }, 1000);
 }
 
@@ -204,7 +224,7 @@ function addNpcTimers(data) {
     if (SIDEBAR_TIMERS && $('#sidebarNpcTimers').size() < 1) {
         let div = '<hr class="delimiter___neME6"><div id="sidebarNpcTimers"><span style="font-weight: 700;">NPC Timers</span><a id="showHideTimers" class="show-hide">[hide]</a>';
         Object.keys(NPCS).forEach(name => {
-            div += '<p style="line-height: 20px; text-decoration: none;" id="npcTimer' + NPCS[name] + '"><a class="t-blue href desc" style="display:inline-block; width: 52px;" href="/loader.php?sid=attack&user2ID=' +
+            div += '<p style="line-height: 20px; text-decoration: none;" id="npcTimer' + NPCS[name].id + '"><a class="t-blue href desc" style="display:inline-block; width: 52px;" href="/loader.php?sid=attack&user2ID=' +
                 NPCS[name] + '">' + name + ': </a><span></span></p>';
         });
         div += '</div>';
@@ -221,7 +241,7 @@ function addNpcTimers(data) {
         let div = '<div id="topbarNpcTimers" class="container" style="line-height: 28px;"><span style="font-weight: 700;">' +
             'NPC Timers&nbsp;<a id="showHideTopbarTimers" class="t-blue href desc" style="cursor: pointer; display:inline-block; width: 45px;">[hide]</a></span>';
         Object.keys(NPCS).forEach(name => {
-            div += '<span style="text-decoration: none;" id="npcTimerTop' + NPCS[name] + '"><a class="t-blue href desc" style="display:inline-block;" href="/loader.php?sid=attack&user2ID=' +
+            div += '<span style="text-decoration: none;" id="npcTimerTop' + NPCS[name].id + '"><a class="t-blue href desc" style="display:inline-block;" href="/loader.php?sid=attack&user2ID=' +
                 `${NPCS[name]}">${name}:&nbsp;</a><span style="display:inline-block; width: ${isMobile? 50 : 80}px;"></span></span>`;
         });
         div += '</div>';
@@ -250,11 +270,12 @@ function addNpcTimers(data) {
     }
 
     Object.keys(NPCS).forEach(name => {
-        const id = NPCS[name]
+        const id = NPCS[name].id;
+        const loot_level = NPCS[name].loot_level;
         const pId = '#npcTimer' + id;
         const spanId = '#npcTimerTop' + id;
         if (data[id]) {
-            const ts = data[id].timings[LOOT_LEVEL].ts;
+            const ts = data[id].timings[loot_level].ts;
 
             // ts is s, Date is ms
             const due = new Date(ts * 1000);
@@ -295,9 +316,11 @@ function addNpcTimers(data) {
     // Your code here...
     if ($(location).attr('href').includes('profiles.php')) {
         const profileId = RegExp(/XID=(\d+)/).exec($(location).attr('href'))[1];
-        if (Object.values(NPCS).includes(Number(profileId))) {
-            getTimings(profileId).then(ts => process(ts));
-        }
+        Object.values(NPCS).forEach(npc => {
+            if (npc.id == profileId) {
+                getTimings(profileId).then(ts => process(ts, npc.loot_level));
+            }
+        });
     }
     if (SIDEBAR_TIMERS && $('#sidebar').size() > 0 || TOPBAR_TIMERS && $('div.header-wrapper-bottom').size() > 0) {
         getAllTimings().then(data => addNpcTimers(data));
