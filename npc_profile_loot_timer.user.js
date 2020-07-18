@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Loot timer on NPC profile
 // @namespace    lugburz.show_timer_on_npc_profile
-// @version      0.2.11
+// @version      0.2.12
 // @description  Add a countdown timer to desired loot level on the NPC profile page as well as on the sidebar and the topbar (optionally).
 // @author       Lugburz
 // @match        https://www.torn.com/*
@@ -159,12 +159,12 @@ async function getAllTimings() {
 }
 
 function hideTimers(hide, yataData, sidebar = true) {
-    log(yataData)
+    log(yataData);
     if (sidebar) {
-        Object.values(NPCS).forEach(npc => (hide || yataData[npc.id] === undefined) ? $(`#npcTimer${npc.id}`).hide() : $(`#npcTimer${npc.id}`).show())
+        Object.values(NPCS).forEach(npc => (hide || yataData[npc.id] === undefined) ? $(`#npcTimer${npc.id}`).hide() : $(`#npcTimer${npc.id}`).show());
         $('#showHideTimers').text(`[${hide ? 'show' : 'hide'}]`);
     } else {
-        Object.values(NPCS).forEach(npc => (hide || yataData[npc.id] === undefined) ? $(`#npcTimerTop${npc.id}`).hide() : $(`#npcTimerTop${npc.id}`).show())
+        Object.values(NPCS).forEach(npc => (hide || yataData[npc.id] === undefined) ? $(`#npcTimerTop${npc.id}`).hide() : $(`#npcTimerTop${npc.id}`).show());
         $('#showHideTopbarTimers').text(`[${hide ? 'show' : 'hide'}]`);
     }
 }
@@ -220,7 +220,7 @@ function addNpcTimers(data) {
     const isMobile = ($('#tcLogo').height() < 50);
 
     log('Adding NPC Timers for:')
-    log(NPCS)
+    log(NPCS);
     if (SIDEBAR_TIMERS && $('#sidebarNpcTimers').size() < 1) {
         let div = '<hr class="delimiter___neME6"><div id="sidebarNpcTimers"><span style="font-weight: 700;">NPC Timers</span><a id="showHideTimers" class="show-hide">[hide]</a>';
         Object.keys(NPCS).forEach(name => {
@@ -282,23 +282,27 @@ function addNpcTimers(data) {
             let x = setInterval(function () {
                 const now = new Date().getTime();
                 const left = due - now;
-                if (left < 0) {
-                    clearInterval(x);
-                    return;
-                }
 
                 // Display the results
                 if (SIDEBAR_TIMERS) {
                     $(pId).attr('notavail', '');
                     const span = $(pId).find('span');
-                    $(span).text(formatTimeSecWithLetters(left));
+                    $(span).text(left < 0 ? data[id].status : formatTimeSecWithLetters(left));
                     maybeChangeColors(span, left);
                 }
                 if (TOPBAR_TIMERS) {
                     $(spanId).attr('notavail', '');
                     const span = $(spanId).find('span');
-                    $(span).text(isMobile ? formatTimeSec(left) : formatTimeSecWithLetters(left));
+                    if (isMobile) {
+                        $(span).text(left < 0 ? 'LL ' + ROMAN[data[id].levels.current - 1] : formatTimeSec(left));
+                    } else {
+                        $(span).text(left < 0 ? data[id].status : formatTimeSecWithLetters(left));
+                    }
                     maybeChangeColors(span, left);
+                }
+
+                if (left < 0) {
+                    clearInterval(x);
                 }
             }, 1000);
         } else {
