@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Sort lists
 // @namespace    lugburz.sort_lists
-// @version      0.5.8
+// @version      0.5.9
 // @description  Sort lists (such as blacklist, friendlist, userlist, faction members, company employees, stocks) by various columns.
 // @author       Lugburz
 // @match        https://www.torn.com/blacklist.php*
@@ -12,7 +12,7 @@
 // @match        https://www.torn.com/stockexchange.php*
 // @match        https://www.torn.com/companies.php*
 // @match        https://www.torn.com/joblist.php*
-// @require      https://greasyfork.org/scripts/390917-dkk-torn-utilities/code/DKK%20Torn%20Utilities.js?version=744690
+// @require      https://github.com/f2404/torn-userscripts/raw/31f4faa6da771b7a16cf732c1a78970506effeeb/lib/lugburz_lib.js
 // @grant        GM_addStyle
 // ==/UserScript==
 
@@ -22,12 +22,12 @@ GM_addStyle(`
 }
 
 .headerSortDown:after {
-  content: " ▾";
+  content: " ▾" !important;
   font: inherit;
 }
 
 .headerSortUp:after {
-  content: " ▴";
+  content: " ▴" !important;
   font: inherit;
 }`);
 
@@ -58,7 +58,7 @@ function doSort(items, column, ascending, divPrefix = '.title-black > .') {
             return compare(Number(aText), Number(bText), ascending);
         });
     } else if ('title'.localeCompare(column) == 0 || 'desk'.localeCompare(column) == 0 ||
-               'name'.localeCompare(column) == 0 || 'employee'.localeCompare(column) == 0) {
+               'name'.localeCompare(column) == 0 || 'employee'.localeCompare(column) == 0 || 'member'.localeCompare(column) == 0) {
         let sortedByName = Array.prototype.sort.bind(items);
         sortedByName(function (a, b) {
             // works with honors enabled or disabled
@@ -69,7 +69,7 @@ function doSort(items, column, ascending, divPrefix = '.title-black > .') {
 
             return compare(aText, bText, ascending);
         });
-    } else if ('status'.localeCompare(column) == 0) {
+    } else if ('status'.localeCompare(column) == 0 || 'position'.localeCompare(column) == 0) {
         let sortedByStatus = Array.prototype.sort.bind(items);
         sortedByStatus(function (a, b) {
             let aText = $(a).find('.'+column).text().replace('Status:', '').trim();
@@ -127,7 +127,7 @@ function doSort(items, column, ascending, divPrefix = '.title-black > .') {
         return items;
     }
 
-    [ 'level', 'lvl', 'title', 'desk', 'name', 'days', 'status', 'member-icons', 'price', 'owned', 'change' ].forEach((elem) => {
+    [ 'level', 'lvl', 'title', 'desk', 'name', 'days', 'status', 'member-icons', 'price', 'owned', 'change', 'member', 'position' ].forEach((elem) => {
         $(divPrefix+elem).removeClass('headerSortUp');
         $(divPrefix+elem).removeClass('headerSortDown');
     });
@@ -175,17 +175,17 @@ function addUserlistSort() {
 
 // Faction members
 function addMemberlistSort() {
-    let user_list = $('ul.member-list');
+    let user_list = $('ul.table-body');
     let users = $(user_list).children('li');
     let ascending = true;
     let last_sort = '';
 
-    let columns = ['desk', 'lvl', 'days', 'status', 'member-icons'].forEach((column) => {
-        $('ul.title-black > li.'+column).addClass('headerSortable');
-        $('ul.title-black > li.'+column).on('click', function() {
+    let columns = ['member', 'lvl', 'position', 'days', 'status', 'member-icons'].forEach((column) => {
+        $('ul.table-header > li.'+column).addClass('headerSortable');
+        $('ul.table-header > li.'+column).on('click', function() {
             if (column != last_sort) ascending = true;
             last_sort = column;
-            users = doSort(users, column, ascending);
+            users = doSort(users, column, ascending, 'ul.table-header > li.');
             ascending = !ascending;
             $(user_list).append(users);
         });
@@ -354,7 +354,7 @@ function addJoblistSort() {
     'use strict';
 
     // Your code here...
-    ajax((page, json, uri) => {
+    ajax((page) => {
         if (page == "userlist") {
             $('ul.user-info-blacklist-wrap').ready(addUserlistSort);
         } else if (page == "page") {
