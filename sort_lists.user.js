@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Sort lists
 // @namespace    lugburz.sort_lists
-// @version      0.5.9
+// @version      0.5.10
 // @description  Sort lists (such as blacklist, friendlist, userlist, faction members, company employees, stocks) by various columns.
 // @author       Lugburz
 // @match        https://www.torn.com/blacklist.php*
@@ -13,6 +13,7 @@
 // @match        https://www.torn.com/companies.php*
 // @match        https://www.torn.com/joblist.php*
 // @require      https://github.com/f2404/torn-userscripts/raw/31f4faa6da771b7a16cf732c1a78970506effeeb/lib/lugburz_lib.js
+// @updateURL    https://github.com/f2404/torn-userscripts/raw/master/sort_lists.user.js
 // @grant        GM_addStyle
 // ==/UserScript==
 
@@ -21,14 +22,12 @@ GM_addStyle(`
   cursor: pointer;
 }
 
-.headerSortDown:after {
+.headerSortDown:before {
   content: " ▾" !important;
-  font: inherit;
 }
 
-.headerSortUp:after {
+.headerSortUp:before {
   content: " ▴" !important;
-  font: inherit;
 }`);
 
 function compare (aText, bText, asc) {
@@ -75,12 +74,12 @@ function doSort(items, column, ascending, divPrefix = '.title-black > .') {
             let aText = $(a).find('.'+column).text().replace('Status:', '').trim();
             let bText = $(b).find('.'+column).text().replace('Status:', '').trim();
 
-            return compare (aText, bText, ascending);
+            return compare(aText, bText, ascending);
         });
     // 'Last Action' script support
     } else if ('member-icons'.localeCompare(column) == 0) {
         // Do not show arrows if no 'Last Action'
-        if ($('.title-black > .'+column).text() === 'undefined' || !$('.title-black > .'+column).text().includes('Last Action'))
+        if (!$(divPrefix+column).text() || !$(divPrefix+column).text().includes('Last Action'))
             return items;
 
         let sortedByLastAction = Array.prototype.sort.bind(items);
@@ -88,17 +87,17 @@ function doSort(items, column, ascending, divPrefix = '.title-black > .') {
             let aText = $(a).find('.last-action').text().trim();
             let bText = $(b).find('.last-action').text().trim();
 
-            let days = aText.match(/((\d+) day)?/)[2] || 0
-            let hours = aText.match(/((\d+) hour)?/)[2] || 0
-            let mins = aText.match(/((\d+) minute)?/)[2] || 0
-            let aMins = Number(days)*24*60 + Number(hours)*60 + Number(mins)
+            let days = aText.match(/((\d+) day)?/)[2] || 0;
+            let hours = aText.match(/((\d+) hour)?/)[2] || 0;
+            let mins = aText.match(/((\d+) minute)?/)[2] || 0;
+            let aMins = Number(days)*24*60 + Number(hours)*60 + Number(mins);
 
-            days = bText.match(/((\d+) day)?/)[2] || 0
-            hours = bText.match(/((\d+) hour)?/)[2] || 0
-            mins = bText.match(/((\d+) minute)?/)[2] || 0
-            let bMins = Number(days)*24*60 + Number(hours)*60 + Number(mins)
+            days = bText.match(/((\d+) day)?/)[2] || 0;
+            hours = bText.match(/((\d+) hour)?/)[2] || 0;
+            mins = bText.match(/((\d+) minute)?/)[2] || 0;
+            let bMins = Number(days)*24*60 + Number(hours)*60 + Number(mins);
 
-            return compare (Number(aMins), Number(bMins), ascending);
+            return compare(Number(aMins), Number(bMins), ascending);
         });
     } else if ('price'.localeCompare(column) == 0 || 'owned'.localeCompare(column) == 0 || 'change'.localeCompare(column) == 0) {
         let sortedByPrice = Array.prototype.sort.bind(items);
@@ -120,14 +119,14 @@ function doSort(items, column, ascending, divPrefix = '.title-black > .') {
             let aText = $(a).find('.'+column).text().replace('Rank:', '').trim();
             let bText = $(b).find('.'+column).text().replace('Rank:', '').trim();
 
-            return compare (aText, bText, ascending);
+            return compare(aText, bText, ascending);
         });
     } else {
         // shouldn't happen
         return items;
     }
 
-    [ 'level', 'lvl', 'title', 'desk', 'name', 'days', 'status', 'member-icons', 'price', 'owned', 'change', 'member', 'position' ].forEach((elem) => {
+    [ 'level', 'lvl', 'title', 'desk', 'name', 'days', 'status', 'member-icons', 'price', 'owned', 'change', 'member', 'position', 'employee', 'rank' ].forEach((elem) => {
         $(divPrefix+elem).removeClass('headerSortUp');
         $(divPrefix+elem).removeClass('headerSortDown');
     });
@@ -343,7 +342,7 @@ function addJoblistSort() {
         $('div.title-black > ul.title > li.'+column).on('click', function() {
             if (column != last_sort) ascending = true;
             last_sort = column;
-            users = doSort(users, column, ascending);
+            users = doSort(users, column, ascending, 'div.title-black > ul.title > li.');
             ascending = !ascending;
             $(user_list).append(users);
         });
