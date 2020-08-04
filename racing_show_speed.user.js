@@ -1,15 +1,17 @@
 // ==UserScript==
 // @name         Torn: Racing enhancements
 // @namespace    lugburz.racing_enhancements
-// @version      0.2.7
-// @description  Show car's current speed, precise skill, official race penalty.
+// @version      0.3.0
+// @description  Show car's current speed, precise skill, official race penalty, racing skill of others.
 // @author       Lugburz
 // @match        https://www.torn.com/*
 // @require      https://github.com/f2404/torn-userscripts/raw/31f4faa6da771b7a16cf732c1a78970506effeeb/lib/lugburz_lib.js
 // @updateURL    https://github.com/f2404/torn-userscripts/raw/master/racing_show_speed.user.js
+// @connect      racing-skill-sharing.firebaseio.com
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @grant        GM_notification
+// @grant        GM_xmlhttpRequest
 // @run-at       document-body
 // ==/UserScript==
 
@@ -21,6 +23,9 @@ const SHOW_RESULTS = GM_getValue('showResultsChk') != 0;
 
 // Whether to show current speed.
 const SHOW_SPEED = GM_getValue('showSpeedChk') != 0;
+
+// Whether to share racing skill with others (disabled by default).
+const SHARE_RS = GM_getValue('shareRacingSkill') > 0;
 
 var period = 1000;
 var last_compl = -1.0;
@@ -34,6 +39,105 @@ function maybeClear() {
         x = 0;
     }
 }
+
+// Shared racing skill
+const FB_URL = 'https://racing-skill-sharing.firebaseio.com/racing_skill_reports/';
+const racingSkillCacheByDriverId = new Map();
+
+async function insertRacingSkillsIntoCurrentDriversList() {
+    const driversList = document.getElementById('leaderBoard');
+    if (driversList === null) {
+        return;
+    }
+
+    watchForDriversListContentChanges(driversList);
+
+    const racingSkills = await getRacingSkillForDrivers(getDriverIds(driversList));
+    for (let driver of driversList.querySelectorAll('.driver-item')) {
+        const driverId = getDriverId(driver);
+        if (! racingSkills[driverId]) {
+            continue;
+        }
+        const nameDiv = driver.querySelector('.name');
+        nameDiv.style.position = 'relative';
+        nameDiv.insertAdjacentHTML('beforeend', `<span style="position:absolute;right:5px">${racingSkills[driverId].toFixed(2)}</span>`);
+    }
+}
+
+function watchForDriversListContentChanges(driversList) {
+    if (driversList.dataset.hasWatcher !== undefined) {
+        return;
+    }
+
+    // The content of #leaderBoard is rebuilt periodically so watch for changes:
+    new MutationObserver(insertRacingSkillsIntoCurrentDriversList).observe(driversList, {childList: true});
+    driversList.dataset.hasWatcher = 'true';
+}
+
+function getDriverIds(driversList) {
+    return Array.from(driversList.querySelectorAll('.driver-item')).map(driver => getDriverId(driver));
+}
+
+function getDriverId(driverUl) {
+    return +driverUl.closest('li').id.substr(4);
+}
+
+async function getRacingSkillForDrivers(driverIds) {
+    const driverIdsToFetchSkillFor = driverIds.filter(driverId => ! racingSkillCacheByDriverId.has(driverId));
+    for (let driverId of driverIdsToFetchSkillFor) {
+        const json = await fetchRacingSkillForDrivers(driverId);
+        if (json && json != 'null') {
+            const skill = json[Object.keys(json)[0]].rs_string;
+            racingSkillCacheByDriverId.set(+driverId, +skill);
+        }
+    }
+
+    const resultHash = {};
+    for (let driverId of driverIds) {
+        resultHash[driverId] = racingSkillCacheByDriverId.get(driverId);
+    }
+    return resultHash;
+}
+
+function getUserIdFromCookie() {
+    const userIdString = document.cookie.split(';')
+        .map(entry => entry.trim())
+        .find(entry => entry.indexOf('uid=') === 0)
+        .replace('uid=', '');
+
+    return parseInt(userIdString, 10);
+}
+
+function formatDate(date) {
+    const month = (+date.getUTCMonth()) + (+1);
+    return date.getUTCFullYear() + '-' + pad(month, 2) + '-' + pad(date.getUTCDate(), 2) + ' ' + formatTime(date);
+}
+
+function fetchRacingSkillForDrivers(driverIds) {
+    return new Promise(resolve => {
+        GM_xmlhttpRequest({
+            method: 'GET',
+            url: `${FB_URL}${driverIds}.json?orderBy="date_utc"&limitToLast=1`,
+            headers: {'Content-Type': 'application/json'},
+            onload: ({responseText}) => resolve(JSON.parse(responseText))
+        });
+    });
+}
+
+function saveRacingSkill(userId, racingSkillString) {
+    const now = new Date();
+    const data = { rs: racingSkillString, rs_string: racingSkillString, date_utc: formatDate(now)};
+    return new Promise(resolve => {
+        GM_xmlhttpRequest({
+            method: 'POST',
+            url: `${FB_URL}${userId}.json`,
+            data: JSON.stringify(data),
+            headers: {'Content-Type': 'application/json'},
+            onload: function(response) { console.log(response.responseText); }
+        });
+    });
+}
+//
 
 function showSpeed() {
     if (!SHOW_SPEED || $('#racingdetails').size() < 1 || $('#racingdetails').find('#speed_mph').size() > 0)
@@ -93,6 +197,10 @@ function checkPenalty() {
 function updateSkill(level) {
     const skill = Number(level).toFixed(4);
     const prev = GM_getValue('racinglevel');
+
+    if (SHARE_RS && level != prev) {
+        saveRacingSkill(getUserIdFromCookie(), skill);
+    }
 
     if (NOTIFICATIONS && prev !== "undefined" && typeof prev !== "undefined" && level > prev) {
         GM_notification("Your racing skill has increased by " + Number(level - prev).toFixed(4) + "!", "Torn: Racing enhancements");
@@ -188,11 +296,17 @@ function addSettingsDiv() {
               '<div id="racingEnhSettingsContainer" style="display: none;"><ul style="color: #ddd;">' +
               '<li><input type="checkbox" style="margin-left: 5px; margin-right: 5px" id="showSpeedChk"><label>Show current speed</label></li>' +
               '<li><input type="checkbox" style="margin-left: 5px; margin-right: 5px" id="showNotifChk"><label>Show notifications</label></li>' +
-              '<li><input type="checkbox" style="margin-left: 5px; margin-right: 5px" id="showResultsChk"><label>Show results</label></li></ul></div></div>';
+              '<li><input type="checkbox" style="margin-left: 5px; margin-right: 5px" id="showResultsChk"><label>Show results</label></li>' +
+              '<li><input type="checkbox" style="margin-left: 5px; margin-right: 5px" id="shareRacingSkill"><label>Share racing skill with others</label></li></ul></div></div>';
         $('#racingupdatesnew').prepend(div);
 
         $('#racingEnhSettingsContainer').find('input[type=checkbox]').each(function() {
-            $(this).prop('checked', GM_getValue($(this).attr('id')) != 0);
+            if ($(this).attr('id') === 'shareRacingSkill') {
+                // sharing is disabled by default
+                $(this).prop('checked', GM_getValue($(this).attr('id')) == 1);
+            } else {
+                $(this).prop('checked', GM_getValue($(this).attr('id')) != 0);
+            }
         });
 
         $('#racingEnhSettings').on('click', function() {
@@ -243,3 +357,10 @@ $('#racingAdditionalContainer').ready(showPenalty);
 
 checkPenalty();
 
+if (SHARE_RS && $(location).attr('href').includes('sid=racing')) {
+    $("#racingupdatesnew").ready(function() {
+        insertRacingSkillsIntoCurrentDriversList();
+        // On change race tab, (re-)insert the racing skills if applicable:
+        new MutationObserver(insertRacingSkillsIntoCurrentDriversList).observe(document.getElementById('racingAdditionalContainer'), {childList: true});
+    });
+}
