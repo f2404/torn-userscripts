@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Racing enhancements
 // @namespace    lugburz.racing_enhancements
-// @version      0.3.0
+// @version      0.3.1
 // @description  Show car's current speed, precise skill, official race penalty, racing skill of others.
 // @author       Lugburz
 // @match        https://www.torn.com/*
@@ -87,8 +87,17 @@ async function getRacingSkillForDrivers(driverIds) {
     for (let driverId of driverIdsToFetchSkillFor) {
         const json = await fetchRacingSkillForDrivers(driverId);
         if (json && json != 'null') {
-            const skill = json[Object.keys(json)[0]].rs_string;
-            racingSkillCacheByDriverId.set(+driverId, +skill);
+            let skill = null;
+            /* this is to parse the result that may look like this: [null,{json_object}]
+               instead of this: {key: {json_object}} */
+            if (Object.keys(json) && Object.keys(json)[0] && json[Object.keys(json)[0]]) {
+                skill = json[Object.keys(json)[0]].rs_string;
+            } else if (Object.keys(json) && Object.keys(json)[1] && json[Object.keys(json)[1]]) {
+                skill = json[Object.keys(json)[1]].rs_string;
+            }
+            if (skill) {
+                racingSkillCacheByDriverId.set(+driverId, +skill);
+            }
         }
     }
 
