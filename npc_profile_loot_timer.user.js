@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Loot timer on NPC profile
 // @namespace    lugburz.show_timer_on_npc_profile
-// @version      0.2.12
+// @version      0.2.13
 // @description  Add a countdown timer to desired loot level on the NPC profile page as well as on the sidebar and the topbar (optionally).
 // @author       Lugburz
 // @match        https://www.torn.com/*
@@ -248,6 +248,8 @@ function addNpcTimers(data) {
         if ($('div.header-wrapper-bottom').find('div.container').size() > 0) {
             // announcement
             $('div.header-wrapper-bottom').find('div.container').append(div);
+            $('#topbarNpcTimers').css('color', 'black');
+            $('#topbarNpcTimers').find('a').css('color', '#069');
         } else {
             $('div.header-wrapper-bottom').prepend(div);
         }
@@ -335,3 +337,4 @@ function log(data) {
     if (LOGGING_ENABLED)
         console.log(data)
 }
+
