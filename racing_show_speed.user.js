@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Racing enhancements
 // @namespace    lugburz.racing_enhancements
-// @version      0.3.1
+// @version      0.3.2
 // @description  Show car's current speed, precise skill, official race penalty, racing skill of others.
 // @author       Lugburz
 // @match        https://www.torn.com/*
@@ -222,6 +222,9 @@ function updateSkill(level) {
 }
 
 function parseRacingData(data) {
+    // no sidebar in phone mode
+    const my_name = $("#sidebarroot").find("a[class^='menu-value']").html() || data.user.playername;
+
     updateSkill(data['user']['racinglevel']);
 
     const leavepenalty = data['user']['leavepenalty'];
@@ -256,7 +259,7 @@ function parseRacingData(data) {
 
         // sort by time
         results.sort(compare);
-        addExportButton(results, crashes);
+        addExportButton(results, crashes, my_name);
 
         if (SHOW_RESULTS) {
             showResults(results);
@@ -290,8 +293,8 @@ function showResults(results, start = 0) {
                     place = p + 'th';
 
                 const result = typeof results[i][1] === 'number' ? formatTimeMsec(results[i][1] * 1000) : results[i][1];
-                const bestLap = formatTimeMsec(results[i][2] * 1000);
-                $(this).find('li.name').html($(this).find('li.name').html().replace(name, name + ' ' + place + ' ' + result + ' (best: ' + bestLap + ')'));
+                const bestLap = results[i][2] ? formatTimeMsec(results[i][2] * 1000) : null;
+                $(this).find('li.name').html($(this).find('li.name').html().replace(name, `${name} ${place} ${result}` + (bestLap ? ` (best: ${bestLap})` : '')));
                 return false;
             }
         });
@@ -329,15 +332,16 @@ function addSettingsDiv() {
     }
 }
 
-function addExportButton(results, crashes) {
+function addExportButton(results, crashes, my_name) {
     if ($("#racingupdatesnew").size() > 0 && $('#downloadAsCsv').size() < 1) {
-        let csv = '';
+        let csv = 'position,name,time,best_lap,rs\n';
         for (let i = 0; i < results.length; i++) {
             const timeStr = formatTimeMsec(results[i][1] * 1000);
-            csv += [i+1, results[i][0], timeStr].join(',') + '\n';
+            const bestLap = formatTimeMsec(results[i][2] * 1000);
+            csv += [i+1, results[i][0], timeStr, bestLap, (results[i][0] === my_name ? GM_getValue('racinglevel') : '')].join(',') + '\n';
         }
         for (let i = 0; i < crashes.length; i++) {
-            csv += [results.length + i + 1, crashes[i][0], crashes[i][1]].join(',') + '\n';
+            csv += [results.length + i + 1, crashes[i][0], crashes[i][1], '', (results[i][0] === my_name ? GM_getValue('racinglevel') : '')].join(',') + '\n';
         }
 
         const myblob = new Blob([csv], {type: 'application/octet-stream'});
