@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Racing enhancements
 // @namespace    lugburz.racing_enhancements
-// @version      0.3.2
+// @version      0.3.3
 // @description  Show car's current speed, precise skill, official race penalty, racing skill of others.
 // @author       Lugburz
 // @match        https://www.torn.com/*
@@ -58,9 +58,11 @@ async function insertRacingSkillsIntoCurrentDriversList() {
         if (! racingSkills[driverId]) {
             continue;
         }
+        const skill = racingSkills[driverId].split('+')[0];
+        const style = racingSkills[driverId].split('+')[1] || '';
         const nameDiv = driver.querySelector('.name');
         nameDiv.style.position = 'relative';
-        nameDiv.insertAdjacentHTML('beforeend', `<span style="position:absolute;right:5px">${racingSkills[driverId].toFixed(2)}</span>`);
+        nameDiv.insertAdjacentHTML('beforeend', `<span style="position:absolute;right:5px;${style}">${(+skill).toFixed(2)}</span>`);
     }
 }
 
@@ -88,15 +90,22 @@ async function getRacingSkillForDrivers(driverIds) {
         const json = await fetchRacingSkillForDrivers(driverId);
         if (json && json != 'null') {
             let skill = null;
+            let dateUtc = null;
             /* this is to parse the result that may look like this: [null,{json_object}]
                instead of this: {key: {json_object}} */
             if (Object.keys(json) && Object.keys(json)[0] && json[Object.keys(json)[0]]) {
                 skill = json[Object.keys(json)[0]].rs_string;
+                dateUtc = Date.parse(json[Object.keys(json)[0]].date_utc + '.000Z');
             } else if (Object.keys(json) && Object.keys(json)[1] && json[Object.keys(json)[1]]) {
                 skill = json[Object.keys(json)[1]].rs_string;
+                dateUtc = Date.parse(json[Object.keys(json)[1]].date_utc + '.000Z');
             }
             if (skill) {
-                racingSkillCacheByDriverId.set(+driverId, +skill);
+                // check if skill was updated more than a week ago
+                if (dateUtc && (Date.now() - dateUtc > 7*24*60*60*1000)) {
+                    skill += '+color:orange';
+                }
+                racingSkillCacheByDriverId.set(+driverId, skill);
             }
         }
     }
@@ -142,7 +151,7 @@ function saveRacingSkill(userId, racingSkillString) {
             url: `${FB_URL}${userId}.json`,
             data: JSON.stringify(data),
             headers: {'Content-Type': 'application/json'},
-            onload: function(response) { console.log(response.responseText); }
+            onload: (response) => { }
         });
     });
 }
