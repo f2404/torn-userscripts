@@ -1,10 +1,11 @@
 // ==UserScript==
 // @name         Bazaar Auto Price
 // @namespace    tos
-// @version      0.7.4
+// @version      0.7.5
 // @description  Auto set bazaar prices on money input field click.
 // @author       tos, Lugburz
 // @match        *.torn.com/bazaar.php*
+// @updateURL    https://github.com/f2404/torn-userscripts/raw/master/tos_bazaar_auto_price.user.js
 // @grant        GM_xmlhttpRequest
 // ==/UserScript==
 
@@ -96,7 +97,7 @@ const observer = new MutationObserver((mutations) => {
                 input = node.querySelector('.input-money[type=text]');
                 const img = node.querySelector('img');
                 if (input && img) {
-                    const itemID = img.src.split('items/')[1].split('/medium')[0];
+                    const itemID = img.src.split('items/')[1].split('/medium')[0].split('/large.png')[0];
                     addOneFocusHandler($(input), itemID);
 
                     // input amount
