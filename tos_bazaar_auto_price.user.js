@@ -1,11 +1,12 @@
 // ==UserScript==
 // @name         Bazaar Auto Price
 // @namespace    tos
-// @version      0.7.5
+// @version      0.7.6
 // @description  Auto set bazaar prices on money input field click.
 // @author       tos, Lugburz
 // @match        *.torn.com/bazaar.php*
 // @updateURL    https://github.com/f2404/torn-userscripts/raw/master/tos_bazaar_auto_price.user.js
+// @connect      api.torn.com
 // @grant        GM_xmlhttpRequest
 // ==/UserScript==
 
