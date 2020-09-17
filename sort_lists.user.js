@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Sort lists
 // @namespace    lugburz.sort_lists
-// @version      0.5.10
+// @version      0.5.11
 // @description  Sort lists (such as blacklist, friendlist, userlist, faction members, company employees, stocks) by various columns.
 // @author       Lugburz
 // @match        https://www.torn.com/blacklist.php*
@@ -118,6 +118,14 @@ function doSort(items, column, ascending, divPrefix = '.title-black > .') {
         sortedByStatus(function (a, b) {
             let aText = $(a).find('.'+column).text().replace('Rank:', '').trim();
             let bText = $(b).find('.'+column).text().replace('Rank:', '').trim();
+
+            return compare(aText, bText, ascending);
+        });
+    } else if ('effectiveness'.localeCompare(column) == 0) {
+        let sortedByStatus = Array.prototype.sort.bind(items);
+        sortedByStatus(function (a, b) {
+            let aText = $(a).find('.'+column).attr('data-effectiveness');
+            let bText = $(b).find('.'+column).attr('data-effectiveness');
 
             return compare(aText, bText, ascending);
         });
@@ -318,7 +326,7 @@ function addCompanylistSort() {
     let ascending = true;
     let last_sort = '';
 
-    let columns = ['employee', 'days'].forEach((column) => {
+    let columns = ['employee', 'days', 'effectiveness'].forEach((column) => {
         $('ul.employee-list-title > li.'+column).addClass('headerSortable');
         $('ul.employee-list-title > li.'+column).on('click', function() {
             if (column != last_sort) ascending = true;
