@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Racing enhancements
 // @namespace    lugburz.racing_enhancements
-// @version      0.3.3
+// @version      0.3.4
 // @description  Show car's current speed, precise skill, official race penalty, racing skill of others.
 // @author       Lugburz
 // @match        https://www.torn.com/*
@@ -240,6 +240,13 @@ function parseRacingData(data) {
     GM_setValue('leavepenalty', leavepenalty);
     checkPenalty();
 
+    // display race link
+    if ($('#raceLink').size() < 1) {
+        const raceId = data.raceID;
+        const raceLink = `<a id="raceLink" href="https://www.torn.com/loader.php?sid=racing&tab=log&raceID=${raceId}" style="float: right; margin-left: 12px;">Link to the race</a>`;
+        $(raceLink).insertAfter('#racingEnhSettings');
+    }
+
     // calc, sort & show race results
     if (data.timeData.status >= 3) {
         const carsData = data.raceData.cars;
@@ -355,7 +362,7 @@ function addExportButton(results, crashes, my_name) {
 
         const myblob = new Blob([csv], {type: 'application/octet-stream'});
         const myurl = window.URL.createObjectURL(myblob);
-        const exportBtn = `<a id="downloadAsCsv" href="${myurl}" style="float: right;" download="results.csv">Download results as CSV</a>`;
+        const exportBtn = `<a id="downloadAsCsv" href="${myurl}" style="float: right; margin-left: 12px;" download="results.csv">Download results as CSV</a>`;
         $(exportBtn).insertAfter('#racingEnhSettings');
     }
 }
