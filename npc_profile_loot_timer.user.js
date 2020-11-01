@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Loot timer on NPC profile
 // @namespace    lugburz.show_timer_on_npc_profile
-// @version      0.2.14
+// @version      0.2.15
 // @description  Add a countdown timer to desired loot level on the NPC profile page as well as on the sidebar and the topbar (optionally).
 // @author       Lugburz
 // @match        https://www.torn.com/*
@@ -130,10 +130,10 @@ function isCachedDataValid(id = '') {
 
 async function getTimings(id) {
     if (!isCachedDataValid(id)) {
-        log('Calling YATA id=' + id);
-        const data = await yata_api();
-        GM_setValue('cached_data', JSON.stringify(data));
-        GM_setValue('last_updated', new Date().getTime());
+//        log('Calling YATA id=' + id);
+//        const data = await yata_api();
+//        GM_setValue('cached_data', JSON.stringify(data));
+//        GM_setValue('last_updated', new Date().getTime());
     }
 
     const cached_data = JSON.parse(GM_getValue('cached_data'));
@@ -152,11 +152,11 @@ async function getTimings(id) {
 
 async function getAllTimings() {
     if (!isCachedDataValid()) {
-        log('Calling YATA');
-        console.log('Calling YATA');
-        const data = await yata_api();
-        GM_setValue('cached_data', JSON.stringify(data));
-        GM_setValue('last_updated', new Date().getTime());
+//        log('Calling YATA');
+//        console.log('Calling YATA');
+//        const data = await yata_api();
+//        GM_setValue('cached_data', JSON.stringify(data));
+//        GM_setValue('last_updated', new Date().getTime());
     }
 
     const cached_data = JSON.parse(GM_getValue('cached_data'));
