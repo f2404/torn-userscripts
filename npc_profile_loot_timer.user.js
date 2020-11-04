@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Loot timer on NPC profile
 // @namespace    lugburz.show_timer_on_npc_profile
-// @version      0.2.16
+// @version      0.2.17
 // @description  Add a countdown timer to desired loot level on the NPC profile page as well as on the sidebar and the topbar (optionally).
 // @author       Lugburz
 // @match        https://www.torn.com/*
@@ -237,6 +237,7 @@ function addNpcTimers(data) {
         return;
 
     const isMobile = ($('#tcLogo').height() < 50);
+    const getLl = (elapsed => (elapsed < TIMINGS[TIMINGS.length - 1]) ? ROMAN[TIMINGS.findIndex(t => elapsed < t) - 1] : ROMAN[ROMAN.length - 1]);
 
     log('Adding NPC Timers for:')
     log(NPCS);
@@ -311,8 +312,7 @@ function addNpcTimers(data) {
                     let text;
                     if (left < 0) {
                         const elapsed = Math.floor(now / 1000) - data.hosp_out[id];
-                        const ll = elapsed < TIMINGS[TIMINGS.length - 1] ? ROMAN[TIMINGS.findIndex(t => elapsed <= t)] : ROMAN[ROMAN.length - 1];
-                        text = elapsed < 0 ? 'Hosp' : `Loot level ${ll}`;
+                        text = elapsed < 0 ? 'Hosp' : `Loot level ${getLl(elapsed)}`;
                     } else {
                         text = formatTimeSecWithLetters(left);
                     }
@@ -325,8 +325,7 @@ function addNpcTimers(data) {
                     let text;
                     if (left < 0) {
                         const elapsed = Math.floor(now / 1000) - data.hosp_out[id];
-                        const ll = elapsed < TIMINGS[TIMINGS.length - 1] ? ROMAN[TIMINGS.findIndex(t => elapsed <= t)] : ROMAN[ROMAN.length - 1];
-                        text = elapsed < 0 ? 'Hosp' : (isMobile ? `LL ${ll}` : `Loot level ${ll}`);
+                        text = elapsed < 0 ? 'Hosp' : (isMobile ? `LL ${getLl(elapsed)}` : `Loot level ${getLl(elapsed)}`);
                     } else {
                         text = isMobile ? formatTimeSec(left) : formatTimeSecWithLetters(left);
                     }
