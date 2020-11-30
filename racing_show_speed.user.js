@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Racing enhancements
 // @namespace    lugburz.racing_enhancements
-// @version      0.3.7
+// @version      0.3.8
 // @description  Show car's current speed, precise skill, official race penalty, racing skill of others.
 // @author       Lugburz
 // @match        https://www.torn.com/*
@@ -353,7 +353,7 @@ function addSettingsDiv() {
 
 function addExportButton(results, crashes, my_name) {
     if ($("#racingupdatesnew").size() > 0 && $('#downloadAsCsv').size() < 1) {
-        let csv = 'position,name,time,best_lap,rs\n';
+        let csv = 'position,name,id,time,best_lap,rs\n';
         for (let i = 0; i < results.length; i++) {
             const timeStr = formatTimeMsec(results[i][2] * 1000);
             const bestLap = formatTimeMsec(results[i][3] * 1000);
