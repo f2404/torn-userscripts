@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Racing enhancements
 // @namespace    lugburz.racing_enhancements
-// @version      0.3.4
+// @version      0.3.6
 // @description  Show car's current speed, precise skill, official race penalty, racing skill of others.
 // @author       Lugburz
 // @match        https://www.torn.com/*
