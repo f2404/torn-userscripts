@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Racing enhancements
 // @namespace    lugburz.racing_enhancements
-// @version      0.3.6
+// @version      0.3.7
 // @description  Show car's current speed, precise skill, official race penalty, racing skill of others.
 // @author       Lugburz
 // @match        https://www.torn.com/*
@@ -250,10 +250,12 @@ function parseRacingData(data) {
     // calc, sort & show race results
     if (data.timeData.status >= 3) {
         const carsData = data.raceData.cars;
+        const carInfo = data.raceData.carInfo;
         const trackIntervals = data.raceData.trackData.intervals.length;
         let results = [], crashes = [];
 
         for (const playername in carsData) {
+            const userId = carInfo[playername].userID;
             const intervals = decode64(carsData[playername]).split(',');
             let raceTime = 0;
             let bestLap = 9999999999;
@@ -267,9 +269,9 @@ function parseRacingData(data) {
                     bestLap = Math.min(bestLap, lapTime);
                     raceTime += Number(lapTime);
                 }
-                results.push([playername, raceTime, bestLap]);
+                results.push([playername, userId, raceTime, bestLap]);
             } else {
-                crashes.push([playername, 'crashed']);
+                crashes.push([playername, userId, 'crashed']);
             }
         }
 
@@ -286,8 +288,8 @@ function parseRacingData(data) {
 
 // compare by time
 function compare(a, b) {
-    if (a[1] > b[1]) return 1;
-    if (b[1] > a[1]) return -1;
+    if (a[2] > b[2]) return 1;
+    if (b[2] > a[2]) return -1;
 
     return 0;
 }
@@ -308,14 +310,15 @@ function showResults(results, start = 0) {
                 else
                     place = p + 'th';
 
-                const result = typeof results[i][1] === 'number' ? formatTimeMsec(results[i][1] * 1000) : results[i][1];
-                const bestLap = results[i][2] ? formatTimeMsec(results[i][2] * 1000) : null;
+                const result = typeof results[i][2] === 'number' ? formatTimeMsec(results[i][2] * 1000) : results[i][2];
+                const bestLap = results[i][3] ? formatTimeMsec(results[i][3] * 1000) : null;
                 $(this).find('li.name').html($(this).find('li.name').html().replace(name, `${name} ${place} ${result}` + (bestLap ? ` (best: ${bestLap})` : '')));
                 return false;
             }
         });
     }
 }
+
 
 function addSettingsDiv() {
     if ($("#racingupdatesnew").size() > 0 && $('#racingEnhSettings').size() < 1) {
@@ -352,12 +355,12 @@ function addExportButton(results, crashes, my_name) {
     if ($("#racingupdatesnew").size() > 0 && $('#downloadAsCsv').size() < 1) {
         let csv = 'position,name,time,best_lap,rs\n';
         for (let i = 0; i < results.length; i++) {
-            const timeStr = formatTimeMsec(results[i][1] * 1000);
-            const bestLap = formatTimeMsec(results[i][2] * 1000);
-            csv += [i+1, results[i][0], timeStr, bestLap, (results[i][0] === my_name ? GM_getValue('racinglevel') : '')].join(',') + '\n';
+            const timeStr = formatTimeMsec(results[i][2] * 1000);
+            const bestLap = formatTimeMsec(results[i][3] * 1000);
+            csv += [i+1, results[i][0], results[i][1], timeStr, bestLap, (results[i][0] === my_name ? GM_getValue('racinglevel') : '')].join(',') + '\n';
         }
         for (let i = 0; i < crashes.length; i++) {
-            csv += [results.length + i + 1, crashes[i][0], crashes[i][1], '', (results[i][0] === my_name ? GM_getValue('racinglevel') : '')].join(',') + '\n';
+            csv += [results.length + i + 1, crashes[i][0], crashes[i][1], crashes[i][2], '', (results[i][0] === my_name ? GM_getValue('racinglevel') : '')].join(',') + '\n';
         }
 
         const myblob = new Blob([csv], {type: 'application/octet-stream'});
