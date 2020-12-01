@@ -55,7 +55,6 @@ function addInterceptor() {
                                 if (visibleCategories.length && !visibleCategories.includes(l.category)) hiddenIds.add(l.ID);
                                 cats.add(l.category);
                             }
-                            console.log(logs);
                             //console.log(cats);
                             hideLogs();
                         } catch (e) {
