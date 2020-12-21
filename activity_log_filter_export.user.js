@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Activity Log filter & export
 // @namespace    lugburz.activity_log_filter_export
-// @version      0.1
+// @version      0.2
 // @description  Activity Log filter & export.
 // @author       Lugburz
 // @match        https://www.torn.com/*
@@ -10,6 +10,9 @@
 // @grant        GM_registerMenuCommand
 // ==/UserScript==
 
+// Whether to export all (true) or only filtered (false) log messages.
+var exportAll = true;
+
 // Categories that you want to see - you can add multiple entries from the all categories list below.
 // If this list is empty, all categories will be visible.
 var visibleCategories = [
@@ -17,8 +20,8 @@ var visibleCategories = [
 ];
 
 var allCategories = [
-    "Ammo", "Attacking", "Authentication", "Awards", "Bank", "Bazaars", "Captcha", "Casino", "Church", "Cityfinds", "Company", "Competitions", "Crimes",
-    "Drugs", "Dump", "Education", "Enemieslist", "Equipping", "Events", "Faction", "Forums", "Friendslist", "Gym", "Halloweenbasket", "Hospital",
+    "Ammo", "Attacking", "Authentication", "Awards", "Bank", "Bazaars", "Captcha", "Casino", "Christmastown", "Church", "Cityfinds", "Company", "Competitions",
+    "Crimes", "Drugs", "Dump", "Education", "Enemieslist", "Equipping", "Events", "Faction", "Forums", "Friendslist", "Gym", "Halloweenbasket", "Hospital",
     "Itemmarket", "Itemsending", "Itemuse", "Jail", "Levelup", "Life", "Merits", "Messages", "Missions", "Moneysending", "Nerve", "Newsletters",
     "Parcels", "Pointsbuilding", "Pointsmarket", "Preferences", "Property", "Racing", "Shops", "Stocks", "Trades", "Travel", "Vault", "Viruses"
 ];
@@ -51,7 +54,7 @@ function addInterceptor() {
                         try {
                             const json = JSON.parse(text);
                             for (const l of json.log) {
-                                logs.add(l);
+                                if (exportAll || !exportAll && visibleCategories.length && visibleCategories.includes(l.category)) logs.add(l);
                                 if (visibleCategories.length && !visibleCategories.includes(l.category)) hiddenIds.add(l.ID);
                                 cats.add(l.category);
                             }
