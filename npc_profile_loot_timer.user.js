@@ -1,13 +1,13 @@
 // ==UserScript==
 // @name         Torn: Loot timer on NPC profile
 // @namespace    lugburz.show_timer_on_npc_profile
-// @version      0.2.17
+// @version      0.2.18
 // @description  Add a countdown timer to desired loot level on the NPC profile page as well as on the sidebar and the topbar (optionally).
 // @author       Lugburz
 // @match        https://www.torn.com/*
 // @require      https://github.com/f2404/torn-userscripts/raw/410fc2fb1dc4d2f21b90709687b97786641c15af/lib/lugburz_lib.js
 // @updateURL    https://github.com/f2404/torn-userscripts/raw/master/npc_profile_loot_timer.user.js
-// @connect      yata.alwaysdata.net
+// @connect      yata.yt
 // @grant        GM_xmlhttpRequest
 // @grant        GM_addStyle
 // @grant        GM_setValue
@@ -69,7 +69,7 @@ const yata_api = async () => {
     return new Promise((resolve, reject) => {
         GM_xmlhttpRequest({
             method: 'GET',
-            url: 'https://yata.alwaysdata.net/api/v1/loot/',
+            url: 'https://yata.yt/api/v1/loot/',
             headers: {
                 'Content-Type': 'application/json'
             },
