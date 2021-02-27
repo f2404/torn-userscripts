@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Racing enhancements
 // @namespace    lugburz.racing_enhancements
-// @version      0.3.9
+// @version      0.3.10
 // @description  Show car's current speed, precise skill, official race penalty, racing skill of others.
 // @author       Lugburz
 // @match        https://www.torn.com/*
@@ -370,6 +370,15 @@ function addExportButton(results, crashes, my_name) {
     }
 }
 
+function addPlaybackButton() {
+    if ($("#racingupdatesnew").size() > 0 && $('div.race-player-container').size() < 1) {
+        $('div.drivers-list > div.cont-black').prepend(`<div class="race-player-container"><button id="play-pause-btn" class="play"></button>
+<div id="speed-slider"><span id="prev-speed" class="disabled"></span><span id="speed-value">x1</span><span id="next-speed" class="enabled"></span></div>
+<div id="replay-bar-container"><span id="progress-active"></span><span id="progress-inactive"></span></div>
+<div id="race-timer-container"><span id="race-timer">00:00:00</span></div></div>`);
+    }
+}
+
 'use strict';
 
 // Your code here...
@@ -378,6 +387,9 @@ ajax((page, xhr) => {
     $("#racingupdatesnew").ready(addSettingsDiv);
     $("#racingupdatesnew").ready(showSpeed);
     $('#racingAdditionalContainer').ready(showPenalty);
+    if ($(location).attr('href').includes('sid=racing&tab=log&raceID=')) {
+        $('#racingupdatesnew').ready(addPlaybackButton);
+    }
     try {
         parseRacingData(JSON.parse(xhr.responseText));
     } catch (e) {}
@@ -386,6 +398,17 @@ ajax((page, xhr) => {
 $("#racingupdatesnew").ready(addSettingsDiv);
 $("#racingupdatesnew").ready(showSpeed);
 $('#racingAdditionalContainer').ready(showPenalty);
+
+if ($(location).attr('href').includes('sid=racing&tab=log&raceID=')) {
+    $('#racingupdatesnew').ready(addPlaybackButton);
+}
+
+// hide playback button when not showing a race log
+$('#racingupdatesnew').ready(function() {
+    $('div.racing-main-wrap').find('ul.categories > li > a').on('click', function() {
+        $('#racingupdatesnew').find('div.race-player-container').hide();
+    });
+});
 
 checkPenalty();
 
