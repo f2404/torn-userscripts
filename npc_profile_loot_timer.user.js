@@ -245,8 +245,8 @@ function addNpcTimers(data) {
     if (SIDEBAR_TIMERS && $('#sidebarNpcTimers').size() < 1) {
         let div = '<hr class="delimiter___neME6"><div id="sidebarNpcTimers"><span style="font-weight: 700;">NPC Timers</span><a id="showHideTimers" class="show-hide">[hide]</a>';
         Object.keys(NPCS).forEach(name => {
-            div += '<p style="line-height: 20px; text-decoration: none;" id="npcTimer' + NPCS[name].id + '"><a class="t-blue href desc" style="display:inline-block; width: 52px;" href="/loader.php?sid=attack&user2ID=' +
-                NPCS[name].id + '">' + name + ': </a><span></span></p>';
+            div += '<p style="line-height: 20px; text-decoration: none;" id="npcTimer' + NPCS[name].id + '"><a class="t-blue href desc" style="display:inline-block;" href="/loader.php?sid=attack&user2ID=' +
+                NPCS[name].id + '">' + name + '</a><span style="float: right;"></span></p>';
         });
         div += '</div>';
         $('#sidebar').find('div[class^=toggle-content__]').find('div[class^=content___]').append(div);
