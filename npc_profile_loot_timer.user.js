@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Loot timer on NPC profile
 // @namespace    lugburz.show_timer_on_npc_profile
-// @version      0.2.20
+// @version      0.2.21
 // @description  Add a countdown timer to desired loot level on the NPC profile page as well as on the sidebar and the topbar (optionally).
 // @author       Lugburz
 // @match        https://www.torn.com/*
@@ -233,6 +233,12 @@ function process(ts, loot_level) {
     }, 1000);
 }
 
+const newsContainerId = 'header-swiper-container';
+const lightTextColor = '#a0a0a0';
+const lightLinkColor = '#00a9f8';
+const darkTextColor = 'black';
+const darkLinkColor = '#069';
+
 function addNpcTimers(data) {
     if (!data)
         return;
@@ -269,10 +275,11 @@ function addNpcTimers(data) {
         if ($('div.header-wrapper-bottom').find('div.container').size() > 0) {
             // announcement
             $('div.header-wrapper-bottom').find('div.container').append(div);
-            $('#topbarNpcTimers').css('color', 'black');
-            $('#topbarNpcTimers').find('a').css('color', '#069');
+            $('#topbarNpcTimers').css('color', $(`#${newsContainerId}`).size() > 0 ? darkTextColor : lightTextColor);
+            $('#topbarNpcTimers').find('a').css('color', $(`#${newsContainerId}`).size() > 0 ? darkLinkColor : lightLinkColor);
         } else {
             $('div.header-wrapper-bottom').prepend(div);
+            $('#topbarNpcTimers').find('a').css('color', '#069');
         }
         $('#showHideTopbarTimers').on('click', function () {
             const hide = $('#showHideTopbarTimers').text() == '[hide]';
@@ -367,3 +374,24 @@ function addNpcTimers(data) {
 function log(data) {
     if (LOGGING_ENABLED) console.log(data)
 }
+
+// News ticker observer
+const observer = new MutationObserver(function(mutations) {
+    mutations.forEach(function(mutation) {
+        for (const node of mutation.addedNodes) {
+            if ($(node).attr('id') === newsContainerId) {
+                $('#topbarNpcTimers').css('color', darkTextColor);
+                $('#topbarNpcTimers').find('a').css('color', darkLinkColor);
+            }
+        }
+        for (const node of mutation.removedNodes) {
+            if ($(node).attr('id') === newsContainerId) {
+                $('#topbarNpcTimers').css('color', lightTextColor);
+                $('#topbarNpcTimers').find('a').css('color', lightLinkColor);
+            }
+        }
+    });
+});
+
+const wrapper = $('div.header-bottom-text');
+observer.observe(wrapper.get(0), { subtree: true, childList: true, characterData: false, attributes: false, attributeOldValue: false });
