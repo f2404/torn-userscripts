@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Loot timer on NPC profile
 // @namespace    lugburz.show_timer_on_npc_profile
-// @version      0.2.22
+// @version      0.2.23
 // @description  Add a countdown timer to desired loot level on the NPC profile page as well as on the sidebar and the topbar (optionally).
 // @author       Lugburz
 // @match        https://www.torn.com/*
@@ -30,7 +30,8 @@ const NPCS = {
     'Scrooge': { id: 10, loot_level: 4 },
     'Leslie': { id: 15, loot_level: 4 },
     'Jimmy': { id: 19, loot_level: 4 },
-    'Fernando': { id: 20, loot_level: 4 }
+    'Fernando': { id: 20, loot_level: 4 },
+    'Easter Bunny': { id: 17, loot_level: 4 }
 };
 
 
