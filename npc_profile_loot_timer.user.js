@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Loot timer on NPC profile
 // @namespace    lugburz.show_timer_on_npc_profile
-// @version      0.2.21
+// @version      0.2.22
 // @description  Add a countdown timer to desired loot level on the NPC profile page as well as on the sidebar and the topbar (optionally).
 // @author       Lugburz
 // @match        https://www.torn.com/*
@@ -234,10 +234,10 @@ function process(ts, loot_level) {
 }
 
 const newsContainerId = 'header-swiper-container';
-const lightTextColor = '#a0a0a0';
+const lightTextColor = '#aaa';
 const lightLinkColor = '#00a9f8';
-const darkTextColor = 'black';
-const darkLinkColor = '#069';
+const darkTextColor = 'var(--default-color)';
+const darkLinkColor = 'var(--default-blue-color)';
 
 function addNpcTimers(data) {
     if (!data)
@@ -249,7 +249,7 @@ function addNpcTimers(data) {
     log('Adding NPC Timers for:')
     log(NPCS);
     if (SIDEBAR_TIMERS && $('#sidebarNpcTimers').size() < 1) {
-        let div = '<hr class="delimiter___neME6"><div id="sidebarNpcTimers"><span style="font-weight: 700;">NPC Timers</span><a id="showHideTimers" class="show-hide">[hide]</a>';
+        let div = '<hr class="delimiter___neME6"><div id="sidebarNpcTimers"><span style="font-weight: 700;">NPC Timers</span><a id="showHideTimers" class="t-blue show-hide">[hide]</a>';
         Object.keys(NPCS).forEach(name => {
             div += '<p style="line-height: 20px; text-decoration: none;" id="npcTimer' + NPCS[name].id + '"><a class="t-blue href desc" style="display:inline-block;" href="/loader.php?sid=attack&user2ID=' +
                 NPCS[name].id + '">' + name + '</a><span style="float: right;"></span></p>';
