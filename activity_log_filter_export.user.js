@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Activity Log filter & export
 // @namespace    lugburz.activity_log_filter_export
-// @version      0.3
+// @version      0.3.1
 // @description  Activity Log filter & export.
 // @author       Lugburz
 // @match        https://www.torn.com/*
@@ -123,7 +123,7 @@ function addExportButton() {
         return;
     }
 
-    const button = '<button id="exportLogsBtn" class="button___1W2NU" style="line-height: 100%;" type="button">Export</button>';
+    const button = '<button id="exportLogsBtn" class="button___1W2NU" style="line-height: 100%; color: var(--default-blue-color);" type="button">Export</button>';
     $('#activity-log-root').find('div[class^=buttonsWrapper]').append(button);
 
     $('#exportLogsBtn').on('click', () => {
@@ -145,7 +145,7 @@ function addExportButton() {
     addInterceptor();
 
     $(root).ready(() => {
-        observer.observe($(root).get(0), { subtree: true, childList: true });
+        if ($(root).get(0)) observer.observe($(root).get(0), { subtree: true, childList: true });
         GM_registerMenuCommand('Export Activity Log', exportActivityLog);
     });
 })();
