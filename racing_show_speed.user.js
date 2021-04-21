@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Racing enhancements
 // @namespace    lugburz.racing_enhancements
-// @version      0.3.10
+// @version      0.3.11
 // @description  Show car's current speed, precise skill, official race penalty, racing skill of others.
 // @author       Lugburz
 // @match        https://www.torn.com/*
@@ -213,7 +213,7 @@ function checkPenalty() {
 }
 
 function updateSkill(level) {
-    const skill = Number(level).toFixed(4);
+    const skill = Number(level).toFixed(5);
     const prev = GM_getValue('racinglevel');
 
     if (SHARE_RS && level != prev) {
@@ -221,12 +221,14 @@ function updateSkill(level) {
     }
 
     if (NOTIFICATIONS && prev !== "undefined" && typeof prev !== "undefined" && level > prev) {
-        GM_notification("Your racing skill has increased by " + Number(level - prev).toFixed(4) + "!", "Torn: Racing enhancements");
+        GM_notification("Your racing skill has increased by " + Number(level - prev).toFixed(5) + "!", "Torn: Racing enhancements");
     }
     GM_setValue('racinglevel', level);
 
     if ($('#racingMainContainer').find('div.skill').size() > 0) {
-        $('#racingMainContainer').find('div.skill').text(skill);
+        // move the elements to the left a little bit to fit 5th decimal digit
+        $('#racingMainContainer').find('div.skill-desc').css('left', '5px');
+        $('#racingMainContainer').find('div.skill').css('left', '5px').text(skill);
     }
 }
 
