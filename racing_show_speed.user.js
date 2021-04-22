@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Racing enhancements
 // @namespace    lugburz.racing_enhancements
-// @version      0.3.11
+// @version      0.3.12
 // @description  Show car's current speed, precise skill, official race penalty, racing skill of others.
 // @author       Lugburz
 // @match        https://www.torn.com/*
@@ -226,9 +226,13 @@ function updateSkill(level) {
     GM_setValue('racinglevel', level);
 
     if ($('#racingMainContainer').find('div.skill').size() > 0) {
-        // move the elements to the left a little bit to fit 5th decimal digit
-        $('#racingMainContainer').find('div.skill-desc').css('left', '5px');
-        $('#racingMainContainer').find('div.skill').css('left', '5px').text(skill);
+        if ($("#sidebarroot").find("a[class^='menu-value']").size() > 0) {
+            // move the elements to the left a little bit to fit 5th decimal digit in desktop mode
+            $('#racingMainContainer').find('div.skill-desc').css('left', '5px');
+            $('#racingMainContainer').find('div.skill').css('left', '5px').text(skill);
+        } else {
+            $('#racingMainContainer').find('div.skill').text(skill);
+        }
     }
 }
 
