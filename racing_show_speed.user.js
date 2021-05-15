@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Racing enhancements
 // @namespace    lugburz.racing_enhancements
-// @version      0.3.12
+// @version      0.3.13
 // @description  Show car's current speed, precise skill, official race penalty, racing skill of others.
 // @author       Lugburz
 // @match        https://www.torn.com/*
@@ -283,7 +283,7 @@ function parseRacingData(data) {
 
         // sort by time
         results.sort(compare);
-        addExportButton(results, crashes, my_name);
+        addExportButton(results, crashes, my_name, data.raceID, data.timeData.timeEnded);
 
         if (SHOW_RESULTS) {
             showResults(results);
@@ -369,9 +369,13 @@ function addExportButton(results, crashes, my_name) {
             csv += [results.length + i + 1, crashes[i][0], crashes[i][1], crashes[i][2], '', (results[i][0] === my_name ? GM_getValue('racinglevel') : '')].join(',') + '\n';
         }
 
+        const timeE = new Date();
+        timeE.setTime(time_ended * 1000);
+        const fileName = `${timeE.getUTCFullYear()}${pad(timeE.getUTCMonth() + 1, 2)}${pad(timeE.getUTCDate(), 2)}-race_${race_id}.csv`;
+
         const myblob = new Blob([csv], {type: 'application/octet-stream'});
         const myurl = window.URL.createObjectURL(myblob);
-        const exportBtn = `<a id="downloadAsCsv" href="${myurl}" style="float: right; margin-left: 12px;" download="results.csv">Download results as CSV</a>`;
+        const exportBtn = `<a id="downloadAsCsv" href="${myurl}" style="float: right; margin-left: 12px;" download="${fileName}">Download results as CSV</a>`;
         $(exportBtn).insertAfter('#racingEnhSettings');
     }
 }
