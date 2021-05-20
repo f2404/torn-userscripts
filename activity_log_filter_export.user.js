@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Activity Log filter & export
 // @namespace    lugburz.activity_log_filter_export
-// @version      0.3.1
+// @version      0.3.2
 // @description  Activity Log filter & export.
 // @author       Lugburz
 // @match        https://www.torn.com/*
@@ -128,11 +128,17 @@ function addExportButton() {
 
     $('#exportLogsBtn').on('click', () => {
         let csv = 'time,category,text\n';
-        $('#activity-log-root').find('div[class^=logWrapper]').find('div[class^=actionInnerWrapper]').each((index, el) => {
-            const id = $(el).find('span.log-text').attr('id').replace('text-', '');
-            const l = logpageLogs.find(log => log.ID === id);
-            const time = new Date(l.time * 1000);
-            csv += [`"${time.toUTCString()}"`, l.category, `"${l.text.replace(/\n/g, ' ')}"`].join(',') + '\n';
+        let prev_id = null;
+        $('#activity-log-root').find('div[class^=logWrapper]').find('td').each((index, el) => {
+            if ($(el).find('span.log-text').size() > 0) {
+                const id = $(el).find('span.log-text').attr('id').replace('text-', '');
+                if (id !== prev_id) { // avoid duplicates
+                    const l = logpageLogs.find(log => log.ID === id);
+                    const time = new Date(l.time * 1000);
+                    csv += [`"${time.toUTCString()}"`, l.category, `"${l.text.replace(/\n/g, ' ')}"`].join(',') + '\n';
+                    prev_id = id;
+                }
+            }
         });
         downloadCsv(csv);
     });
