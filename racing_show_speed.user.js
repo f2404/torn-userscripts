@@ -1,13 +1,14 @@
 // ==UserScript==
 // @name         Torn: Racing enhancements
 // @namespace    lugburz.racing_enhancements
-// @version      0.3.14
+// @version      0.3.15
 // @description  Show car's current speed, precise skill, official race penalty, racing skill of others.
 // @author       Lugburz
 // @match        https://www.torn.com/*
 // @require      https://github.com/f2404/torn-userscripts/raw/e3bb87d75b44579cdb6f756435696960e009dc84/lib/lugburz_lib.js
 // @updateURL    https://github.com/f2404/torn-userscripts/raw/master/racing_show_speed.user.js
 // @connect      racing-skill-sharing.firebaseio.com
+// @connect      github.com
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @grant        GM_notification
