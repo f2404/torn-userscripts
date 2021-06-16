@@ -1,14 +1,14 @@
 // ==UserScript==
 // @name         Torn: Racing enhancements
 // @namespace    lugburz.racing_enhancements
-// @version      0.3.15
+// @version      0.3.16
 // @description  Show car's current speed, precise skill, official race penalty, racing skill of others.
 // @author       Lugburz
 // @match        https://www.torn.com/*
 // @require      https://github.com/f2404/torn-userscripts/raw/e3bb87d75b44579cdb6f756435696960e009dc84/lib/lugburz_lib.js
 // @updateURL    https://github.com/f2404/torn-userscripts/raw/master/racing_show_speed.user.js
 // @connect      racing-skill-sharing.firebaseio.com
-// @connect      github.com
+// @connect      raw.githubusercontent.com
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @grant        GM_notification
@@ -32,8 +32,8 @@ const SHARE_RS = GM_getValue('shareRacingSkill') > 0;
 const SHOW_SKINS = GM_getValue('showCarSkins') != 0;
 
 // TODO: change repo url's before merging back upstream
-const SKIN_AWARDS = 'https://github.com/br41nslug/torn-userscripts/raw/master/racing_skin_awards.json';
-const SKIN_IMAGE = id => `https://github.com/br41nslug/torn-userscripts/raw/master/car_skins/${id}.png`;
+const SKIN_AWARDS = 'https://raw.githubusercontent.com/br41nslug/torn-userscripts/master/racing_skin_awards.json';
+const SKIN_IMAGE = id => `https://raw.githubusercontent.com/br41nslug/torn-userscripts/master/car_skins/${id}.png`;
 
 var period = 1000;
 var last_compl = -1.0;
