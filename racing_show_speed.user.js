@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Racing enhancements
 // @namespace    lugburz.racing_enhancements
-// @version      0.3.16
+// @version      0.3.17
 // @description  Show car's current speed, precise skill, official race penalty, racing skill of others.
 // @author       Lugburz
 // @match        https://www.torn.com/*
@@ -29,7 +29,7 @@ const SHOW_SPEED = GM_getValue('showSpeedChk') != 0;
 const SHARE_RS = GM_getValue('shareRacingSkill') > 0;
 
 // Whether to show car skins
-const SHOW_SKINS = GM_getValue('showCarSkins') != 0;
+const SHOW_SKINS = GM_getValue('showSkinsChk') != 0;
 
 // TODO: change repo url's before merging back upstream
 const SKIN_AWARDS = 'https://raw.githubusercontent.com/br41nslug/torn-userscripts/master/racing_skin_awards.json';
@@ -376,6 +376,7 @@ function addSettingsDiv() {
               '<li><input type="checkbox" style="margin-left: 5px; margin-right: 5px" id="showSpeedChk"><label>Show current speed</label></li>' +
               '<li><input type="checkbox" style="margin-left: 5px; margin-right: 5px" id="showNotifChk"><label>Show notifications</label></li>' +
               '<li><input type="checkbox" style="margin-left: 5px; margin-right: 5px" id="showResultsChk"><label>Show results</label></li>' +
+              '<li><input type="checkbox" style="margin-left: 5px; margin-right: 5px" id="showSkinsChk"><label>Show racing skins</label></li>' +
               '<li><input type="checkbox" style="margin-left: 5px; margin-right: 5px" id="shareRacingSkill"><label>Share racing skill with others</label></li></ul></div></div>';
         $('#racingupdatesnew').prepend(div);
 
