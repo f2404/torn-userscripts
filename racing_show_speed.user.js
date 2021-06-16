@@ -27,6 +27,13 @@ const SHOW_SPEED = GM_getValue('showSpeedChk') != 0;
 // Whether to share racing skill with others (disabled by default).
 const SHARE_RS = GM_getValue('shareRacingSkill') > 0;
 
+// Whether to show car skins
+const SHOW_SKINS = GM_getValue('showCarSkins') != 0;
+
+// TODO: change repo url's before merging back upstream
+const SKIN_AWARDS = 'https://github.com/br41nslug/torn-userscripts/raw/master/racing_skin_awards.json';
+const SKIN_IMAGE = id => `https://github.com/br41nslug/torn-userscripts/raw/master/car_skins/${id}.png`;
+
 var period = 1000;
 var last_compl = -1.0;
 var x = 0;
@@ -44,7 +51,7 @@ function maybeClear() {
 const FB_URL = 'https://racing-skill-sharing.firebaseio.com/racing_skill_reports/';
 const racingSkillCacheByDriverId = new Map();
 
-async function insertRacingSkillsIntoCurrentDriversList() {
+async function updateDriversList() {
     const driversList = document.getElementById('leaderBoard');
     if (driversList === null) {
         return;
@@ -52,17 +59,25 @@ async function insertRacingSkillsIntoCurrentDriversList() {
 
     watchForDriversListContentChanges(driversList);
 
-    const racingSkills = await getRacingSkillForDrivers(getDriverIds(driversList));
+    const driverIds = getDriverIds(driversList);
+    const racingSkills = await getRacingSkillForDrivers(driverIds);
+    const racingSkins = await getRacingSkinOwners(driverIds);
     for (let driver of driversList.querySelectorAll('.driver-item')) {
         const driverId = getDriverId(driver);
-        if (! racingSkills[driverId]) {
-            continue;
+        if (SHARE_RS && !!racingSkills[driverId]) {
+            const skill = racingSkills[driverId].split('+')[0];
+            const style = racingSkills[driverId].split('+')[1] || '';
+            const nameDiv = driver.querySelector('.name');
+            nameDiv.style.position = 'relative';
+            nameDiv.insertAdjacentHTML('beforeend', `<span style="position:absolute;right:5px;${style}">${(+skill).toFixed(2)}</span>`);
         }
-        const skill = racingSkills[driverId].split('+')[0];
-        const style = racingSkills[driverId].split('+')[1] || '';
-        const nameDiv = driver.querySelector('.name');
-        nameDiv.style.position = 'relative';
-        nameDiv.insertAdjacentHTML('beforeend', `<span style="position:absolute;right:5px;${style}">${(+skill).toFixed(2)}</span>`);
+        if (SHOW_SKINS && !!racingSkins[driverId]) {
+            const carImg = driver.querySelector('.car').querySelector('img');
+            const carId = carImg.getAttribute('src').replace(/[^0-9]*/g, '');
+            if (!!racingSkins[driverId][carId]) {
+                carImg.setAttribute('src', SKIN_IMAGE(racingSkins[driverId][carId]));
+            }
+        }
     }
 }
 
@@ -72,7 +87,7 @@ function watchForDriversListContentChanges(driversList) {
     }
 
     // The content of #leaderBoard is rebuilt periodically so watch for changes:
-    new MutationObserver(insertRacingSkillsIntoCurrentDriversList).observe(driversList, {childList: true});
+    new MutationObserver(updateDriversList).observe(driversList, {childList: true});
     driversList.dataset.hasWatcher = 'true';
 }
 
@@ -115,6 +130,32 @@ async function getRacingSkillForDrivers(driverIds) {
         resultHash[driverId] = racingSkillCacheByDriverId.get(driverId);
     }
     return resultHash;
+}
+
+let _skinOwnerCache = null;
+async function getRacingSkinOwners(driverIds) {
+    function filterSkins(skins) {
+        let result = {};
+        for (let driverId of driverIds) {
+            if (!skins[driverId]) continue;
+            result[driverId] = skins[driverId];
+        }
+        return result;
+    }
+    return new Promise(resolve => {
+        // fetching the list once per page load should be enough
+        if (!!_skinOwnerCache) return resolve(_skinOwnerCache);
+        // fetch and filter the owners
+        GM_xmlhttpRequest({
+            method: 'GET',
+            url: SKIN_AWARDS,
+            headers: {'Content-Type': 'application/json'},
+            onload: ({responseText}) => {
+                _skinOwnerCache = JSON.parse(responseText);
+                resolve(_skinOwnerCache);
+            }
+        });
+    }).then(filterSkins);
 }
 
 function getUserIdFromCookie() {
@@ -422,10 +463,10 @@ $('#racingupdatesnew').ready(function() {
 
 checkPenalty();
 
-if (SHARE_RS && $(location).attr('href').includes('sid=racing')) {
+if ((SHARE_RS || SHOW_SKINS) && $(location).attr('href').includes('sid=racing')) {
     $("#racingupdatesnew").ready(function() {
-        insertRacingSkillsIntoCurrentDriversList();
+        updateDriversList();
         // On change race tab, (re-)insert the racing skills if applicable:
-        new MutationObserver(insertRacingSkillsIntoCurrentDriversList).observe(document.getElementById('racingAdditionalContainer'), {childList: true});
+        new MutationObserver(updateDriversList).observe(document.getElementById('racingAdditionalContainer'), {childList: true});
     });
 }
