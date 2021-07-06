@@ -105,7 +105,7 @@ function getDriverId(driverUl) {
 
 async function getRacingSkillForDrivers(driverIds) {
     const driverIdsToFetchSkillFor = driverIds.filter(driverId => ! racingSkillCacheByDriverId.has(driverId));
-    for (let driverId of driverIdsToFetchSkillFor) {
+    for (const driverId of driverIdsToFetchSkillFor) {
         const json = await fetchRacingSkillForDrivers(driverId);
         if (json && json != 'null') {
             let skill = null;
@@ -125,13 +125,22 @@ async function getRacingSkillForDrivers(driverIds) {
                     skill += '+color:orange';
                 }
                 racingSkillCacheByDriverId.set(+driverId, skill);
+            } else {
+                // caching empty results to improve performance
+                racingSkillCacheByDriverId.set(+driverId, '');
             }
+        } else {
+            // caching empty results to improve performance
+            racingSkillCacheByDriverId.set(+driverId, '');
         }
     }
 
     const resultHash = {};
-    for (let driverId of driverIds) {
-        resultHash[driverId] = racingSkillCacheByDriverId.get(driverId);
+    for (const driverId of driverIds) {
+        const skill = racingSkillCacheByDriverId.get(driverId);
+        if (!!skill) {
+            resultHash[driverId] = skill;
+        }
     }
     return resultHash;
 }
