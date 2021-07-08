@@ -31,7 +31,7 @@ const SHARE_RS = GM_getValue('shareRacingSkill') > 0;
 // Whether to show car skins
 const SHOW_SKINS = GM_getValue('showSkinsChk') != 0;
 
-// TODO: change repo url's before merging back upstream
+// Domain for racecar skins
 const SKIN_AWARDS = 'https://race-skins.brainslug.nl/custom/data';
 const SKIN_IMAGE = id => `https://race-skins.brainslug.nl/assets/${id}`;
 
