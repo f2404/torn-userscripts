@@ -149,11 +149,11 @@ let _skinOwnerCache = null;
 async function getRacingSkinOwners(driverIds) {
     function filterSkins(skins) {
         let result = {};
-        for (let driverId of driverIds) {
-            if (!!skins?.['*']?.[driverId]) {
+        for (const driverId of driverIds) {
+            if (!!skins && !!skins['*'] && !!skins['*'][driverId]) {
                 result[driverId] = skins['*'][driverId];
             }
-            if (!!skins?.[RACE_ID]?.[driverId]) {
+            if (!!skins && !!skins[RACE_ID] && !!skins[RACE_ID][driverId]) {
                 result[driverId] = skins[RACE_ID][driverId];
             }
         }
