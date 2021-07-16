@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Miniprofile: Show last action
 // @namespace    lugburz.miniprofile.show_last_action
-// @version      0.1.4
+// @version      0.1.5
 // @description  Show last action in miniprofile.
 // @author       Lugburz
 // @match        https://www.torn.com/*
@@ -58,8 +58,8 @@ const observer = new MutationObserver(function(mutations) {
                 if ($(this).attr('id') && $(this).attr('id') == 'profile-mini-root') {
                     observer.disconnect();
                     observer.observe($('#profile-mini-root').get(0), { subtree: true, childList: true });
-                } else if ($(this).attr('class') && $(this).attr('class').indexOf('-profile-mini-_userProfileWrapper___') > -1) {
-                    let id = $(this).find('div[class^=-profile-mini-_userWrap__]').find('a').attr('href');
+                } else if ($(this).attr('class') && $(this).attr('class').indexOf('profile-mini-_userProfileWrapper___') > -1) {
+                    let id = $(this).find('div[class^=profile-mini-_userWrap__]').find('a').attr('href');
                     if (id) {
                         id = id.replace(/\/?profiles.php\?XID=/, '');
                         $(this).append('<div style="color: #555;  font-size: 12px; line-height: 14px;""><b>Last action:</b> <span id="miniProfileLastAction"></span></div>');
