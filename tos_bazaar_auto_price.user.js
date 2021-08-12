@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Bazaar Auto Price
 // @namespace    tos
-// @version      0.7.7
+// @version      0.7.8
 // @description  Auto set bazaar prices on money input field click.
 // @author       tos, Lugburz
 // @match        *.torn.com/bazaar.php*
@@ -85,15 +85,20 @@ const observer = new MutationObserver((mutations) => {
   for (const mutation of mutations) {
     for (const node of mutation.addedNodes) {
         if (typeof node.classList !== 'undefined' && node.classList) {
-            let input = $(node).find('[class^=priceInput]');
-            if ($(input).size() > 0) {
+            const remove = $(node).find('[class*=removeAmountInput]');
+            let input = $(node).find('[class^=input-money]');
+            if ($(input).size() > 0 && $(remove).size() > 0) {
                 // Manage items
                 $(input).each(function() {
                     const img = $(this).parent().parent().find('img');
-                    const itemID = $(img).attr('src').split('items/')[1].split('/medium')[0];
-                    addOneFocusHandler($(this), itemID);
+                    const src = $(img).attr('src');
+                    if (src) {
+                        const itemID = src.split('items/')[1].split('/medium')[0];
+                        const inp = $(this).find('.input-money[type=text]');
+                        addOneFocusHandler($(inp), itemID);
+                    }
                 });
-            } else {
+            } else if ($(input).size() > 0) {
                 // Add items
                 input = node.querySelector('.input-money[type=text]');
                 const img = node.querySelector('img');
