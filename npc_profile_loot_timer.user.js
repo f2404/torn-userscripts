@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Loot timer on NPC profile
 // @namespace    lugburz.show_timer_on_npc_profile
-// @version      0.2.24
+// @version      0.2.25
 // @description  Add a countdown timer to desired loot level on the NPC profile page as well as on the sidebar and the topbar (optionally).
 // @author       Lugburz
 // @match        https://www.torn.com/*
@@ -241,11 +241,14 @@ const lightLinkColor = '#00a9f8';
 const darkTextColor = 'var(--default-color)';
 const darkLinkColor = 'var(--default-blue-color)';
 
+const isMobile = () => $('#tcLogo').height() < 50;
+const addContentPadding = (add) => $('#mainContainer > div.content-wrapper').css('padding-top', add ? '10px' : '0px');
+const setTopbarPadding = (pad) => $('#topbarNpcTimers').css('padding-top', pad);
+
 function addNpcTimers(data) {
     if (!data)
         return;
 
-    const isMobile = ($('#tcLogo').height() < 50);
     const getLl = (elapsed => (elapsed < TIMINGS[TIMINGS.length - 1]) ? ROMAN[TIMINGS.findIndex(t => elapsed < t) - 1] : ROMAN[ROMAN.length - 1]);
 
     log('Adding NPC Timers for:')
@@ -267,11 +270,11 @@ function addNpcTimers(data) {
     }
 
     if (TOPBAR_TIMERS && $('#topbarNpcTimers').size() < 1) {
-        let div = '<div id="topbarNpcTimers" class="container" style="line-height: 28px;"><span style="font-weight: 700;">' +
+        let div = '<div id="topbarNpcTimers" class="container" style="line-height: 28px; z-index: 1; position: relative;"><span style="font-weight: 700;">' +
             'NPC Timers&nbsp;<a id="showHideTopbarTimers" class="t-blue href desc" style="cursor: pointer; display:inline-block; width: 45px;">[hide]</a></span>';
         Object.keys(NPCS).forEach(name => {
-            div += '<span style="text-decoration: none;" id="npcTimerTop' + NPCS[name].id + '"><a class="t-blue href desc" style="display:inline-block;" href="/loader.php?sid=attack&user2ID=' +
-                `${NPCS[name].id}">${name}:&nbsp;</a><span style="display:inline-block; width: ${isMobile? 50 : 80}px;"></span></span>`;
+            div += '<span style="text-decoration: none;" id="npcTimerTop' + NPCS[name].id + '"><a class="t-blue href desc" style="display: inline-block;" href="/loader.php?sid=attack&user2ID=' +
+                `${NPCS[name].id}">${name}:&nbsp;</a><span style="display:inline-block; width: ${isMobile() ? 50 : 80}px;"></span></span>`;
         });
         div += '</div>';
         if ($('div.header-wrapper-bottom').find('div.container').size() > 0) {
@@ -289,7 +292,7 @@ function addNpcTimers(data) {
             hideTimers(hide, data, false);
         });
         // phone or desktop mode
-        $('#topbarNpcTimers').find('span').first().css('padding-left', isMobile ? '4px' : '190px');
+        $('#topbarNpcTimers').find('span').first().css('padding-left', isMobile() ? '4px' : '190px');
     }
 
     if (SIDEBAR_TIMERS) {
@@ -335,9 +338,9 @@ function addNpcTimers(data) {
                     let text;
                     if (left < 0) {
                         const elapsed = Math.floor(now / 1000) - data.hosp_out[id];
-                        text = elapsed < 0 ? 'Hosp' : (isMobile ? `LL ${getLl(elapsed)}` : `Loot level ${getLl(elapsed)}`);
+                        text = elapsed < 0 ? 'Hosp' : (isMobile() ? `LL ${getLl(elapsed)}` : `Loot level ${getLl(elapsed)}`);
                     } else {
-                        text = isMobile ? formatTimeSec(left) : formatTimeSecWithLetters(left);
+                        text = isMobile() ? formatTimeSec(left) : formatTimeSecWithLetters(left);
                     }
                     $(span).text(text);
                     maybeChangeColors(span, left);
@@ -384,12 +387,17 @@ const observer = new MutationObserver(function(mutations) {
             if ($(node).attr('id') === newsContainerId) {
                 $('#topbarNpcTimers').css('color', darkTextColor);
                 $('#topbarNpcTimers').find('a').css('color', darkLinkColor);
+                addContentPadding(true);
+                // move the topbar down in mobile mode if news ticker is enabled
+                setTopbarPadding(isMobile() ? $('#sidebarroot').height() : 0);
             }
         }
         for (const node of mutation.removedNodes) {
             if ($(node).attr('id') === newsContainerId) {
                 $('#topbarNpcTimers').css('color', lightTextColor);
                 $('#topbarNpcTimers').find('a').css('color', lightLinkColor);
+                addContentPadding(false);
+                setTopbarPadding(0);
             }
         }
     });
