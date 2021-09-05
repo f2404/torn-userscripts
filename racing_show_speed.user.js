@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Racing enhancements
 // @namespace    lugburz.racing_enhancements
-// @version      0.4.1
+// @version      0.4.2
 // @description  Show car's current speed, precise skill, official race penalty, racing skill of others and race car skins.
 // @author       Lugburz
 // @match        https://www.torn.com/*
@@ -310,7 +310,7 @@ function updateSkill(level) {
         }
 
         const lastInc = GM_getValue('lastRSincrement');
-        if (NOTIFICATIONS && lastInc) {
+        if (lastInc) {
             $('div.skill').append(`<div style="margin-top: 10px;">Last gain: ${lastInc}</div>`);
         }
     }
