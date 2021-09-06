@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Racing enhancements
 // @namespace    lugburz.racing_enhancements
-// @version      0.4.2
+// @version      0.4.3
 // @description  Show car's current speed, precise skill, official race penalty, racing skill of others and race car skins.
 // @author       Lugburz
 // @match        https://www.torn.com/*
@@ -293,9 +293,9 @@ function updateSkill(level) {
         saveRacingSkill(userID, skill);
     }
 
-    if (NOTIFICATIONS && prev !== "undefined" && typeof prev !== "undefined" && level > prev) {
+    if (prev !== "undefined" && typeof prev !== "undefined" && level > prev) {
         const inc = Number(level - prev).toFixed(5);
-        GM_notification("Your racing skill has increased by " + inc + "!", "Torn: Racing enhancements");
+        if (NOTIFICATIONS) GM_notification("Your racing skill has increased by " + inc + "!", "Torn: Racing enhancements");
         GM_setValue('lastRSincrement', inc);
     }
     GM_setValue('racinglevel', level);
