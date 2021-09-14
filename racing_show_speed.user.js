@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Racing enhancements
 // @namespace    lugburz.racing_enhancements
-// @version      0.4.3
+// @version      0.4.4
 // @description  Show car's current speed, precise skill, official race penalty, racing skill of others and race car skins.
 // @author       Lugburz
 // @match        https://www.torn.com/*
@@ -289,6 +289,19 @@ function updateSkill(level) {
     const skill = Number(level).toFixed(5);
     const prev = GM_getValue('racinglevel');
 
+    const now = Date.now();
+    const lastDaysRs = GM_getValue('lastDaysRs');
+    if (lastDaysRs && lastDaysRs.includes(':')) {
+        const ts = lastDaysRs.split(':')[0];
+        const dateTs = new Date();
+        dateTs.setTime(ts);
+        if (1 * (new Date(now).setUTCHours(0, 0, 0, 0)) - 1 * (dateTs.setUTCHours(0, 0, 0, 0)) >= 24*60*60*1000) {
+            GM_setValue('lastDaysRs', `${now}:${prev ? prev : skill}`);
+        }
+    } else {
+        GM_setValue('lastDaysRs', `${now}:${prev ? prev : skill}`);
+    }
+
     if (SHARE_RS && level != prev) {
         saveRacingSkill(userID, skill);
     }
@@ -316,11 +329,29 @@ function updateSkill(level) {
     }
 }
 
+function updatePoints(pointsearned) {
+    const now = Date.now();
+    const lastDaysPoints = GM_getValue('lastDaysPoints');
+    const prev = GM_getValue('pointsearned');
+    if (lastDaysPoints && lastDaysPoints.includes(':')) {
+        const ts = lastDaysPoints.split(':')[0];
+        const dateTs = new Date();
+        dateTs.setTime(ts);
+        if (1 * (new Date(now).setUTCHours(0, 0, 0, 0)) - 1 * (dateTs.setUTCHours(0, 0, 0, 0)) >= 24*60*60*1000) {
+            GM_setValue('lastDaysPoints', `${now}:${prev ? prev : pointsearned}`);
+        }
+    } else {
+        GM_setValue('lastDaysPoints', `${now}:${prev ? prev : pointsearned}`);
+    }
+    GM_setValue('pointsearned', pointsearned);
+}
+
 function parseRacingData(data) {
     // no sidebar in phone mode
     const my_name = $("#sidebarroot").find("a[class^='menu-value']").html() || data.user.playername;
 
     updateSkill(data['user']['racinglevel']);
+    updatePoints(data['user']['pointsearned']);
 
     const leavepenalty = data['user']['leavepenalty'];
     GM_setValue('leavepenalty', leavepenalty);
@@ -470,6 +501,42 @@ function addPlaybackButton() {
     }
 }
 
+function displayDailyGains() {
+    $('#mainContainer').find('div.content').find('span.label').each((i, el) => {
+        if ($(el).text().includes('Racing')) {
+            const racingLi = $(el).parent().parent();
+
+            // RS gain
+            const desc = $(racingLi).find('span.desc');
+            if ($(desc).size() > 0) {
+                const rsText = $(desc).text();
+                const currentRs = GM_getValue('racinglevel');
+                const lastDaysRs = GM_getValue('lastDaysRs');
+                const oldRs = lastDaysRs && lastDaysRs.includes(':') ? lastDaysRs.split(':')[1] : undefined;
+                $(desc).text(`${rsText} / Daily gain: ${currentRs && oldRs ? (1*currentRs - 1*oldRs).toFixed(5) : 'N/A'}`);
+                $(desc).attr('title', 'Daily gain: How much your racing skill has increased since yesterday.');
+            }
+
+            // points gain
+            const lastDaysPoints = GM_getValue('lastDaysPoints');
+            const currentPoints = GM_getValue('pointsearned');
+            const oldPoints = lastDaysPoints && lastDaysPoints.includes(':') ? lastDaysPoints.split(':')[1] : undefined;
+            let pointsTitle = 'Racing points earned: How many points you have earned throughout your carreer.';
+            for (const x of [ {points: 25, class: 'D'}, {points: 100, class: 'C'}, {points: 250, class: 'B'}, {points: 475, class: 'A'} ]) {
+                if (currentPoints && currentPoints < x.points) pointsTitle += `<br>Till <b>class ${x.class}</b>: ${1*x.points - 1*currentPoints}`;
+            }
+            const pointsLi = `<li role="row"><span class="divider"><span class="label" title="${pointsTitle}">Racing points earned</span></span>
+<span class="desc" title="Daily gain: How many racing points you've earned since yesterday.">
+${currentPoints ? currentPoints : 'N/A'} / Daily gain: ${currentPoints && oldPoints ? 1*currentPoints - 1*oldPoints : 'N/A'}
+</span>
+</li>`;
+            $(pointsLi).insertAfter(racingLi);
+
+            return false;
+        }
+    });
+}
+
 'use strict';
 
 // Your code here...
@@ -489,6 +556,10 @@ ajax((page, xhr) => {
 $("#racingupdatesnew").ready(addSettingsDiv);
 $("#racingupdatesnew").ready(showSpeed);
 $('#racingAdditionalContainer').ready(showPenalty);
+
+if ($(location).attr('href').includes('index.php')) {
+    $('#mainContainer').ready(displayDailyGains);
+}
 
 if ($(location).attr('href').includes('sid=racing&tab=log&raceID=')) {
     $('#racingupdatesnew').ready(addPlaybackButton);
