@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Miniprofile: Show last action
 // @namespace    lugburz.miniprofile.show_last_action
-// @version      0.1.5
+// @version      0.1.6
 // @description  Show last action in miniprofile.
 // @author       Lugburz
 // @match        https://www.torn.com/*
@@ -11,19 +11,21 @@
 
 function secondsToDhms(seconds) {
     seconds = Number(seconds);
-    var d = Math.floor(seconds / (3600*24));
-    var h = Math.floor(seconds % (3600*24) / 3600);
-    var m = Math.floor(seconds % 3600 / 60);
-    var s = Math.floor(seconds % 60);
+    const d = Math.floor(seconds / (3600*24));
+    const h = Math.floor(seconds % (3600*24) / 3600);
+    const m = Math.floor(seconds % 3600 / 60);
+    const s = Math.floor(seconds % 60);
 
-    var dDisplay = d > 0 ? d + "d " : "";
-    var hDisplay = d > 0 || h > 0 ? h + "h " : "";
-    var mDisplay = d > 0 || h > 0 || m > 0 ? m + "m " : "";
-    var sDisplay = s > 0 ? s + "s" : "";
+    const dDisplay = d > 0 ? d + "d " : "";
+    const hDisplay = d > 0 || h > 0 ? h + "h " : "";
+    const mDisplay = d > 0 || h > 0 || m > 0 ? m + "min " : "";
+    const sDisplay = s > 0 ? s + "s" : "";
+
     return dDisplay + hDisplay + mDisplay + sDisplay;
 }
 
 var lastAction = '';
+var factionTag = '';
 
 // intercept miniprofile fetch() responses
 const constantMock = unsafeWindow.fetch;
@@ -35,10 +37,14 @@ unsafeWindow.fetch = function() {
                 response2.text().then(function (text) {
                     try {
                         const json = JSON.parse(text);
-                        console.log('userID=' + json.user.userID + ' lastAction=' + json.user.lastAction.seconds);
                         lastAction = json.user.lastAction.seconds != 'Unknown' ? secondsToDhms(json.user.lastAction.seconds) + ' ago' : json.user.lastAction.seconds;
+                        factionTag = json.user.faction ? json.user.faction.tag : '';
+                        console.log(`userID=${json.user.userID} lastAction=${json.user.lastAction.seconds} factionTag=${factionTag}`);
                         if ($('#miniProfileLastAction').size() > 0) {
                             $('#miniProfileLastAction').text(lastAction);
+                        }
+                        if (factionTag && $('#profile-mini-root').find('div[class^=profile-mini-_factionWrap]').size() > 0) {
+                            $('#profile-mini-root').find('div[class^=profile-mini-_factionWrap]').attr('title', factionTag);
                         }
                     } catch (e) {
                         console.log(e);
@@ -68,6 +74,9 @@ const observer = new MutationObserver(function(mutations) {
                             lastAction = '';
                         }
                     }
+                } else if (factionTag && $(this).attr('class') && $(this).attr('class').indexOf('profile-mini-_factionWrap___') > -1) {
+                    $(this).attr('class') && $(this).attr('class').indexOf('profile-mini-_factionWrap___').attr('title', factionTag);
+                    factionTag = '';
                 }
             });
         }
