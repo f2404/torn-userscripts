@@ -73,10 +73,11 @@ const observer = new MutationObserver(function(mutations) {
                             $('#miniProfileLastAction').text(lastAction);
                             lastAction = '';
                         }
+                        if (factionTag) {
+                            $(this).find('div[class^=profile-mini-_factionWrap]').attr('title', factionTag);
+                            factionTag = '';
+                        }
                     }
-                } else if (factionTag && $(this).attr('class') && $(this).attr('class').indexOf('profile-mini-_factionWrap___') > -1) {
-                    $(this).attr('class') && $(this).attr('class').indexOf('profile-mini-_factionWrap___').attr('title', factionTag);
-                    factionTag = '';
                 }
             });
         }
