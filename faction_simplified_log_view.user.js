@@ -1,67 +1,66 @@
 // ==UserScript==
 // @name         Torn: Faction: Simplified log view
 // @namespace    lugburz.faction.simplified_log_view
-// @version      0.2.1
+// @version      0.3.0
 // @description  Group similar messages in the faction armory log and provide a summary ("used x items").
 // @author       Lugburz
 // @match        https://www.torn.com/factions.php?step=your*
-// @require      https://github.com/f2404/torn-userscripts/raw/master/lib/lugburz_lib.js
 // @updateURL    https://github.com/f2404/torn-userscripts/raw/master/faction_simplified_log_view.user.js
 // @grant        none
 // ==/UserScript==
 
 const armory_used_text = "one of the faction's";
-const armory_deposited_text = "deposited 1 x";
+const armory_deposited_text = 'deposited 1 x';
 
 function maybe_update_row(row, n, from_time, to_time, to_date, msg_html) {
     if (msg_html.includes(armory_used_text)) {
         // used
-        if (n == 1) {
-            row.find("span.info").html(msg_html.replace(armory_used_text, "<b>" + n + "x</b>").replace("items.", "item."));
+        if (n === 1) {
+            row.find('span.info').html(msg_html.replace(armory_used_text, `<b>${n}x</b>`).replace('items.', 'item.'));
         } else if (n > 1) {
-            row.find("span.date").text(from_time + " - " + to_time + " " + to_date);
-            row.find("span.info").html(msg_html.replace(armory_used_text, "<b>" + n + "x</b>"));
+            row.find('span.date').text(`${from_time} - ${to_time} ${to_date}`);
+            row.find('span.info').html(msg_html.replace(armory_used_text, `<b>${n}x</b>`));
         }
     } else {
         // deposited
         if (n > 1) {
-            row.find("span.date").text(from_time + " - " + to_time + " " + to_date);
-            row.find("span.info").html(msg_html.replace(armory_deposited_text, "deposited <b>" + n + "x</b>"));
+            row.find('span.date').text(`${from_time} - ${to_time} ${to_date}`);
+            row.find('span.info').html(msg_html.replace(armory_deposited_text, `deposited <b>${n}x</b>`));
         }
     }
 }
 
 function simplify() {
     let n = 0;
-    let msg_html = "";
-    let from_date = "";
-    let to_date = "";
-    let from_time = "";
-    let to_time = "";
-    let row = "";
+    let msg_html = '';
+    let from_date = '';
+    let to_date = '';
+    let from_time = '';
+    let to_time = '';
+    let row = '';
 
-    const entries = $("#tab4-4").find("li");
-    if (entries.length < 2) {
+    const entries = $('#factionNewsSearchBar').find('li');
+    if ($(entries).size() < 2) {
         return;
     }
 
-    entries.each(function() {
-        const time = $(this).find("span")[1];
-        const date = $(this).find("span")[2];
-        const info = $(this).find("span.info");
+    $(entries).each((i, entry) => {
+        const time = $(entry).find('span')[1];
+        const date = $(entry).find('span')[2];
+        const info = $(entry).find('span.info');
 
-        if ($(this).find(info).html().localeCompare(msg_html) == 0) {
-            from_time = $(this).find("span").find(time).text();
-            from_date = $(this).find("span").find(date).text();
+        if ($(entry).find(info).html().localeCompare(msg_html) === 0) {
+            from_time = $(entry).find('span').find(time).text();
+            from_date = $(entry).find('span').find(date).text();
             n++;
-            $(this).remove();
-        } else if ($(this).find(info).text().includes(armory_used_text) || $(this).find(info).text().includes(armory_deposited_text)) {
+            $(entry).hide();
+        } else if ($(entry).find(info).text().includes(armory_used_text) || $(entry).find(info).text().includes(armory_deposited_text)) {
             maybe_update_row(row, n, from_time, to_time, to_date, msg_html);
 
-            msg_html = $(this).find(info).html();
-            to_time = $(this).find("span").find(time).text();
-            to_date = $(this).find("span").find(date).text();
-            row = $(this);
+            msg_html = $(entry).find(info).html();
+            to_time = $(entry).find('span').find(time).text();
+            to_date = $(entry).find('span').find(date).text();
+            row = $(entry);
             n = 1;
         } else {
             maybe_update_row(row, n, from_time, to_time, to_date, msg_html);
@@ -77,10 +76,25 @@ function simplify() {
     'use strict';
 
     // Your code here...
-    ajax((page) => {
-        if (page != "factions") return;
-        $("#tab4-4").ready(simplify);
-    });
-
-    $("#tab4-4").ready(simplify);
 })();
+
+function isArmoryTabActive() {
+    const armoryButton = $('#factionNewsSearchBar').find('button')[3];
+    return $(armoryButton).size() > 0 && $(armoryButton).attr('class').split(/\s+/).some(cl => cl.startsWith('active'));
+};
+
+const observer = new MutationObserver(function(mutations) {
+    mutations.forEach(function(mutation) {
+        for (const node of mutation.removedNodes) {
+            if (isArmoryTabActive() && node.classList) {
+                node.classList.forEach((c) => {
+                    // use this as a sign that list has been updated
+                    if (c.startsWith('preloaderWrapper')) simplify();
+                });
+            }
+        }
+    });
+});
+
+const wrapper = $('#factionNewsSearchBar');
+observer.observe(wrapper.get(0), { subtree: true, childList: true, characterData: false, attributes: false, attributeOldValue: false });
