@@ -1,11 +1,11 @@
 // ==UserScript==
 // @name         Torn: Faction: Show OC due date
 // @namespace    lugburz.faction.show_oc_due_date
-// @version      0.3.8
+// @version      0.3.9
 // @description  Show when OC's are due, in addition to time left that Torn shows.
 // @author       Lugburz
 // @match        https://www.torn.com/factions.php?step=your*
-// @require      https://github.com/f2404/torn-userscripts/raw/master/lib/lugburz_lib.js
+// @require      https://raw.githubusercontent.com/f2404/torn-userscripts/master/lib/lugburz_lib.js
 // @updateURL    https://github.com/f2404/torn-userscripts/raw/master/faction_show_oc_due_date.user.js
 // @grant        none
 // ==/UserScript==

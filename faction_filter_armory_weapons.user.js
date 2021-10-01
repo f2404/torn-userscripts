@@ -1,11 +1,12 @@
 // ==UserScript==
 // @name         Torn: Faction: Filter armory weapons
 // @namespace    lugburz.faction.filter_armory_weapons
-// @version      0.4.2
+// @version      0.4.3
 // @description  Filter weapons and armor by type in faction armory.
 // @author       Lugburz
 // @match        https://www.torn.com/factions.php?step=your*
-// @require      https://github.com/f2404/torn-userscripts/raw/master/lib/lugburz_lib.js
+// @require      https://raw.githubusercontent.com/f2404/torn-userscripts/master/lib/lugburz_lib.js
+// @updateURL    https://github.com/f2404/torn-userscripts/raw/master/faction_filter_armory_weapons.user.js
 // @grant        GM_setValue
 // @grant        GM_getValue
 // ==/UserScript==

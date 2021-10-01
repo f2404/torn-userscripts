@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Sort lists
 // @namespace    lugburz.sort_lists
-// @version      0.5.11
+// @version      0.5.12
 // @description  Sort lists (such as blacklist, friendlist, userlist, faction members, company employees, stocks) by various columns.
 // @author       Lugburz
 // @match        https://www.torn.com/blacklist.php*
@@ -12,7 +12,7 @@
 // @match        https://www.torn.com/stockexchange.php*
 // @match        https://www.torn.com/companies.php*
 // @match        https://www.torn.com/joblist.php*
-// @require      https://github.com/f2404/torn-userscripts/raw/31f4faa6da771b7a16cf732c1a78970506effeeb/lib/lugburz_lib.js
+// @require      https://raw.githubusercontent.com/f2404/torn-userscripts/31f4faa6da771b7a16cf732c1a78970506effeeb/lib/lugburz_lib.js
 // @updateURL    https://github.com/f2404/torn-userscripts/raw/master/sort_lists.user.js
 // @grant        GM_addStyle
 // ==/UserScript==
