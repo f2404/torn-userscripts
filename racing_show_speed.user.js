@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Racing enhancements
 // @namespace    lugburz.racing_enhancements
-// @version      0.4.5
+// @version      0.4.6
 // @description  Show car's current speed, precise skill, official race penalty, racing skill of others and race car skins.
 // @author       Lugburz
 // @match        https://www.torn.com/*
@@ -551,6 +551,17 @@ ajax((page, xhr) => {
     try {
         parseRacingData(JSON.parse(xhr.responseText));
     } catch (e) {}
+
+    const JltColor = '#fff200';
+    if ($('#racingAdditionalContainer').size() > 0 && $('#racingAdditionalContainer').find('div.custom-events-wrap').size() > 0) {
+        $('#racingAdditionalContainer').find('div.custom-events-wrap').find('ul.events-list > li').each((i, li) => {
+            if ($(li).find('li.name').size() > 0 && $(li).find('li.name').text().trim().startsWith('JLT-')) {
+                $(li).addClass('gold');
+                $(li).css('color', JltColor).css('text-shadow', `0 0 1px ${JltColor}`);
+                $(li).find('span.laps').css('color', JltColor);
+            }
+        });
+    }
 });
 
 $("#racingupdatesnew").ready(addSettingsDiv);
