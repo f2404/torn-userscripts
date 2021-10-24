@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Gimme basket
 // @namespace    lugburz.gimme_basket
-// @version      0.1.1
+// @version      0.1.2
 // @description  Gimme basket!
 // @author       Lugburz
 // @match        https://www.torn.com/shops.php*
@@ -21,7 +21,7 @@ function addButton() {
                 action: 'shops.php',
                 data: {
                     step: 'buyShopItem',
-                    ID: 1003,
+                    ID: 920,
                     amount: 1
                 },
                 success: (str) => {
