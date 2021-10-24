@@ -1,10 +1,11 @@
 // ==UserScript==
 // @name         Torn: Gimme basket
 // @namespace    lugburz.gimme_basket
-// @version      0.1
+// @version      0.1.1
 // @description  Gimme basket!
 // @author       Lugburz
 // @match        https://www.torn.com/shops.php*
+// @updateURL    https://github.com/f2404/torn-userscripts/raw/master/gimme_basket.user.js
 // @grant        none
 // ==/UserScript==
 
