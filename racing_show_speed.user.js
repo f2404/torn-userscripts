@@ -1,13 +1,13 @@
 // ==UserScript==
 // @name         Torn: Racing enhancements
 // @namespace    lugburz.racing_enhancements
-// @version      0.4.6
+// @version      0.5.0
 // @description  Show car's current speed, precise skill, official race penalty, racing skill of others and race car skins.
 // @author       Lugburz
 // @match        https://www.torn.com/*
 // @require      https://raw.githubusercontent.com/f2404/torn-userscripts/e3bb87d75b44579cdb6f756435696960e009dc84/lib/lugburz_lib.js
 // @updateURL    https://github.com/f2404/torn-userscripts/raw/master/racing_show_speed.user.js
-// @connect      racing-skill-sharing.firebaseio.com
+// @connect      api.torn.com
 // @connect      race-skins.brainslug.nl
 // @grant        GM_setValue
 // @grant        GM_getValue
@@ -25,8 +25,8 @@ const SHOW_RESULTS = GM_getValue('showResultsChk') != 0;
 // Whether to show current speed.
 const SHOW_SPEED = GM_getValue('showSpeedChk') != 0;
 
-// Whether to share racing skill with others (disabled by default).
-const SHARE_RS = GM_getValue('shareRacingSkill') > 0;
+// Whether to fetch others' racing skill from the API (requires API key).
+const FETCH_RS = !!(GM_getValue('apiKey') && GM_getValue('apiKey').length > 0);
 
 // Whether to show car skins
 const SHOW_SKINS = GM_getValue('showSkinsChk') != 0;
@@ -50,8 +50,11 @@ function maybeClear() {
     }
 }
 
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 // Shared racing skill
-const FB_URL = 'https://racing-skill-sharing.firebaseio.com/racing_skill_reports/';
 const racingSkillCacheByDriverId = new Map();
 
 async function updateDriversList() {
@@ -67,12 +70,11 @@ async function updateDriversList() {
     const racingSkins = await getRacingSkinOwners(driverIds);
     for (let driver of driversList.querySelectorAll('.driver-item')) {
         const driverId = getDriverId(driver);
-        if (SHARE_RS && !!racingSkills[driverId]) {
-            const skill = racingSkills[driverId].split('+')[0];
-            const style = racingSkills[driverId].split('+')[1] || '';
+        if (FETCH_RS && !!racingSkills[driverId]) {
+            const skill = racingSkills[driverId];
             const nameDiv = driver.querySelector('.name');
             nameDiv.style.position = 'relative';
-            nameDiv.insertAdjacentHTML('beforeend', `<span style="position:absolute;right:5px;${style}">${(+skill).toFixed(2)}</span>`);
+            nameDiv.insertAdjacentHTML('beforeend', `<span style="position:absolute;right:5px;">RS:${skill}</span>`);
         }
         if (SHOW_SKINS && !!racingSkins[driverId]) {
             const carImg = driver.querySelector('.car').querySelector('img');
@@ -107,32 +109,12 @@ async function getRacingSkillForDrivers(driverIds) {
     const driverIdsToFetchSkillFor = driverIds.filter(driverId => ! racingSkillCacheByDriverId.has(driverId));
     for (const driverId of driverIdsToFetchSkillFor) {
         const json = await fetchRacingSkillForDrivers(driverId);
-        if (json && json != 'null') {
-            let skill = null;
-            let dateUtc = null;
-            /* this is to parse the result that may look like this: [null,{json_object}]
-               instead of this: {key: {json_object}} */
-            if (Object.keys(json) && Object.keys(json)[0] && json[Object.keys(json)[0]]) {
-                skill = json[Object.keys(json)[0]].rs_string;
-                dateUtc = Date.parse(json[Object.keys(json)[0]].date_utc + '.000Z');
-            } else if (Object.keys(json) && Object.keys(json)[1] && json[Object.keys(json)[1]]) {
-                skill = json[Object.keys(json)[1]].rs_string;
-                dateUtc = Date.parse(json[Object.keys(json)[1]].date_utc + '.000Z');
-            }
-            if (skill) {
-                // check if skill was updated more than a week ago
-                if (dateUtc && (Date.now() - dateUtc > 7*24*60*60*1000)) {
-                    skill += '+color:orange';
-                }
-                racingSkillCacheByDriverId.set(+driverId, skill);
-            } else {
-                // caching empty results to improve performance
-                racingSkillCacheByDriverId.set(+driverId, '');
-            }
-        } else {
-            // caching empty results to improve performance
-            racingSkillCacheByDriverId.set(+driverId, '');
+        if (json && json.error) {
+            $('#racingupdatesnew').prepend(`<div style="color: red; font-size: 12px; line-height: 24px;">API error: ${JSON.stringify(json.error)}</div>`);
+            break;
         }
+        racingSkillCacheByDriverId.set(+driverId, json && json.personalstats && json.personalstats.racingskill ? json.personalstats.racingskill : 'N/A');
+        await sleep(800);
     }
 
     const resultHash = {};
@@ -205,26 +187,24 @@ function formatDate(date) {
 }
 
 function fetchRacingSkillForDrivers(driverIds) {
-    return new Promise(resolve => {
-        GM_xmlhttpRequest({
-            method: 'GET',
-            url: `${FB_URL}${driverIds}.json?orderBy="date_utc"&limitToLast=1`,
-            headers: {'Content-Type': 'application/json'},
-            onload: ({responseText}) => resolve(JSON.parse(responseText))
-        });
-    });
-}
-
-function saveRacingSkill(userId, racingSkillString) {
-    const now = new Date();
-    const data = { rs: racingSkillString, rs_string: racingSkillString, date_utc: formatDate(now)};
-    return new Promise(resolve => {
+    const apiKey = GM_getValue('apiKey');
+    return new Promise((resolve, reject) => {
         GM_xmlhttpRequest({
             method: 'POST',
-            url: `${FB_URL}${userId}.json`,
-            data: JSON.stringify(data),
-            headers: {'Content-Type': 'application/json'},
-            onload: (response) => { }
+            url: `https://api.torn.com/user/${driverIds}?selections=personalstats&comment=RacingUiUx&key=${apiKey}`,
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            onload: (response) => {
+                try {
+                    resolve(JSON.parse(response.responseText));
+                } catch(err) {
+                    reject(err);
+                }
+            },
+            onerror: (err) => {
+                reject(err);
+            }
         });
     });
 }
@@ -300,10 +280,6 @@ function updateSkill(level) {
         }
     } else {
         GM_setValue('lastDaysRs', `${now}:${prev ? prev : skill}`);
-    }
-
-    if (SHARE_RS && level != prev) {
-        saveRacingSkill(userID, skill);
     }
 
     if (prev !== "undefined" && typeof prev !== "undefined" && level > prev) {
@@ -436,7 +412,6 @@ function showResults(results, start = 0) {
     }
 }
 
-
 function addSettingsDiv() {
     if ($("#racingupdatesnew").size() > 0 && $('#racingEnhSettings').size() < 1) {
         const div = '<div style="font-size: 12px; line-height: 24px; padding-left: 10px; padding-right: 10px; background: repeating-linear-gradient(90deg,#242424,#242424 2px,#2e2e2e 0,#2e2e2e 4px); border-radius: 5px;">' +
@@ -446,26 +421,21 @@ function addSettingsDiv() {
               '<li><input type="checkbox" style="margin-left: 5px; margin-right: 5px" id="showNotifChk"><label>Show notifications</label></li>' +
               '<li><input type="checkbox" style="margin-left: 5px; margin-right: 5px" id="showResultsChk"><label>Show results</label></li>' +
               '<li><input type="checkbox" style="margin-left: 5px; margin-right: 5px" id="showSkinsChk"><label>Show racing skins</label></li>' +
-              '<li><input type="checkbox" style="margin-left: 5px; margin-right: 5px" id="shareRacingSkill"><label>Share racing skill with others</label></li></ul></div></div>';
+              '<li><label>Fetch racing skill from the API</label><span class="input-wrap" style="margin: 0px 5px 5px;"><input type="text" autocomplete="off" data-lpignore="true" id="apiKey"></span></li></ul></div></div>';
         $('#racingupdatesnew').prepend(div);
 
         $('#racingEnhSettingsContainer').find('input[type=checkbox]').each(function() {
-            if ($(this).attr('id') === 'shareRacingSkill') {
-                // sharing is disabled by default
-                $(this).prop('checked', GM_getValue($(this).attr('id')) == 1);
-            } else {
-                $(this).prop('checked', GM_getValue($(this).attr('id')) != 0);
-            }
+            $(this).prop('checked', GM_getValue($(this).attr('id')) != 0);
         });
+        $('#apiKey').val(GM_getValue('apiKey'));
 
-        $('#racingEnhSettings').on('click', function() {
-            $('#racingEnhSettingsContainer').toggle();
-        });
-        $('#racingEnhSettingsContainer').on('click', 'input', function() {
+        $('#racingEnhSettings').on('click', () => $('#racingEnhSettingsContainer').toggle());
+        $('#racingEnhSettingsContainer').on('click', 'input', () => {
             const id = $(this).attr('id');
             const checked = $(this).prop('checked');
             GM_setValue(id, checked ? 1 : 0);
         });
+        $('#apiKey').on('change', () => GM_setValue('apiKey', $('#apiKey').val()));
     }
 }
 
