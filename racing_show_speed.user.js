@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Racing enhancements
 // @namespace    lugburz.racing_enhancements
-// @version      0.5.1
+// @version      0.5.2
 // @description  Show car's current speed, precise skill, official race penalty, racing skill of others and race car skins.
 // @author       Lugburz
 // @match        https://www.torn.com/*
@@ -66,8 +66,8 @@ async function updateDriversList() {
     watchForDriversListContentChanges(driversList);
 
     const driverIds = getDriverIds(driversList);
-    const racingSkills = await getRacingSkillForDrivers(driverIds);
-    const racingSkins = await getRacingSkinOwners(driverIds);
+    const racingSkills = FETCH_RS ? await getRacingSkillForDrivers(driverIds) : {};
+    const racingSkins = SHOW_SKINS ? await getRacingSkinOwners(driverIds) : {};
     for (let driver of driversList.querySelectorAll('.driver-item')) {
         const driverId = getDriverId(driver);
         if (FETCH_RS && !!racingSkills[driverId]) {
