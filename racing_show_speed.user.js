@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Racing enhancements
 // @namespace    lugburz.racing_enhancements
-// @version      0.5.2
+// @version      0.5.3
 // @description  Show car's current speed, precise skill, official race penalty, racing skill of others and race car skins.
 // @author       Lugburz
 // @match        https://www.torn.com/*
@@ -421,7 +421,8 @@ function addSettingsDiv() {
               '<li><input type="checkbox" style="margin-left: 5px; margin-right: 5px" id="showNotifChk"><label>Show notifications</label></li>' +
               '<li><input type="checkbox" style="margin-left: 5px; margin-right: 5px" id="showResultsChk"><label>Show results</label></li>' +
               '<li><input type="checkbox" style="margin-left: 5px; margin-right: 5px" id="showSkinsChk"><label>Show racing skins</label></li>' +
-              '<li><label>Fetch racing skill from the API</label><span class="input-wrap" style="margin: 0px 5px 5px;"><input type="text" autocomplete="off" data-lpignore="true" id="apiKey"></span></li></ul></div></div>';
+              '<li><label>Fetch racing skill from the API (<a href="https://www.torn.com/preferences.php#tab=api">link to your API key</a>)</label><span class="input-wrap" style="margin: 0px 5px 5px;">' +
+              '<input type="text" autocomplete="off" data-lpignore="true" id="apiKey" title="Remember to refresh the page once you\'ve entered your API key"></span></li></ul></div></div>';
         $('#racingupdatesnew').prepend(div);
 
         $('#racingEnhSettingsContainer').find('input[type=checkbox]').each(function() {
