@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Racing enhancements
 // @namespace    lugburz.racing_enhancements
-// @version      0.5.0
+// @version      0.5.1
 // @description  Show car's current speed, precise skill, official race penalty, racing skill of others and race car skins.
 // @author       Lugburz
 // @match        https://www.torn.com/*
@@ -555,7 +555,7 @@ $('#racingupdatesnew').ready(function() {
 
 checkPenalty();
 
-if ((SHARE_RS || SHOW_SKINS) && $(location).attr('href').includes('sid=racing')) {
+if ((FETCH_RS || SHOW_SKINS) && $(location).attr('href').includes('sid=racing')) {
     $("#racingupdatesnew").ready(function() {
         updateDriversList();
         // On change race tab, (re-)insert the racing skills if applicable:
