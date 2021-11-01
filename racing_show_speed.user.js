@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Racing enhancements
 // @namespace    lugburz.racing_enhancements
-// @version      0.5.3
+// @version      0.5.4
 // @description  Show car's current speed, precise skill, official race penalty, racing skill of others and race car skins.
 // @author       Lugburz
 // @match        https://www.torn.com/*
@@ -26,7 +26,7 @@ const SHOW_RESULTS = GM_getValue('showResultsChk') != 0;
 const SHOW_SPEED = GM_getValue('showSpeedChk') != 0;
 
 // Whether to fetch others' racing skill from the API (requires API key).
-const FETCH_RS = !!(GM_getValue('apiKey') && GM_getValue('apiKey').length > 0);
+let FETCH_RS = !!(GM_getValue('apiKey') && GM_getValue('apiKey').length > 0);
 
 // Whether to show car skins
 const SHOW_SKINS = GM_getValue('showSkinsChk') != 0;
@@ -63,6 +63,8 @@ async function updateDriversList() {
         return;
     }
 
+    FETCH_RS = !!(GM_getValue('apiKey') && GM_getValue('apiKey').length > 0);
+
     watchForDriversListContentChanges(driversList);
 
     const driverIds = getDriverIds(driversList);
@@ -75,6 +77,11 @@ async function updateDriversList() {
             const nameDiv = driver.querySelector('.name');
             nameDiv.style.position = 'relative';
             nameDiv.insertAdjacentHTML('beforeend', `<span style="position:absolute;right:5px;">RS:${skill}</span>`);
+        } else if (!FETCH_RS) {
+            const nameDiv = $(driver).find('li.name');
+            if ($(nameDiv).find("span:contains('RS')").size() > 0) {
+                $(nameDiv).find("span:contains('RS')").remove();
+            }
         }
         if (SHOW_SKINS && !!racingSkins[driverId]) {
             const carImg = driver.querySelector('.car').querySelector('img');
@@ -105,16 +112,18 @@ function getDriverId(driverUl) {
     return +driverUl.closest('li').id.substr(4);
 }
 
+let racersCount = 0;
 async function getRacingSkillForDrivers(driverIds) {
     const driverIdsToFetchSkillFor = driverIds.filter(driverId => ! racingSkillCacheByDriverId.has(driverId));
     for (const driverId of driverIdsToFetchSkillFor) {
         const json = await fetchRacingSkillForDrivers(driverId);
+        racingSkillCacheByDriverId.set(+driverId, json && json.personalstats && json.personalstats.racingskill ? json.personalstats.racingskill : 'N/A');
         if (json && json.error) {
             $('#racingupdatesnew').prepend(`<div style="color: red; font-size: 12px; line-height: 24px;">API error: ${JSON.stringify(json.error)}</div>`);
             break;
         }
-        racingSkillCacheByDriverId.set(+driverId, json && json.personalstats && json.personalstats.racingskill ? json.personalstats.racingskill : 'N/A');
-        await sleep(800);
+        racersCount++;
+        if (racersCount > 20) await sleep(1500);
     }
 
     const resultHash = {};
@@ -422,7 +431,8 @@ function addSettingsDiv() {
               '<li><input type="checkbox" style="margin-left: 5px; margin-right: 5px" id="showResultsChk"><label>Show results</label></li>' +
               '<li><input type="checkbox" style="margin-left: 5px; margin-right: 5px" id="showSkinsChk"><label>Show racing skins</label></li>' +
               '<li><label>Fetch racing skill from the API (<a href="https://www.torn.com/preferences.php#tab=api">link to your API key</a>)</label><span class="input-wrap" style="margin: 0px 5px 5px;">' +
-              '<input type="text" autocomplete="off" data-lpignore="true" id="apiKey" title="Remember to refresh the page once you\'ve entered your API key"></span></li></ul></div></div>';
+              '<input type="text" autocomplete="off" data-lpignore="true" id="apiKey"></span>' +
+              '<a href="#" id="saveApiKey" class="link btn-action-tab tt-modified"><i style="display: inline-block; background: url(/images/v2/racing/car_enlist.png) 0 0 no-repeat; vertical-align: middle; height: 15px; width: 15px;"></i>Save</a></li></ul></div></div>';
         $('#racingupdatesnew').prepend(div);
 
         $('#racingEnhSettingsContainer').find('input[type=checkbox]').each(function() {
@@ -436,7 +446,12 @@ function addSettingsDiv() {
             const checked = $(this).prop('checked');
             GM_setValue(id, checked ? 1 : 0);
         });
-        $('#apiKey').on('change', () => GM_setValue('apiKey', $('#apiKey').val()));
+        $('#saveApiKey').click(event => {
+            event.preventDefault();
+            event.stopPropagation();
+            GM_setValue('apiKey', $('#apiKey').val());
+            updateDriversList();
+        });
     }
 }
 
