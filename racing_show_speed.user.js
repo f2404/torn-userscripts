@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Racing enhancements
 // @namespace    lugburz.racing_enhancements
-// @version      0.5.4
+// @version      0.5.5
 // @description  Show car's current speed, precise skill, official race penalty, racing skill of others and race car skins.
 // @author       Lugburz
 // @match        https://www.torn.com/*
@@ -57,12 +57,15 @@ function sleep(ms) {
 // Shared racing skill
 const racingSkillCacheByDriverId = new Map();
 
+let updating = false;
 async function updateDriversList() {
     const driversList = document.getElementById('leaderBoard');
-    if (driversList === null) {
+    if (updating || driversList === null) {
         return;
     }
 
+    updating = true;
+    $('#updating').size() < 1 && $('#racingupdatesnew').prepend('<div id="updating" style="color: green; font-size: 12px; line-height: 24px;">Updating drivers\' RS and skins...</div>');
     FETCH_RS = !!(GM_getValue('apiKey') && GM_getValue('apiKey').length > 0);
 
     watchForDriversListContentChanges(driversList);
@@ -92,6 +95,9 @@ async function updateDriversList() {
             }
         }
     }
+
+    updating = false;
+    $('#updating').size() > 0 && $('#updating').remove();
 }
 
 function watchForDriversListContentChanges(driversList) {
