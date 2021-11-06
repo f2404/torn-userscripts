@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Racing enhancements
 // @namespace    lugburz.racing_enhancements
-// @version      0.5.6
+// @version      0.5.7
 // @description  Show car's current speed, precise skill, official race penalty, racing skill of others and race car skins.
 // @author       Lugburz
 // @match        https://www.torn.com/*
@@ -172,7 +172,11 @@ async function getRacingSkinOwners(driverIds) {
             onload: ({responseText}) => {
                 _skinOwnerCache = JSON.parse(responseText);
                 resolve(_skinOwnerCache);
-            }
+            },
+            onerror: (err) => {
+                console.error(err);
+                resolve({});
+            },
         });
     }).then(filterSkins);
 }
