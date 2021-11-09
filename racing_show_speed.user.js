@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Racing enhancements
 // @namespace    lugburz.racing_enhancements
-// @version      0.5.7
+// @version      0.5.8
 // @description  Show car's current speed, precise skill, official race penalty, racing skill of others and race car skins.
 // @author       Lugburz
 // @match        https://www.torn.com/*
@@ -188,11 +188,15 @@ function skinCarSidebar(carSkin) {
     const tornItem = carSelected.querySelector('.torn-item');
     if (!tornItem) return; // fail quietly
     if (tornItem !== _skinned) {
-        tornItem.setAttribute('src', SKIN_IMAGE(carSkin));
-        tornItem.style.display = 'block';
-        tornItem.style.opacity = 1;
-        carSelected.querySelector('canvas').style.display = 'none';
-        _skinned = tornItem;
+        try {
+            tornItem.setAttribute('src', SKIN_IMAGE(carSkin));
+            tornItem.style.display = 'block';
+            tornItem.style.opacity = 1;
+            carSelected.querySelector('canvas').style.display = 'none';
+            _skinned = tornItem;
+        } catch (err) {
+            console.error(err);
+        }
     }
 }
 
