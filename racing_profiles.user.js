@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Racing: Links to profiles
 // @namespace    lugburz.racing.profiles
-// @version      0.1.2
+// @version      0.1.3
 // @description  Adds links to player profiles to their names in the racing list.
 // @author       Lugburz
 // @match        https://www.torn.com/loader.php?sid=racing*
@@ -11,13 +11,13 @@
 // ==/UserScript==
 
 function addLinks() {
-    const names = $("ul.overview").find("li.name");
+    const names = $('ul.overview').find('li.name');
     names.each(function() {
-        const parent = $(this).parent().parent()
-        if (parent.attr("id").startsWith("lbr-")) {
-            const username = $(this).text();
-            const user_id = parent.attr("id").replace("lbr-", "");
-            $(this).html("<a href=/profiles.php?XID=" + user_id + ">" + username + "</a>");
+        const parent = $(this).parent().parent();
+        if (parent.attr('id').startsWith('lbr-')) {
+            const username = $(this).html().replace('<span>', '').replace('</span>', '');
+            const user_id = parent.attr('id').replace('lbr-', '');
+            $(this).html(`<a href=/profiles.php?XID=${user_id}>${username}</a>`);
         }
     });
 }
@@ -27,9 +27,9 @@ function addLinks() {
 
     // Your code here...
     ajax((page) => {
-        if (page != "loader") return;
-        $("ul.overview").ready(addLinks);
+        if (page != 'loader') return;
+        $('ul.overview').ready(addLinks);
     });
 
-    $("ul.overview").ready(addLinks);
+    $('ul.overview').ready(addLinks);
 })();
