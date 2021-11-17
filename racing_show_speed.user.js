@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Racing enhancements
 // @namespace    lugburz.racing_enhancements
-// @version      0.5.8
+// @version      0.5.9
 // @description  Show car's current speed, precise skill, official race penalty, racing skill of others and race car skins.
 // @author       Lugburz
 // @match        https://www.torn.com/*
@@ -460,7 +460,7 @@ function addSettingsDiv() {
         $('#apiKey').val(GM_getValue('apiKey'));
 
         $('#racingEnhSettings').on('click', () => $('#racingEnhSettingsContainer').toggle());
-        $('#racingEnhSettingsContainer').on('click', 'input', () => {
+        $('#racingEnhSettingsContainer').on('click', 'input', function() {
             const id = $(this).attr('id');
             const checked = $(this).prop('checked');
             GM_setValue(id, checked ? 1 : 0);
