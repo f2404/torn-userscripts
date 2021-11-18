@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Racing enhancements
 // @namespace    lugburz.racing_enhancements
-// @version      0.5.11
+// @version      0.5.12
 // @description  Show car's current speed, precise skill, official race penalty, racing skill of others and race car skins.
 // @author       Lugburz
 // @match        https://www.torn.com/*
@@ -417,20 +417,20 @@ function compare(a, b) {
 }
 
 GM_addStyle(`
-.position {
+li.name .race_position {
   background:url(/images/v2/racing/car_status.svg) 0 0 no-repeat;
   display:inline-block;
   width:20px;
   height:18px;
   vertical-align:text-bottom;
 }
-.position.gold {
+li.name .race_position.gold {
   background-position:0 0;
 }
-.position.silver {
+li.name .race_position.silver {
   background-position:0 -22px;
 }
-.position.bronze {
+li.name .race_position.bronze {
   background-position:0 -44px;
 }`);
 
@@ -453,7 +453,7 @@ function showResults(results, start = 0) {
 
                 const result = typeof results[i][2] === 'number' ? formatTimeMsec(results[i][2] * 1000) : results[i][2];
                 const bestLap = results[i][3] ? formatTimeMsec(results[i][3] * 1000) : null;
-                $(this).find('li.name').html($(this).find('li.name').html().replace(name, (position ? `<i class="position ${position}"></i>` : '') + `${name} ${place} ${result}` + (bestLap ? ` (best: ${bestLap})` : '')));
+                $(this).find('li.name').html($(this).find('li.name').html().replace(name, (position ? `<i class="race_position ${position}"></i>` : '') + `${name} ${place} ${result}` + (bestLap ? ` (best: ${bestLap})` : '')));
                 return false;
             }
         });
