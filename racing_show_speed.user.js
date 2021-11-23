@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Racing enhancements
 // @namespace    lugburz.racing_enhancements
-// @version      0.5.12
+// @version      0.5.13
 // @description  Show car's current speed, precise skill, official race penalty, racing skill of others and race car skins.
 // @author       Lugburz
 // @match        https://www.torn.com/*
@@ -25,6 +25,9 @@ const SHOW_RESULTS = GM_getValue('showResultsChk') != 0;
 
 // Whether to show current speed.
 const SHOW_SPEED = GM_getValue('showSpeedChk') != 0;
+
+// whether to show the top3 position icon
+const SHOW_POSITION_ICONS = GM_getValue('showPositionIconChk') != 0;
 
 // Whether to fetch others' racing skill from the API (requires API key).
 let FETCH_RS = !!(GM_getValue('apiKey') && GM_getValue('apiKey').length > 0);
@@ -453,7 +456,7 @@ function showResults(results, start = 0) {
 
                 const result = typeof results[i][2] === 'number' ? formatTimeMsec(results[i][2] * 1000) : results[i][2];
                 const bestLap = results[i][3] ? formatTimeMsec(results[i][3] * 1000) : null;
-                $(this).find('li.name').html($(this).find('li.name').html().replace(name, (position ? `<i class="race_position ${position}"></i>` : '') + `${name} ${place} ${result}` + (bestLap ? ` (best: ${bestLap})` : '')));
+                $(this).find('li.name').html($(this).find('li.name').html().replace(name, ((SHOW_POSITION_ICONS && position) ? `<i class="race_position ${position}"></i>` : '') + `${name} ${place} ${result}` + (bestLap ? ` (best: ${bestLap})` : '')));
                 return false;
             }
         });
@@ -469,6 +472,7 @@ function addSettingsDiv() {
               '<li><input type="checkbox" style="margin-left: 5px; margin-right: 5px" id="showNotifChk"><label>Show notifications</label></li>' +
               '<li><input type="checkbox" style="margin-left: 5px; margin-right: 5px" id="showResultsChk"><label>Show results</label></li>' +
               '<li><input type="checkbox" style="margin-left: 5px; margin-right: 5px" id="showSkinsChk"><label>Show racing skins</label></li>' +
+              '<li><input type="checkbox" style="margin-left: 5px; margin-right: 5px" id="showPositionIconChk"><label>Show position icons</label></li>' +
               '<li><label>Fetch racing skill from the API (<a href="https://www.torn.com/preferences.php#tab=api">link to your API key</a>)</label><span class="input-wrap" style="margin: 0px 5px 5px;">' +
               '<input type="text" autocomplete="off" data-lpignore="true" id="apiKey"></span>' +
               '<a href="#" id="saveApiKey" class="link btn-action-tab tt-modified"><i style="display: inline-block; background: url(/images/v2/racing/car_enlist.png) 0 0 no-repeat; vertical-align: middle; height: 15px; width: 15px;"></i>Save</a></li></ul></div></div>';
