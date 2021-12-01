@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Loot timer on NPC profile
 // @namespace    lugburz.show_timer_on_npc_profile
-// @version      0.2.28
+// @version      0.2.29
 // @description  Add a countdown timer to desired loot level on the NPC profile page as well as on the sidebar and the topbar (optionally).
 // @author       Lugburz
 // @match        https://www.torn.com/*
@@ -30,7 +30,7 @@ const NPCS = {
     'Scrooge': { id: 10, loot_level: 4 },
     'Leslie': { id: 15, loot_level: 4 },
     'Jimmy': { id: 19, loot_level: 4 },
-    'Fernando': { id: 20, loot_level: 4 },
+    'Nando': { id: 20, loot_level: 4 },
     'Tiny': { id: 21, loot_level: 4 },
     'Easter Bunny': { id: 17, loot_level: 4 }
 };
@@ -187,7 +187,7 @@ function hideTimers(hide, yataData, sidebar = true) {
         $('#showHideTimers').text(`[${hide ? 'show' : 'hide'}]`);
     } else {
         Object.values(NPCS).forEach(npc => (hide || yataData.hosp_out[npc.id] === undefined) ? $(`#npcTimerTop${npc.id}`).hide() : $(`#npcTimerTop${npc.id}`).show());
-        $('#showHideTopbarTimers').text(`[${hide ? 'show' : 'hide'}]`);
+        $('#showHideTopbarTimers').html(`[${hide ? 'show NPC timers' : 'hide'}]`);
     }
 }
 
@@ -256,7 +256,7 @@ function addNpcTimers(data) {
     if (SIDEBAR_TIMERS && $('#sidebarNpcTimers').size() < 1) {
         let div = '<hr class="delimiter___neME6"><div id="sidebarNpcTimers"><span style="font-weight: 700;">NPC Timers</span><a id="showHideTimers" class="t-blue show-hide">[hide]</a>';
         Object.keys(NPCS).forEach(name => {
-            div += '<p style="line-height: 20px; text-decoration: none;" id="npcTimer' + NPCS[name].id + '"><a class="t-blue href desc" style="display:inline-block;" href="/loader.php?sid=attack&user2ID=' +
+            div += '<p style="line-height: 20px; text-decoration: none;" id="npcTimer' + NPCS[name].id + '"><a class="t-blue href desc" style="display: inline-block;" href="/loader.php?sid=attack&user2ID=' +
                 NPCS[name].id + '">' + name + '</a><span style="float: right;"></span></p>';
         });
         div += '</div>';
@@ -271,10 +271,10 @@ function addNpcTimers(data) {
 
     if (TOPBAR_TIMERS && $('#topbarNpcTimers').size() < 1) {
         let div = '<div id="topbarNpcTimers" class="container" style="line-height: 28px; z-index: 1; position: relative;"><span style="font-weight: 700;">' +
-            'NPC Timers&nbsp;<a id="showHideTopbarTimers" class="t-blue href desc" style="cursor: pointer; display:inline-block; width: 45px;">[hide]</a></span>';
+            '<a id="showHideTopbarTimers" class="t-blue href desc" style="cursor: pointer; display: inline-block; margin-right: 10px;">[hide]</a></span>';
         Object.keys(NPCS).forEach(name => {
             div += '<span style="text-decoration: none;" id="npcTimerTop' + NPCS[name].id + '"><a class="t-blue href desc" style="display: inline-block;" href="/loader.php?sid=attack&user2ID=' +
-                `${NPCS[name].id}">${name}:&nbsp;</a><span style="display:inline-block; width: ${isMobile() ? 50 : 80}px;"></span></span>`;
+                `${NPCS[name].id}">${name}:&nbsp;</a><span style="display: inline-block; width: ${isMobile() ? 50 : 80}px;"></span></span>`;
         });
         div += '</div>';
         if ($('div.header-wrapper-bottom').find('div.container').size() > 0) {
