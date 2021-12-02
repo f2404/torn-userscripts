@@ -1,10 +1,10 @@
 // ==UserScript==
 // @name         Torn: Gimme beers
 // @namespace    lugburz.gimme_beers
-// @version      0.1.1
+// @version      0.1.2
 // @description  Gimme beers!
 // @author       Lugburz
-// @match        https://www.torn.com/shops.php*
+// @match        https://www.torn.com/shops.php?step=bitsnbobs*
 // @updateURL    https://github.com/f2404/torn-userscripts/raw/master/gimme_beers.user.js
 // @grant        none
 // ==/UserScript==
