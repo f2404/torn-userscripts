@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Bazaar Auto Price
 // @namespace    tos
-// @version      0.7.8
+// @version      0.7.9
 // @description  Auto set bazaar prices on money input field click.
 // @author       tos, Lugburz
 // @match        *.torn.com/bazaar.php*
@@ -120,5 +120,5 @@ const observer = new MutationObserver((mutations) => {
   }
 });
 
-const wrapper = document.querySelector('#react-root')
-observer.observe(wrapper, { subtree: true, childList: true })
+const wrapper = document.querySelector('#bazaarRoot');
+observer.observe(wrapper, { subtree: true, childList: true });
