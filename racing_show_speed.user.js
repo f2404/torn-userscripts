@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Racing enhancements
 // @namespace    lugburz.racing_enhancements
-// @version      0.5.14
+// @version      0.5.15
 // @description  Show car's current speed, precise skill, official race penalty, racing skill of others and race car skins.
 // @author       Lugburz
 // @match        https://www.torn.com/*
@@ -88,11 +88,13 @@ async function updateDriversList() {
             const skill = racingSkills[driverId];
             const nameDiv = driver.querySelector('.name');
             nameDiv.style.position = 'relative';
-            nameDiv.insertAdjacentHTML('beforeend', `<span style="position:absolute;right:5px;">RS:${skill}</span>`);
+            if ( ! driver.querySelector('.rs-display')) {
+                nameDiv.insertAdjacentHTML('beforeend', `<span class="rs-display">RS:${skill}</span>`);
+            }
         } else if (!FETCH_RS) {
-            const nameDiv = $(driver).find('li.name');
-            if ($(nameDiv).find("span:contains('RS')").size() > 0) {
-                $(nameDiv).find("span:contains('RS')").remove();
+            const rsSpan = driver.querySelector('.rs-display');
+            if ( !! rsSpan) {
+                rsSpan.remove();
             }
         }
         if (SHOW_SKINS && !!racingSkins[driverId]) {
@@ -421,6 +423,10 @@ function compare(a, b) {
 }
 
 GM_addStyle(`
+.rs-display { 
+    position: absolute;
+    right: 5px;
+}
 li.name .race_position {
   background:url(/images/v2/racing/car_status.svg) 0 0 no-repeat;
   display:inline-block;
