@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Faction: Simplified log view
 // @namespace    lugburz.faction.simplified_log_view
-// @version      0.3.1
+// @version      0.3.2
 // @description  Group similar messages in the faction armory log and provide a summary ("used x items").
 // @author       Lugburz
 // @match        https://www.torn.com/factions.php?step=your*
@@ -78,16 +78,11 @@ function simplify() {
     // Your code here...
 })();
 
-function isArmoryTabActive() {
-    const armoryButton = $('#faction-news-root').find('button')[3];
-    return $(armoryButton).size() > 0 && $(armoryButton).attr('class').split(/\s+/).some(cl => cl.startsWith('active'));
-};
-
 const observer = new MutationObserver(function(mutations) {
     mutations.forEach(function(mutation) {
         for (const node of mutation.removedNodes) {
-            if (isArmoryTabActive() && node.classList) {
-                node.classList.forEach((c) => {
+            if (node.classList) {
+                node.classList.forEach(c => {
                     // use this as a sign that list has been updated
                     if (c.startsWith('preloaderWrapper')) simplify();
                 });
