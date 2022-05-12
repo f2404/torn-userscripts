@@ -1,10 +1,12 @@
 // ==UserScript==
 // @name         Torn: Filter chats
 // @namespace    lugburz.filter_chat
-// @version      0.2.5
+// @version      0.2.6
 // @description  Add filtering by keywords to chats. Use double quotes to apply AND rule and no quotes for OR rule; use ! to apply a NOT rule.
 // @author       Lugburz
 // @match        https://www.torn.com/*
+// @updateURL    https://github.com/f2404/torn-userscripts/raw/master/chat_filter.user.js
+// @downloadURL  https://github.com/f2404/torn-userscripts/raw/master/chat_filter.user.js
 // @grant        GM_setValue
 // @grant        GM_getValue
 // ==/UserScript==
@@ -77,7 +79,7 @@ function filter(content, keyword) {
     const ors = p[1];
     const nots = p[2];
 
-    const msgs = $(content).find('div[class^=message_]');
+    const msgs = $(content).find('div[class^=_message_]');
     $(msgs).each(function() {
         const msg = $(this).text();
         if (checkAnds(ands, msg) && checkOrs(ors, msg) && checkNots(nots, msg))
@@ -88,7 +90,7 @@ function filter(content, keyword) {
 }
 
 function addChatFilter(box, chat) {
-    const content = $(box).find('div[class^=chat-box-content_]');
+    const content = $(box).find('div[class^=_chat-box-content_]');
     const filter_name = 'filter-' + chat;
 
     if ($(box).find('#'+filter_name).size() > 0) {
@@ -99,8 +101,8 @@ function addChatFilter(box, chat) {
         return;
     }
 
-    const input = $(box).find('div[class^=chat-box-input_]');
-    $(input).prepend('<div><span style="vertical-align: middle; padding: 10px;"><label for="filter" style="color: green;">Filter: </label>' +
+    const input = $(box).find('div[class^=_chat-box-input_]');
+    $(input).append('<div><span style="vertical-align: middle; padding: 10px;"><label for="filter" style="color: green;">Filter: </label>' +
                      '<input type="text" id="' + filter_name + '" name="' + filter_name + '"></span></div>');
 
     $(content).bind('DOMNodeInserted DOMNodeRemoved', function() {
@@ -122,7 +124,7 @@ function addChatFilter(box, chat) {
     // Your code here...
     const chats = ['global', 'trade', 'faction', 'company', 'travel', 'hospital', 'jail', 'new-players'];
     chats.forEach(function(chat) {
-        const box = $('#chatRoot').find('div[class^=chat-box_][class*='+chat+'_]');
+        const box = $('#chatRoot').find('div[class^=_chat-box_][class*='+chat+'_]');
         $(box).bind('DOMNodeInserted', function() {
             $(box).ready(addChatFilter(box, chat));
         });
