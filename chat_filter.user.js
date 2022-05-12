@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Filter chats
 // @namespace    lugburz.filter_chat
-// @version      0.2.6
+// @version      0.2.7
 // @description  Add filtering by keywords to chats. Use double quotes to apply AND rule and no quotes for OR rule; use ! to apply a NOT rule.
 // @author       Lugburz
 // @match        https://www.torn.com/*
@@ -102,8 +102,8 @@ function addChatFilter(box, chat) {
     }
 
     const input = $(box).find('div[class^=_chat-box-input_]');
-    $(input).append('<div><span style="vertical-align: middle; padding: 10px;"><label for="filter" style="color: green;">Filter: </label>' +
-                     '<input type="text" id="' + filter_name + '" name="' + filter_name + '"></span></div>');
+    $(input).css('flex-direction', 'column').css('height', 'auto');
+    $(input).prepend('<div><label for="filter" style="color: green;">Filter: </label><input type="text" id="' + filter_name + '" name="' + filter_name + '"></div>');
 
     $(content).bind('DOMNodeInserted DOMNodeRemoved', function() {
         $('#'+filter_name).val(GM_getValue(filter_name));
