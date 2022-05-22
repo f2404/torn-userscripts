@@ -1,12 +1,14 @@
 // ==UserScript==
 // @name         Torn: Bounties: Hide friends and faction
 // @namespace    lugburz.bounties.hide_friends_and_faction
-// @version      0.1
+// @version      0.2
 // @description  Add an option to hide friends and faction from bounties.
 // @author       Lugburz
 // @match        https://www.torn.com/bounties.php*
 // @match        https://www.torn.com/friendlist.php*
 // @require      https://github.com/f2404/torn-userscripts/raw/master/lib/lugburz_lib.js
+// @updateURL    https://github.com/f2404/torn-userscripts/raw/master/bounties_hide_friends_and_faction.user.js
+// @downloadURL  https://github.com/f2404/torn-userscripts/raw/master/bounties_hide_friends_and_faction.user.js
 // @grant        GM_xmlhttpRequest
 // @grant        GM_setValue
 // @grant        GM_getValue
@@ -60,24 +62,26 @@ async function getFactionMembers() {
     return DATA;
 }
 
+function loadFriends() {
+    return GM_getValue('friendlist') && GM_getValue('friendlist').split(',') || [];
+}
+
 function showHideItems(checked, id) {
     const list = $('#mainContainer').find('ul.bounties-list');
-    const friends = GM_getValue('friendlist').split(',');
+    const friends = loadFriends();
 
-    getFactionMembers().then((data) => {
-        for (let mid in data.members) {
+    getFactionMembers().then(data => {
+        for (const mid in data.members) {
             $(list).children('li').each(function() {
                 let userid = $(this).find('ul.item > li.b-info-wrap.head > div.target.left > a').attr('href');
                 if (userid) {
-                    userid = userid.replace('profiles.php?XID=', '');
-                    if ((userid == mid || friends.includes(userid)) && checked) {
+                    userid = userid.replace('profiles.php?XID=', '').trim();
+                    if ((userid === mid || friends.includes(userid)) && checked) {
                         $(this).attr('friendorfaction', 1);
                         $(this).hide();
-                        return false;
-                    } else if ((userid == mid || friends.includes(userid)) && $(this).attr('friendorfaction') == 1) {
+                    } else if ((userid === mid || friends.includes(userid)) && $(this).attr('friendorfaction') === '1') {
                         $(this).attr('friendorfaction', 0);
                         $(this).show();
-                        return false;
                     }
                 }
             });
@@ -117,13 +121,15 @@ function parseFriendlist() {
         return;
     }
 
-    let friends = [];
+    const friends = loadFriends();
 
     $(list).children('li').each(function() {
         let userid = $(this).find('a.user.name').attr('href');
-        if (typeof userid !== "undefined" && userid != undefined) {
-            userid = userid.replace('/profiles.php?XID=', '');
-            friends.push(userid);
+        if (userid) {
+            userid = userid.replace('/profiles.php?XID=', '').trim();
+            if (!friends.includes(userid)) {
+                friends.push(userid);
+            }
         }
     });
 
@@ -135,9 +141,9 @@ function parseFriendlist() {
     'use strict';
 
     // Your code here...
-    ajax((page) => {
-        if (page == "bounties") addCheckbox();
-        else if (page == "userlist") parseFriendlist();
+    ajax(page => {
+        if (page === 'bounties') addCheckbox();
+        else if (page === 'userlist') parseFriendlist();
     });
 
     addCheckbox();
