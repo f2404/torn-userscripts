@@ -1,12 +1,15 @@
 // ==UserScript==
 // @name         Torn: Export lap times
 // @namespace    lugburz.prezze_export_lap_times
-// @version      0.1
+// @version      0.1.1
 // @description  Prezze is 40!
 // @author       Lugburz
 // @match        https://www.torn.com/loader.php?sid=racing*
 // @require      https://github.com/f2404/torn-userscripts/raw/e3bb87d75b44579cdb6f756435696960e009dc84/lib/lugburz_lib.js
+// @updateURL    https://github.com/f2404/torn-userscripts/raw/master/prezze_export_lap_times.user.js
+// @downloadURL  https://github.com/f2404/torn-userscripts/raw/master/prezze_export_lap_times.user.js
 // @grant        none
+// @run-at       document-body
 // ==/UserScript==
 
 // Laps to export, must be sorted (default: [1, 51])
@@ -19,9 +22,9 @@ function addExportButton(results, crashes, race_id, time_ended) {
     if ($("#infoSpot").size() > 0 && $('#exportLaps').size() < 1) {
         let csv = `position,name,id,time,best_lap,${LAPS.map(lap => 'lap_'+lap)}\n`;
         results.forEach((result, i) => {
-            const timeStr = formatTimeMsec(result[2] * 1000, true);
-            const bestLap = formatTimeMsec(result[3] * 1000);
-            const indLaps = result.slice(4).map(t => formatTimeMsec(t * 1000));
+            const timeStr = strictFormat(formatTimeMsec(result[2] * 1000, true));
+            const bestLap = strictFormat(formatTimeMsec(result[3] * 1000));
+            const indLaps = result.slice(4).map(t => strictFormat(formatTimeMsec(t * 1000)));
             csv += [i+1, result[0], result[1], timeStr, bestLap].concat(indLaps).join(',') + '\n';
         });
         crashes.forEach((crash, i) => {
@@ -89,8 +92,15 @@ function compare(a, b) {
     return 0;
 }
 
+// prevents sheets from auto formatting data
+// https://stackoverflow.com/questions/165042/stop-excel-from-automatically-converting-certain-text-values-to-dates
+function strictFormat(str) {
+    return `="${str}"`;
+}
+
 // Your code here...
 ajax((page, xhr) => {
+    if (page !== 'loader') return;
     try {
         const json = JSON.parse(xhr.responseText);
         parseRacingData(json);
