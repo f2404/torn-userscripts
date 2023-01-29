@@ -1,11 +1,11 @@
 // ==UserScript==
 // @name         Torn: Export lap times
 // @namespace    lugburz.prezze_export_lap_times
-// @version      0.1.1
+// @version      0.1.2
 // @description  Prezze is 40!
 // @author       Lugburz
 // @match        https://www.torn.com/loader.php?sid=racing*
-// @require      https://github.com/f2404/torn-userscripts/raw/e3bb87d75b44579cdb6f756435696960e009dc84/lib/lugburz_lib.js
+// @require      https://github.com/f2404/torn-userscripts/raw/aa736a5fd7d4c54b5785ea6ed872ac02e3dbb866/lib/lugburz_lib.js
 // @updateURL    https://github.com/f2404/torn-userscripts/raw/master/prezze_export_lap_times.user.js
 // @downloadURL  https://github.com/f2404/torn-userscripts/raw/master/prezze_export_lap_times.user.js
 // @grant        none
@@ -22,9 +22,9 @@ function addExportButton(results, crashes, race_id, time_ended) {
     if ($("#infoSpot").size() > 0 && $('#exportLaps').size() < 1) {
         let csv = `position,name,id,time,best_lap,${LAPS.map(lap => 'lap_'+lap)}\n`;
         results.forEach((result, i) => {
-            const timeStr = strictFormat(formatTimeMsec(result[2] * 1000, true));
-            const bestLap = strictFormat(formatTimeMsec(result[3] * 1000));
-            const indLaps = result.slice(4).map(t => strictFormat(formatTimeMsec(t * 1000)));
+            const timeStr = formatTimeMsec(result[2] * 1000, true);
+            const bestLap = formatTimeMsec(result[3] * 1000, true);
+            const indLaps = result.slice(4).map(t => formatTimeMsec(t * 1000, true));
             csv += [i+1, result[0], result[1], timeStr, bestLap].concat(indLaps).join(',') + '\n';
         });
         crashes.forEach((crash, i) => {
