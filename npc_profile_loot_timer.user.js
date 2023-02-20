@@ -1,13 +1,15 @@
 // ==UserScript==
 // @name         Torn: Loot timer on NPC profile
 // @namespace    lugburz.show_timer_on_npc_profile
-// @version      0.2.30
-// @description  Add a countdown timer to desired loot level on the NPC profile page as well as on the sidebar and the topbar (optionally).
+// @version      0.3.0
+// @description  Add a countdown timer to desired loot level on the NPC profile page as well as in the sidebar and the topbar (optionally).
 // @author       Lugburz
 // @match        https://www.torn.com/*
-// @require      https://raw.githubusercontent.com/f2404/torn-userscripts/410fc2fb1dc4d2f21b90709687b97786641c15af/lib/lugburz_lib.js
+// @require      https://raw.githubusercontent.com/f2404/torn-userscripts/d8fb88fbc7e03173aa81b1b466b1d2a251a70aad/lib/lugburz_lib.js
 // @updateURL    https://github.com/f2404/torn-userscripts/raw/master/npc_profile_loot_timer.user.js
+// @downloadURL  https://github.com/f2404/torn-userscripts/raw/master/npc_profile_loot_timer.user.js
 // @connect      yata.yt
+// @connect      api.lzpt.io
 // @grant        GM_xmlhttpRequest
 // @grant        GM_addStyle
 // @grant        GM_setValue
@@ -15,12 +17,18 @@
 // ==/UserScript==
 
 // Whether or not to show timer in sidebar
+// true by default
 const SIDEBAR_TIMERS = true;
 
 // Whether or not to show timer in topbar
+//true by default
 const TOPBAR_TIMERS = true;
 
-// Whether or not to change the timer color when it's close to running out
+// Whether or not to show scheduled attack timer provided by the Loot Rangers discord API
+// true by default
+const ATTACK_TIMER = true;
+
+// Whether or not to change the timer color when it's close to running out (true by default)
 const CHANGE_COLOR = true;
 
 // The NPC's to watch. Remove any that you don't want
@@ -68,11 +76,14 @@ const ROMAN = ['I', 'II', 'III', 'IV', 'V'];
 const TIMINGS = [0, 30*60, 90*60, 210*60, 450*60]; // till loot levels
 const LOGGING_ENABLED = false;
 
-const yata_api = async () => {
+const YATA_API_URL = 'https://yata.yt/api/v1/loot/';
+const ATTACK_TIMER_API_URL = 'https://api.lzpt.io/loot/';
+
+const call_api = async (url) => {
     return new Promise((resolve, reject) => {
         GM_xmlhttpRequest({
             method: 'GET',
-            url: 'https://yata.yt/api/v1/loot/',
+            url,
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -90,6 +101,8 @@ const yata_api = async () => {
         });
     });
 }
+
+/* Loot Timers */
 
 function getLootLevel(id) {
     let loot_level = 0;
@@ -146,7 +159,7 @@ function isCachedDataValid(id = '') {
 async function getTimings(id) {
     if (!isCachedDataValid(id)) {
         log('Calling the API id=' + id);
-        const data = await yata_api();
+        const data = await call_api(YATA_API_URL);
         GM_setValue('cached_data', JSON.stringify(data));
         GM_setValue('last_updated', new Date().getTime());
     }
@@ -167,7 +180,7 @@ async function getTimings(id) {
 async function getAllTimings() {
     if (!isCachedDataValid()) {
         log('Calling the API');
-        const data = await yata_api();
+        const data = await call_api(YATA_API_URL);
         GM_setValue('cached_data', JSON.stringify(data));
         GM_setValue('last_updated', new Date().getTime());
     }
@@ -184,9 +197,11 @@ function hideTimers(hide, yataData, sidebar = true) {
     log(yataData);
     if (sidebar) {
         Object.values(NPCS).forEach(npc => (hide || yataData.hosp_out[npc.id] === undefined) ? $(`#npcTimer${npc.id}`).hide() : $(`#npcTimer${npc.id}`).show());
+        hide ? $('#npcTimerSideScheduledAttack').hide() : $('#npcTimerSideScheduledAttack').show();
         $('#showHideTimers').text(`[${hide ? 'show' : 'hide'}]`);
     } else {
         Object.values(NPCS).forEach(npc => (hide || yataData.hosp_out[npc.id] === undefined) ? $(`#npcTimerTop${npc.id}`).hide() : $(`#npcTimerTop${npc.id}`).show());
+        hide ? $('#npcTimerTopScheduledAttack').hide() : $('#npcTimerTopScheduledAttack').show();
         $('#showHideTopbarTimers').html(`[${hide ? 'show NPC timers' : 'hide'}]`);
     }
 }
@@ -256,10 +271,10 @@ function addNpcTimers(data) {
     if (SIDEBAR_TIMERS && $('#sidebarNpcTimers').size() < 1) {
         let div = '<hr class="delimiter___neME6"><div id="sidebarNpcTimers"><span style="font-weight: 700;">NPC Timers</span><a id="showHideTimers" class="t-blue show-hide">[hide]</a>';
         Object.keys(NPCS).forEach(name => {
-            div += '<p style="line-height: 20px; text-decoration: none;" id="npcTimer' + NPCS[name].id + '"><a class="t-blue href desc" style="display: inline-block;" href="/loader.php?sid=attack&user2ID=' +
-                NPCS[name].id + '">' + name + '</a><span style="float: right;"></span></p>';
+            div += `<p style="line-height: 20px; text-decoration: none;" id="npcTimer${NPCS[name].id}"><a class="t-blue href desc" style="display: inline-block;" href="/loader.php?sid=attack&user2ID=` +
+                `${NPCS[name].id}">${name}</a><span style="float: right;"></span></p>`;
         });
-        div += '</div>';
+        div += '<p style="line-height: 20px; text-decoration: none;" id="npcTimerSideScheduledAttack">Attack in<span style="float: right;"></span></p></div>';
         $('#sidebar').find('div[class^=toggle-content__]').find('div[class^=content___]').append(div);
         //$(div).insertBefore($('#sidebar').find('h2[class^=header__]').eq(1)); // second header
         $('#showHideTimers').on('click', function () {
@@ -273,10 +288,13 @@ function addNpcTimers(data) {
         let div = '<div id="topbarNpcTimers" class="container" style="line-height: 28px; z-index: 1; position: relative;"><span style="font-weight: 700;">' +
             '<a id="showHideTopbarTimers" class="t-blue href desc" style="cursor: pointer; display: inline-block; margin-right: 10px;">[hide]</a></span>';
         Object.keys(NPCS).forEach(name => {
-            div += '<span style="text-decoration: none;" id="npcTimerTop' + NPCS[name].id + '"><a class="t-blue href desc" style="display: inline-block;" href="/loader.php?sid=attack&user2ID=' +
-                `${NPCS[name].id}">${name}:&nbsp;</a><span style="display: inline-block; width: ${isMobile() ? 50 : 80}px;"></span></span>`;
+            div += `<span style="text-decoration: none;" id="npcTimerTop${NPCS[name].id}"><a class="t-blue href desc" style="display: inline-block;" href="/loader.php?sid=attack&user2ID=` +
+                `${NPCS[name].id}">${name}:&nbsp;</a><span style="display: inline-block; width: ${isMobile() ? 50 : 65}px;"></span></span>`;
         });
-        div += '</div>';
+
+        const pistolImg = '<img class="lazy" src="https://emojiguide.com/wp-content/uploads/platform/gmail/43450.png" alt="Attack scheduled" title="Attack scheduled" style="width: 15px; height: 15px; display: inline-block; vertical-align: text-bottom">';
+        div += `<span id="npcTimerTopScheduledAttack">${pistolImg} <span style="text-decoration: none;"></span></span></div>`;
+
         if ($('div.header-wrapper-bottom').find('div.container').size() > 0) {
             // announcement
             $('div.header-wrapper-bottom').find('div.container').append(div);
@@ -340,9 +358,9 @@ function addNpcTimers(data) {
                     let text;
                     if (left < 0) {
                         const elapsed = Math.floor(now / 1000) - data.hosp_out[id];
-                        text = elapsed < 0 ? 'Hosp' : (isMobile() ? `LL ${getLl(elapsed)}` : `Loot level ${getLl(elapsed)}`);
+                        text = elapsed < 0 ? 'Hosp' : (isMobile() ? `LL ${getLl(elapsed)}` : `Loot lvl ${getLl(elapsed)}`);
                     } else {
-                        text = isMobile() ? formatTimeSec(left) : formatTimeSecWithLetters(left);
+                        text = isMobile() ? formatTimeSec(left) : formatTimeSecWithLettersShort(left);
                     }
                     $(span).text(text);
                     maybeChangeColors(span, left);
@@ -361,6 +379,65 @@ function addNpcTimers(data) {
     })
 }
 
+/* Attack Timer */
+
+const ATTACK_TIMER_API_DELAY = 60 * 1000;
+let displayAttackTimer = -1;
+
+async function getAttackTime() {
+    const data = await call_api(ATTACK_TIMER_API_URL);
+    log('getAttackTime', data);
+    const attackTs = data && data.time && data.time.clear ? data.time.clear * 1000 : 0;
+    GM_setValue('attack_ts_cached', attackTs);
+    GM_setValue('attack_ts_last_updated', new Date().getTime());
+}
+
+async function addScheduledAttackTimer() {
+    const now = new Date().getTime();
+    const attackTs = GM_getValue('attack_ts_cached');
+    const lastUpdated = GM_getValue('attack_ts_last_updated');
+
+    if (!attackTs || !lastUpdated || now - lastUpdated >= ATTACK_TIMER_API_DELAY) {
+        log('Calling attack timer API');
+        await getAttackTime();
+    }
+
+    setInterval(async () => {
+        log('Calling attack timer API, timer');
+        await getAttackTime();
+        startDisplayingScheduledAttack();
+    }, ATTACK_TIMER_API_DELAY);
+
+    startDisplayingScheduledAttack();
+}
+
+function startDisplayingScheduledAttack() {
+    if (displayAttackTimer > -1) {
+        clearInterval(displayAttackTimer);
+    }
+
+    displayAttackTimer = setInterval(() => {
+        const attackTs = GM_getValue('attack_ts_cached');
+        const due = new Date(attackTs);
+        const now = new Date().getTime();
+        const left = due - now;
+        if (SIDEBAR_TIMERS) {
+            const span = $('#npcTimerSideScheduledAttack').find('span');
+            const text = left < 0 ? 'N/A' : formatTimeSecWithLetters(left);
+            $('#npcTimerSideScheduledAttack').find('span').text(text);
+            maybeChangeColors(span, left);
+        }
+        if (TOPBAR_TIMERS) {
+            const span = $('#npcTimerTopScheduledAttack').find('span');
+            const text = left < 0 ? 'N/A' : (isMobile() ? formatTimeSec(left) : formatTimeSecWithLettersShort(left));
+            $('#npcTimerTopScheduledAttack').find('span').text(text);
+            maybeChangeColors(span, left);
+        }
+    }, 1000);
+}
+
+
+
 (function () {
     'use strict';
 
@@ -377,6 +454,9 @@ function addNpcTimers(data) {
     const maybeAddTimers = () => {
         if (SIDEBAR_TIMERS && $('#sidebar').size() > 0 || TOPBAR_TIMERS && $('div.header-wrapper-bottom').size() > 0) {
             getAllTimings().then(data => addNpcTimers(data));
+            if (ATTACK_TIMER) {
+                addScheduledAttackTimer();
+            }
         }
     };
     maybeAddTimers();
