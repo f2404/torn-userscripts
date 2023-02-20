@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Loot timer on NPC profile
 // @namespace    lugburz.show_timer_on_npc_profile
-// @version      0.3.1
+// @version      0.3.2
 // @description  Add a countdown timer to desired loot level on the NPC profile page as well as in the sidebar and the topbar (optionally).
 // @author       Lugburz
 // @match        https://www.torn.com/*
@@ -270,7 +270,9 @@ function addNpcTimers(data) {
     log(NPCS);
     if (SIDEBAR_TIMERS && $('#sidebarNpcTimers').size() < 1) {
         let div = '<hr class="delimiter___neME6"><div id="sidebarNpcTimers"><span style="font-weight: 700;">NPC Timers</span><a id="showHideTimers" class="t-blue show-hide">[hide]</a>';
-        div += '<p style="line-height: 20px; text-decoration: none;" id="npcTimerSideScheduledAttack">Attack in<span style="float: right;"></span></p>';
+        if (ATTACK_TIMER) {
+            div += '<p style="line-height: 20px; text-decoration: none;" id="npcTimerSideScheduledAttack">Attack in<span style="float: right;"></span></p>';
+        }
         Object.keys(NPCS).forEach(name => {
             div += `<p style="line-height: 20px; text-decoration: none;" id="npcTimer${NPCS[name].id}"><a class="t-blue href desc" style="display: inline-block;" href="/loader.php?sid=attack&user2ID=` +
                 `${NPCS[name].id}">${name}</a><span style="float: right;"></span></p>`;
@@ -289,8 +291,10 @@ function addNpcTimers(data) {
         let div = '<div id="topbarNpcTimers" class="container" style="line-height: 28px; z-index: 1; position: relative;"><span style="font-weight: 700;">' +
             '<a id="showHideTopbarTimers" class="t-blue href desc" style="cursor: pointer; display: inline-block; margin-right: 10px;">[hide]</a></span>';
 
-        const pistolImg = '<img class="lazy" src="https://emojiguide.com/wp-content/uploads/platform/gmail/43450.png" alt="Attack scheduled" title="Attack scheduled" style="width: 15px; height: 15px; display: inline-block; vertical-align: text-bottom">';
-        div += `<span id="npcTimerTopScheduledAttack">${pistolImg} <span style="text-decoration: none; display: inline-block; width: ${isMobile() ? 50 : 65}px;"></span></span>`;
+        if (ATTACK_TIMER) {
+            const pistolImg = '<img class="lazy" src="https://emojiguide.com/wp-content/uploads/platform/gmail/43450.png" alt="Attack scheduled" title="Attack scheduled" style="width: 15px; height: 15px; display: inline-block; vertical-align: text-bottom">';
+            div += `<span id="npcTimerTopScheduledAttack">${pistolImg} <span style="text-decoration: none; display: inline-block; width: ${isMobile() ? 50 : 65}px;"></span></span>`;
+        }
 
         Object.keys(NPCS).forEach(name => {
             div += `<span style="text-decoration: none;" id="npcTimerTop${NPCS[name].id}"><a class="t-blue href desc" style="display: inline-block;" href="/loader.php?sid=attack&user2ID=` +
