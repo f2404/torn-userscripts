@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Loot timer on NPC profile
 // @namespace    lugburz.show_timer_on_npc_profile
-// @version      0.3.0
+// @version      0.3.1
 // @description  Add a countdown timer to desired loot level on the NPC profile page as well as in the sidebar and the topbar (optionally).
 // @author       Lugburz
 // @match        https://www.torn.com/*
@@ -270,11 +270,12 @@ function addNpcTimers(data) {
     log(NPCS);
     if (SIDEBAR_TIMERS && $('#sidebarNpcTimers').size() < 1) {
         let div = '<hr class="delimiter___neME6"><div id="sidebarNpcTimers"><span style="font-weight: 700;">NPC Timers</span><a id="showHideTimers" class="t-blue show-hide">[hide]</a>';
+        div += '<p style="line-height: 20px; text-decoration: none;" id="npcTimerSideScheduledAttack">Attack in<span style="float: right;"></span></p>';
         Object.keys(NPCS).forEach(name => {
             div += `<p style="line-height: 20px; text-decoration: none;" id="npcTimer${NPCS[name].id}"><a class="t-blue href desc" style="display: inline-block;" href="/loader.php?sid=attack&user2ID=` +
                 `${NPCS[name].id}">${name}</a><span style="float: right;"></span></p>`;
         });
-        div += '<p style="line-height: 20px; text-decoration: none;" id="npcTimerSideScheduledAttack">Attack in<span style="float: right;"></span></p></div>';
+        div += '</div>';
         $('#sidebar').find('div[class^=toggle-content__]').find('div[class^=content___]').append(div);
         //$(div).insertBefore($('#sidebar').find('h2[class^=header__]').eq(1)); // second header
         $('#showHideTimers').on('click', function () {
@@ -287,13 +288,16 @@ function addNpcTimers(data) {
     if (TOPBAR_TIMERS && $('#topbarNpcTimers').size() < 1) {
         let div = '<div id="topbarNpcTimers" class="container" style="line-height: 28px; z-index: 1; position: relative;"><span style="font-weight: 700;">' +
             '<a id="showHideTopbarTimers" class="t-blue href desc" style="cursor: pointer; display: inline-block; margin-right: 10px;">[hide]</a></span>';
+
+        const pistolImg = '<img class="lazy" src="https://emojiguide.com/wp-content/uploads/platform/gmail/43450.png" alt="Attack scheduled" title="Attack scheduled" style="width: 15px; height: 15px; display: inline-block; vertical-align: text-bottom">';
+        div += `<span id="npcTimerTopScheduledAttack">${pistolImg} <span style="text-decoration: none; display: inline-block; width: ${isMobile() ? 50 : 65}px;"></span></span>`;
+
         Object.keys(NPCS).forEach(name => {
             div += `<span style="text-decoration: none;" id="npcTimerTop${NPCS[name].id}"><a class="t-blue href desc" style="display: inline-block;" href="/loader.php?sid=attack&user2ID=` +
                 `${NPCS[name].id}">${name}:&nbsp;</a><span style="display: inline-block; width: ${isMobile() ? 50 : 65}px;"></span></span>`;
         });
 
-        const pistolImg = '<img class="lazy" src="https://emojiguide.com/wp-content/uploads/platform/gmail/43450.png" alt="Attack scheduled" title="Attack scheduled" style="width: 15px; height: 15px; display: inline-block; vertical-align: text-bottom">';
-        div += `<span id="npcTimerTopScheduledAttack">${pistolImg} <span style="text-decoration: none;"></span></span></div>`;
+        div += '</div>';
 
         if ($('div.header-wrapper-bottom').find('div.container').size() > 0) {
             // announcement
@@ -386,7 +390,7 @@ let displayAttackTimer = -1;
 
 async function getAttackTime() {
     const data = await call_api(ATTACK_TIMER_API_URL);
-    log('getAttackTime', data);
+    log(`getAttackTime: ${JSON.stringify(data)}`);
     const attackTs = data && data.time && data.time.clear ? data.time.clear * 1000 : 0;
     GM_setValue('attack_ts_cached', attackTs);
     GM_setValue('attack_ts_last_updated', new Date().getTime());
@@ -425,13 +429,13 @@ function startDisplayingScheduledAttack() {
             const span = $('#npcTimerSideScheduledAttack').find('span');
             const text = left < 0 ? 'N/A' : formatTimeSecWithLetters(left);
             $('#npcTimerSideScheduledAttack').find('span').text(text);
-            maybeChangeColors(span, left);
+            if (text !== 'N/A') maybeChangeColors(span, left);
         }
         if (TOPBAR_TIMERS) {
             const span = $('#npcTimerTopScheduledAttack').find('span');
             const text = left < 0 ? 'N/A' : (isMobile() ? formatTimeSec(left) : formatTimeSecWithLettersShort(left));
             $('#npcTimerTopScheduledAttack').find('span').text(text);
-            maybeChangeColors(span, left);
+            if (text !== 'N/A') maybeChangeColors(span, left);
         }
     }, 1000);
 }
