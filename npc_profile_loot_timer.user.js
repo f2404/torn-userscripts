@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Loot timer on NPC profile
 // @namespace    lugburz.show_timer_on_npc_profile
-// @version      0.3.2
+// @version      0.3.3
 // @description  Add a countdown timer to desired loot level on the NPC profile page as well as in the sidebar and the topbar (optionally).
 // @author       Lugburz
 // @match        https://www.torn.com/*
@@ -392,6 +392,11 @@ function addNpcTimers(data) {
 const ATTACK_TIMER_API_DELAY = 60 * 1000;
 let displayAttackTimer = -1;
 
+function formatTimeTorn(ts) {
+    const date = new Date(ts);
+    return `${pad(date.getUTCHours(), 2)}:${pad(date.getUTCMinutes(), 2)}:${pad(date.getUTCSeconds(), 2)} - ${pad(date.getUTCDate(), 2)}/${pad(date.getUTCMonth() + 1, 2)}/${date.getUTCFullYear()} TCT`;
+}
+
 async function getAttackTime() {
     const data = await call_api(ATTACK_TIMER_API_URL);
     log(`getAttackTime: ${JSON.stringify(data)}`);
@@ -402,8 +407,8 @@ async function getAttackTime() {
 
 async function addScheduledAttackTimer() {
     const now = new Date().getTime();
-    const attackTs = GM_getValue('attack_ts_cached');
     const lastUpdated = GM_getValue('attack_ts_last_updated');
+    let attackTs = GM_getValue('attack_ts_cached');
 
     if (!attackTs || !lastUpdated || now - lastUpdated >= ATTACK_TIMER_API_DELAY) {
         log('Calling attack timer API');
@@ -417,6 +422,10 @@ async function addScheduledAttackTimer() {
     }, ATTACK_TIMER_API_DELAY);
 
     startDisplayingScheduledAttack();
+
+    attackTs = GM_getValue('attack_ts_cached');
+    $('#npcTimerTopScheduledAttack').find('img').attr('title', attackTs ? `Attack scheduled for ${formatTimeTorn(attackTs)}` : 'Attack scheduled');
+    $('#npcTimerSideScheduledAttack').attr('title', attackTs ? `Attack scheduled for ${formatTimeTorn(attackTs)}` : '');
 }
 
 function startDisplayingScheduledAttack() {
