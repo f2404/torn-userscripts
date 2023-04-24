@@ -127,7 +127,6 @@ function addChatFilter(box, chat) {
         $(box).ready(addChatFilter(box, chat));
         $(box).bind('DOMNodeInserted', function(event) {
             if (event.target.className && event.target.className.startsWith('_chat-box-input_')) {
-                console.log(box);
                 $(box).ready(addChatFilter(box, chat));
             }
         });
