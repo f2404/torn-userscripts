@@ -507,14 +507,14 @@ function addSettingsDiv() {
 
 function addExportButton(results, crashes, my_name, race_id, time_ended) {
     if ($("#racingupdatesnew").size() > 0 && $('#downloadAsCsv').size() < 1) {
-        let csv = 'PS,NM,ID,TM,BL,RS\n';
+        let csv = 'PS,NM,ID,TM,BL\n';
         for (let i = 0; i < results.length; i++) {
             const timeStr = formatTimeMsec(results[i][2] * 1000, true);
             const bestLap = formatTimeMsec(results[i][3] * 1000);
-            csv += [i+1, results[i][0], results[i][1], timeStr, bestLap, (results[i][0] === my_name ? GM_getValue('racinglevel') : '')].join(',') + '\n';
+            csv += [i+1, results[i][0], results[i][1], timeStr, bestLap].join(',') + '\n';
         }
         for (let i = 0; i < crashes.length; i++) {
-            csv += [results.length + i + 1, crashes[i][0], crashes[i][1], crashes[i][2], '', (results[i][0] === my_name ? GM_getValue('racinglevel') : '')].join(',') + '\n';
+            csv += [results.length + i + 1, crashes[i][0], crashes[i][1], crashes[i][2], ''].join(',') + '\n';
         }
 
         const timeE = new Date();
