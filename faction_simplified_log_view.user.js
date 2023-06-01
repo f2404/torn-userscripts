@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Faction: Simplified log view
 // @namespace    lugburz.faction.simplified_log_view
-// @version      0.3.3
+// @version      0.3.4
 // @description  Group similar messages in the faction armory log and provide a summary ("used x items").
 // @author       Lugburz
 // @match        https://www.torn.com/factions.php?step=your*
@@ -40,7 +40,7 @@ function simplify() {
     let to_time = '';
     let row = '';
 
-    const entries = $('#faction-news-root').find('li');
+    const entries = $('ul.news-list').find('li');
     if ($(entries).size() < 2) {
         return;
     }
