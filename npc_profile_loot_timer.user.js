@@ -1,5 +1,6 @@
 // ==UserScript==
 // @name         Torn: Loot timer on NPC profile
+// @namespace    lugburz.show_timer_on_npc_profile
 // @version      1.0
 // @description  Displays NPC loot data on profiles, the sidebar, and at the top of the page.
 // @author       Lugburz, Lazerpent
