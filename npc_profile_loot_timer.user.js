@@ -147,12 +147,32 @@ function process(id, data) {
       return;
     }
 
-    const span = $('div.profile-status').find('div.profile-container').find('div.description').find('span.sub-desc');
-    let html = $(span).html();
-    if (html && currentLevel !== 5) {
-      const n = html.indexOf('(');
-      html = html.substring(0, n !== -1 ? n - 1 : html.length);
-      $(span).html(`${html} (Till loot level ${ROMAN[currentLevel === 4 ? 5 : 4]}: ${formatTime(remaining)})`);
+    const status = $('div.profile-status').find('div.profile-container').find('div.description');
+    const subDesc = status.find('span.sub-desc');
+    let subHtml = $(subDesc).html();
+
+    if (subHtml) {
+      const n = subHtml.indexOf('(');
+      subHtml = subHtml.substring(0, n !== -1 ? n - 1 : subHtml.length);
+
+      let location = 0;
+      for (const l of data.order) {
+        if (data.npcs[l].clear) {
+          location++;
+        }
+        if (l === id) {
+          break;
+        }
+      }
+      if (currentLevel !== 5) {
+        subDesc.html(`${subHtml} (Loot Level ${ROMAN[currentLevel === 4 ? 5 : 4]} in ${formatCountdown(remaining)})`);
+      }
+
+      if (data.time.clear > now && data.npcs[id].clear) {
+        subDesc.attr('title', `Attack ${location} at ${formatTornTime(data.time.clear)}`);
+      } else {
+        subDesc.attr('title', `Attack Not Scheduled`);
+      }
     }
   }, 1000);
 }
@@ -287,7 +307,7 @@ async function renderTimes() {
       if (currentLevel >= 4) {
         text = elapsedTime < 0 ? 'Hosp' : `Loot level ${ROMAN[currentLevel]}`;
       } else {
-        text = formatTime(remaining);
+        text = formatCountdown(remaining);
       }
       $(span).text(text);
       maybeChangeColors(span, remaining, currentLevel);
@@ -301,7 +321,7 @@ async function renderTimes() {
       if (currentLevel >= 4) {
         text = elapsedTime < 0 ? 'Hosp' : (isMobile() ? `LL ${ROMAN[currentLevel]}` : `Loot lvl ${ROMAN[currentLevel]}`);
       } else {
-        text = isMobile() ? formatTime(remaining, 'minimal') : formatTime(remaining, 'short');
+        text = isMobile() ? formatCountdown(remaining, 'minimal') : formatCountdown(remaining, 'short');
       }
       $(span).text(text);
       maybeChangeColors(span, remaining, currentLevel);
@@ -316,7 +336,7 @@ async function renderTimes() {
   if (SIDEBAR_TIMERS) {
     const sidebar = $('#npcTimerSidebarScheduledAttack');
     const span = sidebar.find('span');
-    const text = scheduled ? formatTime(remainingTime) : 'N/A';
+    const text = scheduled ? formatCountdown(remainingTime) : 'N/A';
     sidebar.find('span').text(text);
 
     if (scheduled) {
@@ -327,7 +347,7 @@ async function renderTimes() {
   if (TOPBAR_TIMERS) {
     const topbar = $('#npcTimerTopbarScheduledAttack');
     const span = topbar.find('span');
-    const text = scheduled ? (isMobile() ? formatTime(remainingTime, 'minimal') : formatTime(remainingTime, 'short')) : 'N/A';
+    const text = scheduled ? (isMobile() ? formatCountdown(remainingTime, 'minimal') : formatCountdown(remainingTime, 'short')) : 'N/A';
     topbar.find('span').text(text);
 
     if (scheduled) {
@@ -344,8 +364,12 @@ async function renderTimes() {
   'use strict';
 
   if ($(location).attr('href').includes('profiles.php')) {
-    const profileId = RegExp(/XID=(\d+)/).exec($(location).attr('href'))[1];
-    getData().then(process.bind(null, profileId));
+    try {
+      const profileId = RegExp(/XID=(\d+)/).exec($(location).attr('href'))[1];
+      getData().then(process.bind(null, parseInt(profileId)));
+    } catch (err) {
+      console.error(err);
+    }
   }
 
   const maybeAddTimers = () => {
@@ -395,7 +419,7 @@ function formatTornTime(time) {
   return `${pad(date.getUTCHours(), 2)}:${pad(date.getUTCMinutes(), 2)}:${pad(date.getUTCSeconds(), 2)} - ${pad(date.getUTCDate(), 2)}/${pad(date.getUTCMonth() + 1, 2)}/${date.getUTCFullYear()} TCT`;
 }
 
-function formatTime(sec, mode = 'long') {
+function formatCountdown(sec, mode = 'long') {
   const hours = Math.floor((sec % (60 * 60 * 24)) / (60 * 60));
   const minutes = Math.floor((sec % (60 * 60)) / 60);
   const seconds = Math.floor(sec % 60);
