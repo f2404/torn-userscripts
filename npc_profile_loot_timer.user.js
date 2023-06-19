@@ -7,7 +7,6 @@
 // @match        https://www.torn.com/*
 // @updateURL    https://github.com/f2404/torn-userscripts/raw/master/npc_profile_loot_timer.user.js
 // @downloadURL  https://github.com/f2404/torn-userscripts/raw/master/npc_profile_loot_timer.user.js
-// @connect      yata.yt
 // @connect      api.lzpt.io
 // @grant        GM_xmlhttpRequest
 // @grant        GM_addStyle
