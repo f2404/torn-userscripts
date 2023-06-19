@@ -306,13 +306,14 @@ async function renderTimes() {
   });
 
   const remainingTime = data.time.clear - now;
+  const scheduled = remainingTime > 0;
+
   if (SIDEBAR_TIMERS) {
     const sidebar = $('#npcTimerSidebarScheduledAttack');
     const span = sidebar.find('span');
-    const text = remainingTime < 0 ? 'N/A' : formatTime(remainingTime);
+    const text = scheduled ? 'N/A' : formatTime(remainingTime);
     sidebar.find('span').text(text);
 
-    const scheduled = text !== 'N/A';
     if (scheduled) {
       maybeChangeColors(span, remainingTime);
     }
@@ -321,11 +322,10 @@ async function renderTimes() {
   if (TOPBAR_TIMERS) {
     const topbar = $('#npcTimerTopbarScheduledAttack');
     const span = topbar.find('span');
-    const text = remainingTime < 0 ? 'N/A' : (isMobile() ? formatTime(remainingTime, 'minimal') : formatTime(remainingTime, 'short'));
+    const text = scheduled ? 'N/A' : (isMobile() ? formatTime(remainingTime, 'minimal') : formatTime(remainingTime, 'short'));
     topbar.find('span').text(text);
 
-    const scheduled = text !== 'N/A';
-    if (text !== 'N/A') {
+    if (scheduled) {
       maybeChangeColors(span, remainingTime);
     }
     topbar.find('img').attr('title', scheduled ? `Attack scheduled for ${formatTornTime(data.time.clear)}` : 'Attack scheduled');
