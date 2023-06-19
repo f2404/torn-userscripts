@@ -96,9 +96,11 @@ async function getData() {
 
           resolve(data);
         } catch (err) {
+          GM_setValue('last_updated', 0);
           reject(err);
         }
       }, onerror: (err) => {
+        GM_setValue('last_updated', 0);
         reject(err);
       }
     });
