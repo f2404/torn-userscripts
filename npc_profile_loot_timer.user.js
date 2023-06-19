@@ -58,12 +58,12 @@ const ROMAN = [null, 'I', 'II', 'III', 'IV', 'V'];
 const TIMINGS = [-1, 0, 30, 90, 210, 450].map(i => i * 60);
 const SHORT_NAME = name => {
   return {
-    'Fernando': 'Nando',
-    'Easter Bunny': 'Bunny'
+    'Fernando': 'Nando', 'Easter Bunny': 'Bunny'
   }[name] || name;
 };
 
 const LOGGING_ENABLED = false;
+
 function log(data) {
   if (LOGGING_ENABLED) console.log(data)
 }
@@ -86,12 +86,9 @@ const updateData = async () => {
 
   return await new Promise((resolve, reject) => {
     GM_xmlhttpRequest({
-      method: 'GET',
-      url: 'https://api.lzpt.io/loot/',
-      headers: {
+      method: 'GET', url: 'https://api.lzpt.io/loot/', headers: {
         'Content-Type': 'application/json'
-      },
-      onload: (response) => {
+      }, onload: (response) => {
         try {
           let data = JSON.parse(response.responseText);
           GM_setValue('cached_data', JSON.stringify(data));
@@ -101,8 +98,7 @@ const updateData = async () => {
         } catch (err) {
           reject(err);
         }
-      },
-      onerror: (err) => {
+      }, onerror: (err) => {
         reject(err);
       }
     });
@@ -166,8 +162,9 @@ const addContentPadding = (add) => $('#mainContainer > div.content-wrapper').css
 const setTopbarPadding = (pad) => $('#topbarNpcTimers').css('padding-top', pad);
 
 function addNpcTimers(data) {
-  if (!data)
+  if (!data) {
     return;
+  }
 
   log('Adding NPC Timers')
   if (SIDEBAR_TIMERS && $('#sidebarNpcTimers').size() < 1) {
@@ -365,11 +362,7 @@ const observer = new MutationObserver(function (mutations) {
 });
 
 observer.observe(document.getElementById('header-root'), {
-  subtree: true,
-  childList: true,
-  characterData: false,
-  attributes: false,
-  attributeOldValue: false
+  subtree: true, childList: true, characterData: false, attributes: false, attributeOldValue: false
 });
 
 
