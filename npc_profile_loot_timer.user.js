@@ -36,6 +36,10 @@ GM_addStyle(`
   .npc_red-timer {
     color: red;
   }
+   
+  .npc_green-timer {
+    color: green;
+  }
   
   .npc_show-hide {
     color: #069;
@@ -113,15 +117,16 @@ function hideTimers(hide, sidebar) {
   $(`#showHide${sidebar ? 'Side' : 'Top'}barTimers`).text(`[${hide ? sidebar ? 'show' : 'snow NPC timers' : 'hide'}]`);
 }
 
-function maybeChangeColors(span, left) {
+function maybeChangeColors(span, time, level = 3) {
   if (CHANGE_COLOR) {
-    if (left < 5 * 60) {
+    if (level < 4 && time < 5 * 60) {
       $(span).addClass('npc_red-timer');
-    } else if (left < 10 * 60) {
+    } else if (level < 4 && time < 10 * 60) {
       $(span).addClass('npc_orange-timer');
+    } else if (level >= 4) {
+      $(span).addClass('npc_green-timer');
     } else {
-      $(span).removeClass('npc_orange-timer');
-      $(span).removeClass('npc_red-timer');
+      $(span).removeClass('npc_orange-timer npc_red-timer npc_green-timer');
     }
   }
 }
@@ -285,7 +290,7 @@ async function renderTimes() {
         text = formatTime(remaining);
       }
       $(span).text(text);
-      maybeChangeColors(span, remaining);
+      maybeChangeColors(span, remaining, currentLevel);
 
       div.find('a').first().css('text-decoration', clearStatus);
     }
@@ -299,7 +304,7 @@ async function renderTimes() {
         text = isMobile() ? formatTime(remaining, 'minimal') : formatTime(remaining, 'short');
       }
       $(span).text(text);
-      maybeChangeColors(span, remaining);
+      maybeChangeColors(span, remaining, currentLevel);
 
       div.find('a').first().css('text-decoration', clearStatus);
     }
@@ -311,7 +316,7 @@ async function renderTimes() {
   if (SIDEBAR_TIMERS) {
     const sidebar = $('#npcTimerSidebarScheduledAttack');
     const span = sidebar.find('span');
-    const text = scheduled ? 'N/A' : formatTime(remainingTime);
+    const text = scheduled ? formatTime(remainingTime) : 'N/A';
     sidebar.find('span').text(text);
 
     if (scheduled) {
@@ -322,7 +327,7 @@ async function renderTimes() {
   if (TOPBAR_TIMERS) {
     const topbar = $('#npcTimerTopbarScheduledAttack');
     const span = topbar.find('span');
-    const text = scheduled ? 'N/A' : (isMobile() ? formatTime(remainingTime, 'minimal') : formatTime(remainingTime, 'short'));
+    const text = scheduled ? (isMobile() ? formatTime(remainingTime, 'minimal') : formatTime(remainingTime, 'short')) : 'N/A';
     topbar.find('span').text(text);
 
     if (scheduled) {
