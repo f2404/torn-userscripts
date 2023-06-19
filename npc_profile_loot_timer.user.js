@@ -264,7 +264,7 @@ function addNpcTimers(data) {
         const span = div.find('span');
         let text;
         if (currentLevel >= 4) {
-          text = elapsedTime < 0 ? 'Hosp' : `Loot level ${currentLevel}`;
+          text = elapsedTime < 0 ? 'Hosp' : `Loot level ${ROMAN[currentLevel]}`;
         } else {
           text = formatTime(remaining);
         }
@@ -278,7 +278,7 @@ function addNpcTimers(data) {
         const span = div.find('span');
         let text;
         if (currentLevel >= 4) {
-          text = elapsedTime < 0 ? 'Hosp' : (isMobile() ? `LL ${currentLevel}` : `Loot lvl ${currentLevel}`);
+          text = elapsedTime < 0 ? 'Hosp' : (isMobile() ? `LL ${ROMAN[currentLevel]}` : `Loot lvl ${ROMAN[currentLevel]}`);
         } else {
           text = isMobile() ? formatTime(remaining, 'minimal') : formatTime(remaining, 'short');
         }
