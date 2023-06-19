@@ -273,6 +273,8 @@ async function renderTimes() {
     const remaining = elapsedTime < TIMINGS[4] ? TIMINGS[4] - elapsedTime : TIMINGS[5] - elapsedTime;
     const currentLevel = elapsedTime < TIMINGS[5] ? TIMINGS.findIndex(t => elapsedTime < t) - 1 : 5;
 
+    const clearStatus = (data.time.clear <= now || data.npcs[id].clear) ? 'none' : 'line-through';
+
     if (SIDEBAR_TIMERS) {
       const div = $(sidebar);
       const span = div.find('span');
@@ -285,7 +287,7 @@ async function renderTimes() {
       $(span).text(text);
       maybeChangeColors(span, remaining);
 
-      div.find('a').first().css('text-decoration', data.npcs[id].clear ? 'none' : 'line-through');
+      div.find('a').first().css('text-decoration', clearStatus);
     }
     if (TOPBAR_TIMERS) {
       const div = $(topbar);
@@ -299,7 +301,7 @@ async function renderTimes() {
       $(span).text(text);
       maybeChangeColors(span, remaining);
 
-      div.find('a').first().css('text-decoration', data.npcs[id].clear ? 'none' : 'line-through');
+      div.find('a').first().css('text-decoration', clearStatus);
     }
   });
 
