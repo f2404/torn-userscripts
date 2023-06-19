@@ -68,7 +68,7 @@ function log(data) {
   if (LOGGING_ENABLED) console.log(data)
 }
 
-const updateData = async () => {
+async function getData() {
   try {
     const str_data = GM_getValue('cached_data');
     const last_updated = GM_getValue('last_updated');
@@ -248,73 +248,86 @@ function addNpcTimers(data) {
     hideTimers(hide, false);
   }
 
-  setInterval(() => {
-    const now = Math.floor(new Date().getTime() / 1000);
-
-    data.order.forEach(id => {
-      const sidebar = `#npcTimerSidebar${id}`;
-      const topbar = `#npcTimerTopbar${id}`;
-
-      const elapsedTime = now - data.npcs[id].hosp_out;
-      const remaining = elapsedTime < TIMINGS[4] ? TIMINGS[4] - elapsedTime : TIMINGS[5] - elapsedTime;
-      const currentLevel = elapsedTime < TIMINGS[5] ? TIMINGS.findIndex(t => elapsedTime < t) - 1 : 5;
-
-      if (SIDEBAR_TIMERS) {
-        const div = $(sidebar);
-        const span = div.find('span');
-        let text;
-        if (currentLevel >= 4) {
-          text = elapsedTime < 0 ? 'Hosp' : `Loot level ${ROMAN[currentLevel]}`;
-        } else {
-          text = formatTime(remaining);
-        }
-        $(span).text(text);
-        maybeChangeColors(span, remaining);
-
-        div.find('a').first().css('text-decoration', data.npcs[id].clear ? 'none' : 'line-through');
-      }
-      if (TOPBAR_TIMERS) {
-        const div = $(topbar);
-        const span = div.find('span');
-        let text;
-        if (currentLevel >= 4) {
-          text = elapsedTime < 0 ? 'Hosp' : (isMobile() ? `LL ${ROMAN[currentLevel]}` : `Loot lvl ${ROMAN[currentLevel]}`);
-        } else {
-          text = isMobile() ? formatTime(remaining, 'minimal') : formatTime(remaining, 'short');
-        }
-        $(span).text(text);
-        maybeChangeColors(span, remaining);
-
-        div.find('a').first().css('text-decoration', data.npcs[id].clear ? 'none' : 'line-through');
-      }
+  if (!setup) {
+    setup = true;
+    renderTimes().catch(err => {
+      console.error(err);
     });
+  }
+}
 
-    const remainingTime = data.time.clear - now;
+let setup = false;
+
+async function renderTimes() {
+  const start = new Date().getTime();
+  const data = await getData();
+  const now = Math.floor(start / 1000);
+
+  data.order.forEach(id => {
+    const sidebar = `#npcTimerSidebar${id}`;
+    const topbar = `#npcTimerTopbar${id}`;
+
+    const elapsedTime = now - data.npcs[id].hosp_out;
+    const remaining = elapsedTime < TIMINGS[4] ? TIMINGS[4] - elapsedTime : TIMINGS[5] - elapsedTime;
+    const currentLevel = elapsedTime < TIMINGS[5] ? TIMINGS.findIndex(t => elapsedTime < t) - 1 : 5;
+
     if (SIDEBAR_TIMERS) {
-      const sidebar = $('#npcTimerSidebarScheduledAttack');
-      const span = sidebar.find('span');
-      const text = remainingTime < 0 ? 'N/A' : formatTime(remainingTime);
-      sidebar.find('span').text(text);
-
-      const scheduled = text !== 'N/A';
-      if (scheduled) {
-        maybeChangeColors(span, remainingTime);
+      const div = $(sidebar);
+      const span = div.find('span');
+      let text;
+      if (currentLevel >= 4) {
+        text = elapsedTime < 0 ? 'Hosp' : `Loot level ${ROMAN[currentLevel]}`;
+      } else {
+        text = formatTime(remaining);
       }
-      sidebar.attr('title', scheduled ? `Attack scheduled for ${formatTornTime(data.time.clear)}` : '');
+      $(span).text(text);
+      maybeChangeColors(span, remaining);
+
+      div.find('a').first().css('text-decoration', data.npcs[id].clear ? 'none' : 'line-through');
     }
     if (TOPBAR_TIMERS) {
-      const topbar = $('#npcTimerTopbarScheduledAttack');
-      const span = topbar.find('span');
-      const text = remainingTime < 0 ? 'N/A' : (isMobile() ? formatTime(remainingTime, 'minimal') : formatTime(remainingTime, 'short'));
-      topbar.find('span').text(text);
-
-      const scheduled = text !== 'N/A';
-      if (text !== 'N/A') {
-        maybeChangeColors(span, remainingTime);
+      const div = $(topbar);
+      const span = div.find('span');
+      let text;
+      if (currentLevel >= 4) {
+        text = elapsedTime < 0 ? 'Hosp' : (isMobile() ? `LL ${ROMAN[currentLevel]}` : `Loot lvl ${ROMAN[currentLevel]}`);
+      } else {
+        text = isMobile() ? formatTime(remaining, 'minimal') : formatTime(remaining, 'short');
       }
-      topbar.find('img').attr('title', scheduled ? `Attack scheduled for ${formatTornTime(data.time.clear)}` : 'Attack scheduled');
+      $(span).text(text);
+      maybeChangeColors(span, remaining);
+
+      div.find('a').first().css('text-decoration', data.npcs[id].clear ? 'none' : 'line-through');
     }
-  }, 1000);
+  });
+
+  const remainingTime = data.time.clear - now;
+  if (SIDEBAR_TIMERS) {
+    const sidebar = $('#npcTimerSidebarScheduledAttack');
+    const span = sidebar.find('span');
+    const text = remainingTime < 0 ? 'N/A' : formatTime(remainingTime);
+    sidebar.find('span').text(text);
+
+    const scheduled = text !== 'N/A';
+    if (scheduled) {
+      maybeChangeColors(span, remainingTime);
+    }
+    sidebar.attr('title', scheduled ? `Attack scheduled for ${formatTornTime(data.time.clear)}` : '');
+  }
+  if (TOPBAR_TIMERS) {
+    const topbar = $('#npcTimerTopbarScheduledAttack');
+    const span = topbar.find('span');
+    const text = remainingTime < 0 ? 'N/A' : (isMobile() ? formatTime(remainingTime, 'minimal') : formatTime(remainingTime, 'short'));
+    topbar.find('span').text(text);
+
+    const scheduled = text !== 'N/A';
+    if (text !== 'N/A') {
+      maybeChangeColors(span, remainingTime);
+    }
+    topbar.find('img').attr('title', scheduled ? `Attack scheduled for ${formatTornTime(data.time.clear)}` : 'Attack scheduled');
+  }
+
+  setTimeout(renderTimes, Math.max(100, start + 1000 - new Date().getTime()));
 }
 
 
@@ -323,12 +336,12 @@ function addNpcTimers(data) {
 
   if ($(location).attr('href').includes('profiles.php')) {
     const profileId = RegExp(/XID=(\d+)/).exec($(location).attr('href'))[1];
-    updateData().then(process.bind(null, profileId));
+    getData().then(process.bind(null, profileId));
   }
 
   const maybeAddTimers = () => {
     if (SIDEBAR_TIMERS && $('#sidebar').size() > 0 || TOPBAR_TIMERS && $('div.header-wrapper-bottom').size() > 0) {
-      updateData().then(data => addNpcTimers(data));
+      getData().then(data => addNpcTimers(data));
     }
   };
   maybeAddTimers();
