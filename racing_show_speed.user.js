@@ -1,12 +1,13 @@
 // ==UserScript==
 // @name         Torn: Racing enhancements
 // @namespace    lugburz.racing_enhancements
-// @version      0.5.15
+// @version      0.5.16
 // @description  Show car's current speed, precise skill, official race penalty, racing skill of others and race car skins.
 // @author       Lugburz
 // @match        https://www.torn.com/*
 // @require      https://raw.githubusercontent.com/f2404/torn-userscripts/e3bb87d75b44579cdb6f756435696960e009dc84/lib/lugburz_lib.js
 // @updateURL    https://github.com/f2404/torn-userscripts/raw/master/racing_show_speed.user.js
+// @downloadURL  https://github.com/f2404/torn-userscripts/raw/master/racing_show_speed.user.js
 // @connect      api.torn.com
 // @connect      race-skins.brainslug.nl
 // @grant        GM_setValue
@@ -423,9 +424,12 @@ function compare(a, b) {
 }
 
 GM_addStyle(`
-.rs-display { 
+.rs-display {
     position: absolute;
     right: 5px;
+}
+li.name {
+  overflow: auto;
 }
 li.name .race_position {
   background:url(/images/v2/racing/car_status.svg) 0 0 no-repeat;
