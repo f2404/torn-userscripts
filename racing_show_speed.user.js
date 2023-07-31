@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Racing enhancements
 // @namespace    lugburz.racing_enhancements
-// @version      0.5.16
+// @version      0.5.17
 // @description  Show car's current speed, precise skill, official race penalty, racing skill of others and race car skins.
 // @author       Lugburz
 // @match        https://www.torn.com/*
@@ -561,7 +561,7 @@ function displayDailyGains() {
             const lastDaysPoints = GM_getValue('lastDaysPoints');
             const currentPoints = GM_getValue('pointsearned');
             const oldPoints = lastDaysPoints && lastDaysPoints.includes(':') ? lastDaysPoints.split(':')[1] : undefined;
-            let pointsTitle = 'Racing points earned: How many points you have earned throughout your carreer.';
+            let pointsTitle = 'Racing points earned: How many points you have earned throughout your career.';
             for (const x of [ {points: 25, class: 'D'}, {points: 100, class: 'C'}, {points: 250, class: 'B'}, {points: 475, class: 'A'} ]) {
                 if (currentPoints && currentPoints < x.points) pointsTitle += `<br>Till <b>class ${x.class}</b>: ${1*x.points - 1*currentPoints}`;
             }
