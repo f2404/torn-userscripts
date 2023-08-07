@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Racing enhancements
 // @namespace    lugburz.racing_enhancements
-// @version      0.5.17
+// @version      0.5.18
 // @description  Show car's current speed, precise skill, official race penalty, racing skill of others and race car skins.
 // @author       Lugburz
 // @match        https://www.torn.com/*
@@ -428,7 +428,7 @@ GM_addStyle(`
     position: absolute;
     right: 5px;
 }
-li.name {
+ul.driver-item > li.name {
   overflow: auto;
 }
 li.name .race_position {
