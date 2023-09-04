@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Faction: Simplified log view
 // @namespace    lugburz.faction.simplified_log_view
-// @version      0.3.4
+// @version      0.4.0
 // @description  Group similar messages in the faction armory log and provide a summary ("used x items").
 // @author       Lugburz
 // @match        https://www.torn.com/factions.php?step=your*
@@ -17,16 +17,16 @@ function maybe_update_row(row, n, from_time, to_time, to_date, msg_html) {
     if (msg_html.includes(armory_used_text)) {
         // used
         if (n === 1) {
-            row.find('span.info').html(msg_html.replace(armory_used_text, `<b>${n}x</b>`).replace('items.', 'item.'));
+            row.find('p[class^=message]').html(msg_html.replace(armory_used_text, `<b>${n}x</b>`).replace('items.', 'item.'));
         } else if (n > 1) {
-            row.find('span.date').text(`${from_time} - ${to_time} ${to_date}`);
-            row.find('span.info').html(msg_html.replace(armory_used_text, `<b>${n}x</b>`));
+            row.find('time[class^=dateTime]').html(`${from_time} -<br>&nbsp;${to_time}<br>${to_date}`);
+            row.find('p[class^=message]').html(msg_html.replace(armory_used_text, `<b>${n}x</b>`));
         }
     } else {
         // deposited
         if (n > 1) {
-            row.find('span.date').text(`${from_time} - ${to_time} ${to_date}`);
-            row.find('span.info').html(msg_html.replace(armory_deposited_text, `deposited <b>${n}x</b>`));
+            row.find('time[class^=dateTime]').html(`${from_time} -<br>&nbsp;${to_time}<br>${to_date}`);
+            row.find('p[class^=message]').html(msg_html.replace(armory_deposited_text, `deposited <b>${n}x</b>`));
         }
     }
 }
@@ -40,27 +40,26 @@ function simplify() {
     let to_time = '';
     let row = '';
 
-    const entries = $('ul.news-list').find('li');
+    const entries = $('#faction-main').find('li[class^=listItemWrapper]');
     if ($(entries).size() < 2) {
         return;
     }
 
     $(entries).each((i, entry) => {
-        const time = $(entry).find('span')[1];
-        const date = $(entry).find('span')[2];
-        const info = $(entry).find('span.info');
+        const time = $(entry).find('time[class^=dateTime]');
+        const info = $(entry).find('p[class^=message]');
 
-        if ($(entry).find(info).html() === msg_html) {
-            from_time = $(entry).find('span').find(time).text();
-            from_date = $(entry).find('span').find(date).text();
+        if ($(info).html() === msg_html) {
+            from_time = $(time).html().split('<br>')[0];
+            from_date = $(time).html().split('<br>')[1];
             n++;
             $(entry).hide();
-        } else if ($(entry).find(info).text().includes(armory_used_text) || $(entry).find(info).text().includes(armory_deposited_text)) {
+        } else if ($(info).text().includes(armory_used_text) || $(info).text().includes(armory_deposited_text)) {
             maybe_update_row(row, n, from_time, to_time, to_date, msg_html);
 
-            msg_html = $(entry).find(info).html();
-            to_time = $(entry).find('span').find(time).text();
-            to_date = $(entry).find('span').find(date).text();
+            msg_html = $(info).html();
+            to_time = $(time).html().split('<br>')[0];
+            to_date = $(time).html().split('<br>')[1];
             row = $(entry);
             n = 1;
         } else {
