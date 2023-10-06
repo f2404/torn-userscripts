@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         Torn: Loot timer on NPC profile
+// @name         Torn: Loot Timers
 // @namespace    lugburz.show_timer_on_npc_profile
 // @version      1.0
 // @description  Displays NPC loot data on profiles, the sidebar, and at the top of the page.
@@ -117,17 +117,22 @@ function hideTimers(hide, sidebar) {
   $(`#showHide${sidebar ? 'Side' : 'Top'}barTimers`).text(`[${hide ? sidebar ? 'show' : 'snow NPC timers' : 'hide'}]`);
 }
 
-function maybeChangeColors(span, time, level = 3) {
-  if (CHANGE_COLOR) {
-    if (level < 4 && time < 5 * 60) {
-      $(span).addClass('npc_red-timer');
-    } else if (level < 4 && time < 10 * 60) {
-      $(span).addClass('npc_orange-timer');
-    } else if (level >= 4) {
-      $(span).addClass('npc_green-timer');
-    } else {
-      $(span).removeClass('npc_orange-timer npc_red-timer npc_green-timer');
+function maybeChangeColors(span, time, level = 3, active = true) {
+  let color = '';
+  if (level < 4) {
+    if (time < 5 * 60) {
+      color = 'red';
+    } else if (time < 10 * 60) {
+      color = 'orange';
     }
+  } else if (level >= 4) {
+    color = 'green';
+  }
+
+  if (CHANGE_COLOR && active && color) {
+    $(span).addClass(`npc_${color}-timer`);
+  } else {
+    $(span).removeClass('npc_orange-timer npc_red-timer npc_green-timer');
   }
 }
 
@@ -170,6 +175,8 @@ function process(id, data) {
 
       if (data.time.clear > now && data.npcs[id].clear) {
         subDesc.attr('title', `Attack ${location} at ${formatTornTime(data.time.clear)}`);
+      } else if (data.time.attack) {
+        subDesc.attr('title', 'Attack Right Now');
       } else {
         subDesc.attr('title', `Attack Not Scheduled`);
       }
@@ -298,7 +305,7 @@ async function renderTimes() {
     const remaining = elapsedTime < TIMINGS[4] ? TIMINGS[4] - elapsedTime : TIMINGS[5] - elapsedTime;
     const currentLevel = elapsedTime < TIMINGS[5] ? TIMINGS.findIndex(t => elapsedTime < t) - 1 : 5;
 
-    const clearStatus = (data.time.clear <= now || data.npcs[id].clear) ? 'none' : 'line-through';
+    const clearStatus = data.npcs[id].clear ? 'none' : 'line-through';
 
     if (SIDEBAR_TIMERS) {
       const div = $(sidebar);
@@ -336,24 +343,22 @@ async function renderTimes() {
   if (SIDEBAR_TIMERS) {
     const sidebar = $('#npcTimerSidebarScheduledAttack');
     const span = sidebar.find('span');
-    const text = scheduled ? formatCountdown(remainingTime) : 'N/A';
+    const text = scheduled ? formatCountdown(remainingTime) : data.time.attack ? 'NOW' : 'N/A';
     sidebar.find('span').text(text);
 
-    if (scheduled) {
-      maybeChangeColors(span, remainingTime);
-    }
-    sidebar.attr('title', scheduled ? `Attack scheduled for ${formatTornTime(data.time.clear)}` : '');
+    maybeChangeColors(span, remainingTime, undefined, scheduled || data.time.attack);
+
+    sidebar.attr('title', scheduled ? `Attack scheduled for ${formatTornTime(data.time.clear)}` : data.time.attack ? 'Attack now' : 'No attack scheduled');
   }
   if (TOPBAR_TIMERS) {
     const topbar = $('#npcTimerTopbarScheduledAttack');
     const span = topbar.find('span');
-    const text = scheduled ? (isMobile() ? formatCountdown(remainingTime, 'minimal') : formatCountdown(remainingTime, 'short')) : 'N/A';
+    const text = scheduled ? (isMobile() ? formatCountdown(remainingTime, 'minimal') : formatCountdown(remainingTime, 'short')) : data.time.attack ? 'NOW' : 'N/A';
     topbar.find('span').text(text);
 
-    if (scheduled) {
-      maybeChangeColors(span, remainingTime);
-    }
-    topbar.find('img').attr('title', scheduled ? `Attack scheduled for ${formatTornTime(data.time.clear)}` : 'Attack scheduled');
+    maybeChangeColors(span, remainingTime, undefined, scheduled || data.time.attack);
+
+    topbar.attr('title', scheduled ? `Attack scheduled for ${formatTornTime(data.time.clear)}` : data.time.attack ? 'Attack now' : 'No attack scheduled');
   }
 
   setTimeout(renderTimes, Math.max(100, start + 1000 - new Date().getTime()));
