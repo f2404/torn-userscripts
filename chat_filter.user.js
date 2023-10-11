@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Filter chats
 // @namespace    lugburz.filter_chat
-// @version      0.2.8
+// @version      0.3.0
 // @description  Add filtering by keywords to chats. Use double quotes to apply AND rule and no quotes for OR rule; use ! to apply a NOT rule.
 // @author       Lugburz
 // @match        https://www.torn.com/*
@@ -10,6 +10,10 @@
 // @grant        GM_setValue
 // @grant        GM_getValue
 // ==/UserScript==
+
+// Array of words that need to be auto filtered; please add words enclosed in quotes, separated by commas, e.g.
+// const insults = ['bitch', 'slut'];
+const insults = [];
 
 function parse(keyword) {
     if (keyword == null || keyword == '')
@@ -82,7 +86,7 @@ function filter(content, keyword) {
     const msgs = $(content).find('div[class^=_message_]');
     $(msgs).each(function() {
         const msg = $(this).text();
-        if (checkAnds(ands, msg) && checkOrs(ors, msg) && checkNots(nots, msg))
+        if (checkAnds(ands, msg) && checkOrs(ors, msg) && checkNots(nots, msg) && insults.every(insult => !msg.toLowerCase().includes(insult.toLowerCase())))
             $(this).show();
         else
             $(this).hide();
@@ -97,13 +101,16 @@ function addChatFilter(box, chat) {
         $('#'+filter_name).val(GM_getValue(filter_name));
         const keyword = $('#'+filter_name).val();
         filter(content, keyword);
-
         return;
     }
 
     const input = $(box).find('div[class^=_chat-box-input_]');
     $(input).css('flex-direction', 'column').css('height', 'auto');
     $(input).prepend('<div><label for="filter" style="color: green;">Filter: </label><input type="text" id="' + filter_name + '" name="' + filter_name + '"></div>');
+
+    if (insults.length) {
+        filter(content, '');
+    }
 
     $(content).bind('DOMNodeInserted DOMNodeRemoved', function() {
         $('#'+filter_name).val(GM_getValue(filter_name));
@@ -125,8 +132,10 @@ function addChatFilter(box, chat) {
     $('#chatRoot').find('div[class^=_chat-box_]').each((i, box) => {
         const chat = $(box).find('div[class^=_chat-box-title_]').attr('title').replace(/%/g, '_');
         $(box).ready(addChatFilter(box, chat));
-        $(box).bind('DOMNodeInserted', function() {
-            $(box).ready(addChatFilter(box, chat));
+        $(box).bind('DOMNodeInserted', function(event) {
+            if (event.target.className && event.target.className.startsWith('_chat-box-input_')) {
+                $(box).ready(addChatFilter(box, chat));
+            }
         });
     });
 })();

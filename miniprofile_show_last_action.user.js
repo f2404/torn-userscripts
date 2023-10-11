@@ -1,11 +1,12 @@
 // ==UserScript==
 // @name         Torn: Miniprofile: Show last action
 // @namespace    lugburz.miniprofile.show_last_action
-// @version      0.1.6
+// @version      0.1.8
 // @description  Show last action in miniprofile.
 // @author       Lugburz
 // @match        https://www.torn.com/*
 // @updateURL    https://github.com/f2404/torn-userscripts/raw/master/miniprofile_show_last_action.user.js
+// @downloadURL  https://github.com/f2404/torn-userscripts/raw/master/miniprofile_show_last_action.user.js
 // @grant        unsafeWindow
 // ==/UserScript==
 
@@ -31,25 +32,23 @@ var factionTag = '';
 const constantMock = unsafeWindow.fetch;
 unsafeWindow.fetch = function() {
     return new Promise((resolve, reject) => {
-        constantMock.apply(this, arguments).then((response) => {
-            if (response.url.indexOf('/profiles.php?step=getUserNameContextMenu') > -1) {
-                const response2 = response.clone();
-                response2.text().then(function (text) {
-                    try {
-                        const json = JSON.parse(text);
-                        lastAction = json.user.lastAction.seconds != 'Unknown' ? secondsToDhms(json.user.lastAction.seconds) + ' ago' : json.user.lastAction.seconds;
-                        factionTag = json.user.faction ? json.user.faction.tag : '';
-                        console.log(`userID=${json.user.userID} lastAction=${json.user.lastAction.seconds} factionTag=${factionTag}`);
-                        if ($('#miniProfileLastAction').size() > 0) {
-                            $('#miniProfileLastAction').text(lastAction);
-                        }
-                        if (factionTag && $('#profile-mini-root').find('div[class^=profile-mini-_factionWrap]').size() > 0) {
-                            $('#profile-mini-root').find('div[class^=profile-mini-_factionWrap]').attr('title', factionTag);
-                        }
-                    } catch (e) {
-                        console.log(e);
+        constantMock.apply(this, arguments).then(async response => {
+            if (response.url.indexOf('/profiles.php?step=getMiniProfile') > -1) {
+                const text = await response.clone().text();
+                try {
+                    const json = JSON.parse(text);
+                    lastAction = json.user.lastAction.seconds != 'Unknown' ? secondsToDhms(json.user.lastAction.seconds) + ' ago' : json.user.lastAction.seconds;
+                    factionTag = json.user.faction ? json.user.faction.tag : '';
+                    console.log(`userID=${json.user.userID} lastAction=${json.user.lastAction.seconds} factionTag=${factionTag}`);
+                    if ($('#miniProfileLastAction').size() > 0) {
+                        $('#miniProfileLastAction').text(lastAction);
                     }
-                });
+                    if (factionTag && $('#profile-mini-root').find('div[class^=profile-mini-_factionWrap]').size() > 0) {
+                        $('#profile-mini-root').find('div[class^=profile-mini-_factionWrap]').attr('title', factionTag);
+                    }
+                } catch (e) {
+                    console.log(e);
+                }
             }
             resolve(response);
         });
@@ -68,7 +67,7 @@ const observer = new MutationObserver(function(mutations) {
                     let id = $(this).find('div[class^=profile-mini-_userWrap__]').find('a').attr('href');
                     if (id) {
                         id = id.replace(/\/?profiles.php\?XID=/, '');
-                        $(this).append('<div style="color: #555;  font-size: 12px; line-height: 14px;""><b>Last action:</b> <span id="miniProfileLastAction"></span></div>');
+                        $(this).append('<div style="color: var(--default-color);  font-size: 12px; line-height: 14px;""><b>Last action:</b> <span id="miniProfileLastAction"></span></div>');
                         if (lastAction) {
                             $('#miniProfileLastAction').text(lastAction);
                             lastAction = '';

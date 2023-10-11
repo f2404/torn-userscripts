@@ -1,13 +1,12 @@
 // ==UserScript==
-// @name         Torn: Racing enhancements
-// @namespace    lugburz.racing_enhancements
-// @version      0.5.18
+// @name         Torn: Racing enhancements (Indolent's copy)
+// @namespace    lugburz.racing_enhancements_indolent
+// @version      0.5.15
 // @description  Show car's current speed, precise skill, official race penalty, racing skill of others and race car skins.
 // @author       Lugburz
 // @match        https://www.torn.com/*
 // @require      https://raw.githubusercontent.com/f2404/torn-userscripts/e3bb87d75b44579cdb6f756435696960e009dc84/lib/lugburz_lib.js
 // @updateURL    https://github.com/f2404/torn-userscripts/raw/master/racing_show_speed.user.js
-// @downloadURL  https://github.com/f2404/torn-userscripts/raw/master/racing_show_speed.user.js
 // @connect      api.torn.com
 // @connect      race-skins.brainslug.nl
 // @grant        GM_setValue
@@ -424,12 +423,9 @@ function compare(a, b) {
 }
 
 GM_addStyle(`
-.rs-display {
+.rs-display { 
     position: absolute;
     right: 5px;
-}
-ul.driver-item > li.name {
-  overflow: auto;
 }
 li.name .race_position {
   background:url(/images/v2/racing/car_status.svg) 0 0 no-repeat;
@@ -511,14 +507,14 @@ function addSettingsDiv() {
 
 function addExportButton(results, crashes, my_name, race_id, time_ended) {
     if ($("#racingupdatesnew").size() > 0 && $('#downloadAsCsv').size() < 1) {
-        let csv = 'position,name,id,time,best_lap,rs\n';
+        let csv = 'PS,NM,ID,TM,BL\n';
         for (let i = 0; i < results.length; i++) {
             const timeStr = formatTimeMsec(results[i][2] * 1000, true);
             const bestLap = formatTimeMsec(results[i][3] * 1000);
-            csv += [i+1, results[i][0], results[i][1], timeStr, bestLap, (results[i][0] === my_name ? GM_getValue('racinglevel') : '')].join(',') + '\n';
+            csv += [i+1, results[i][0], results[i][1], timeStr, bestLap].join(',') + '\n';
         }
         for (let i = 0; i < crashes.length; i++) {
-            csv += [results.length + i + 1, crashes[i][0], crashes[i][1], crashes[i][2], '', (results[i][0] === my_name ? GM_getValue('racinglevel') : '')].join(',') + '\n';
+            csv += [results.length + i + 1, crashes[i][0], crashes[i][1], crashes[i][2], ''].join(',') + '\n';
         }
 
         const timeE = new Date();
@@ -561,7 +557,7 @@ function displayDailyGains() {
             const lastDaysPoints = GM_getValue('lastDaysPoints');
             const currentPoints = GM_getValue('pointsearned');
             const oldPoints = lastDaysPoints && lastDaysPoints.includes(':') ? lastDaysPoints.split(':')[1] : undefined;
-            let pointsTitle = 'Racing points earned: How many points you have earned throughout your career.';
+            let pointsTitle = 'Racing points earned: How many points you have earned throughout your carreer.';
             for (const x of [ {points: 25, class: 'D'}, {points: 100, class: 'C'}, {points: 250, class: 'B'}, {points: 475, class: 'A'} ]) {
                 if (currentPoints && currentPoints < x.points) pointsTitle += `<br>Till <b>class ${x.class}</b>: ${1*x.points - 1*currentPoints}`;
             }
