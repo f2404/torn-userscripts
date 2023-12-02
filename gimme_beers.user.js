@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Gimme beers
 // @namespace    lugburz.gimme_beers
-// @version      0.1.2
+// @version      0.1.3
 // @description  Gimme beers!
 // @author       Lugburz
 // @match        https://www.torn.com/shops.php?step=bitsnbobs*
@@ -22,7 +22,8 @@ function addButton() {
                 data: {
                     step: 'buyShopItem',
                     ID: 180,
-                    amount: 100
+                    amount: 100,
+                    shoparea: 103
                 },
                 success: (str) => {
                     try {
