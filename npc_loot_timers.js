@@ -80,7 +80,14 @@ async function getData() {
     const data = JSON.parse(str_data);
 
     const now = new Date().getTime();
-    if (now - last_updated < 15 * 60 * 1000 && ((data.time.clear !== 0 && data.time.clear >= now / 1000) || now - last_updated <= 60 * 1000)) {
+
+    const noClear = data.time.clear === 0 && !data.time.reason;
+    const pastClear = now / 1000 > data.time.clear;
+    const overOneMinute = now - last_updated > 60 * 1000;
+    const overFifteenMinutes = now - last_updated >= 15 * 60 * 1000;
+
+    const shouldRequest = overOneMinute && (noClear || pastClear) || overFifteenMinutes;
+    if (!shouldRequest) {
       return data;
     }
   } catch (e) {
@@ -177,6 +184,8 @@ function process(id, data) {
         subDesc.attr('title', `Attack ${location} at ${formatTornTime(data.time.clear)}`);
       } else if (data.time.attack) {
         subDesc.attr('title', 'Attack Right Now');
+      } else if (data.time.reason) {
+        subDesc.attr('title', "Attack resumes after " + data.time.reason);
       } else {
         subDesc.attr('title', `Attack Not Scheduled`);
       }
@@ -343,22 +352,22 @@ async function renderTimes() {
   if (SIDEBAR_TIMERS) {
     const sidebar = $('#npcTimerSidebarScheduledAttack');
     const span = sidebar.find('span');
-    const text = scheduled ? formatCountdown(remainingTime) : data.time.attack ? 'NOW' : 'N/A';
+    const text = scheduled ? formatCountdown(remainingTime) : data.time.attack ? 'NOW' : data.time.reason ? `${data.time.reason}` :'N/A';
     sidebar.find('span').text(text);
 
     maybeChangeColors(span, remainingTime, undefined, scheduled || data.time.attack);
 
-    sidebar.attr('title', scheduled ? `Attack scheduled for ${formatTornTime(data.time.clear)}` : data.time.attack ? 'Attack now' : 'No attack scheduled');
+    sidebar.attr('title', scheduled ? `Attack scheduled for ${formatTornTime(data.time.clear)}` : data.time.attack ? 'Attack now' : data.time.reason ? `Attacking resumes after ${data.time.reason}` :'No attack scheduled');
   }
   if (TOPBAR_TIMERS) {
     const topbar = $('#npcTimerTopbarScheduledAttack');
     const span = topbar.find('span');
-    const text = scheduled ? (isMobile() ? formatCountdown(remainingTime, 'minimal') : formatCountdown(remainingTime, 'short')) : data.time.attack ? 'NOW' : 'N/A';
+    const text = scheduled ? (isMobile() ? formatCountdown(remainingTime, 'minimal') : formatCountdown(remainingTime, 'short')) : data.time.attack ? 'NOW' : data.time.reason ? `On Hold` :'N/A';
     topbar.find('span').text(text);
 
     maybeChangeColors(span, remainingTime, undefined, scheduled || data.time.attack);
 
-    topbar.attr('title', scheduled ? `Attack scheduled for ${formatTornTime(data.time.clear)}` : data.time.attack ? 'Attack now' : 'No attack scheduled');
+    topbar.attr('title', scheduled ? `Attack scheduled for ${formatTornTime(data.time.clear)}` : data.time.attack ? 'Attack now' : data.time.reason ? `Attacking resumes after ${data.time.reason}` : 'No attack scheduled');
   }
 
   setTimeout(renderTimes, Math.max(100, start + 1000 - new Date().getTime()));
