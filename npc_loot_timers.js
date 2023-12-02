@@ -442,7 +442,7 @@ function formatCountdown(sec, mode = 'long') {
     case 'long':
       return (hours > 0 ? hours + 'h ' : '') + (hours > 0 || minutes > 0 ? minutes + 'min ' : '') + seconds + 's';
     case 'short':
-      return hours > 0 ? `${hours}h ${minutes}min` : minutes > 0 ? `${minutes}min ${seconds}s` : `${seconds}s`;
+      return hours > 0 ? `${hours}h ${minutes}m` : minutes > 0 ? `${minutes}min ${seconds}s` : `${seconds}s`;
     case 'minimal':
       return (hours > 0 ? hours + ':' : '') + (hours > 0 || minutes > 0 ? pad(minutes, 2) + ':' : '') + pad(seconds, 2);
   }
