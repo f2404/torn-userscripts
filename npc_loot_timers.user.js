@@ -247,7 +247,7 @@ function addNpcTimers(data) {
     const npc_html = data.order.map(id => [id, data.npcs[id].name]).map(([id, name]) => (`
         <span style='text-decoration: none;' id='npcTimerTopbar${id}'>
             <a class='t-blue href desc npc_link ' style='display: inline-block; text-decoration-color: black; text-decoration-thickness: 2px' href='/loader.php?sid=attack&user2ID=${id}'>${SHORT_NAME(name)}</a>:&nbsp;
-            <span style='display: inline-block; width: ${isMobile() ? 50 : 65}px;'></span>
+            <span style='display: inline-block; width: ${isMobile() ? 40 : 45}px;'></span>
           </span>
     `)).join('');
 
@@ -259,7 +259,7 @@ function addNpcTimers(data) {
         <span id='npcTopbarData'>
           <span id='npcTimerTopbarScheduledAttack'>
             <img class='lazy' src='https://emojiguide.com/wp-content/uploads/platform/gmail/43450.png' alt='Attack scheduled' title='Attack scheduled' style='width: 15px; height: 15px; display: inline-block; vertical-align: text-bottom'>
-            <span style='text-decoration: none; display: inline-block; width: ${isMobile() ? 50 : 65}px;'></span>
+            <span style='text-decoration: none; display: inline-block; width: ${isMobile() ? 40 : 45}px;'></span>
           </span>
           ${npc_html}
         </span>
