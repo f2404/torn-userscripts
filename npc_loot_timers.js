@@ -169,7 +169,7 @@ function process(id, data) {
 
       let location = 0;
       for (const l of data.order) {
-        if (data.npcs[l].clear) {
+        if (data.npcs[l].next) {
           location++;
         }
         if (l === id) {
@@ -180,7 +180,7 @@ function process(id, data) {
         subDesc.html(`${subHtml} (Loot Level ${ROMAN[currentLevel === 4 ? 5 : 4]} in ${formatCountdown(remaining)})`);
       }
 
-      if (data.time.clear > now && data.npcs[id].clear) {
+      if (data.time.clear > now && data.npcs[id].next) {
         subDesc.attr('title', `Attack ${location} at ${formatTornTime(data.time.clear)}`);
       } else if (data.time.attack) {
         subDesc.attr('title', 'Attack Right Now');
@@ -314,7 +314,7 @@ async function renderTimes() {
     const remaining = elapsedTime < TIMINGS[4] ? TIMINGS[4] - elapsedTime : TIMINGS[5] - elapsedTime;
     const currentLevel = elapsedTime < TIMINGS[5] ? TIMINGS.findIndex(t => elapsedTime < t) - 1 : 5;
 
-    const clearStatus = data.npcs[id].clear ? 'none' : 'line-through';
+    const clearStatus = data.npcs[id].next ? 'none' : 'line-through';
 
     if (SIDEBAR_TIMERS) {
       const div = $(sidebar);
