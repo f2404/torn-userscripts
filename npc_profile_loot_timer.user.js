@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Loot timer on NPC profile
 // @namespace    lugburz.show_timer_on_npc_profile
-// @version      0.3.3
+// @version      0.4.0
 // @description  Add a countdown timer to desired loot level on the NPC profile page as well as in the sidebar and the topbar (optionally).
 // @author       Lugburz
 // @match        https://www.torn.com/*
@@ -80,7 +80,7 @@ const YATA_API_URL = 'https://yata.yt/api/v1/loot/';
 const ATTACK_TIMER_API_URL = 'https://api.lzpt.io/loot/';
 
 const call_api = async (url) => {
-    return new Promise((resolve, reject) => {
+    return new Promise(resolve => {
         GM_xmlhttpRequest({
             method: 'GET',
             url,
@@ -92,11 +92,13 @@ const call_api = async (url) => {
                     const resjson = JSON.parse(response.responseText);
                     resolve(resjson);
                 } catch (err) {
-                    reject(err);
+                    console.error(url, err);
+                    resolve(null);
                 }
             },
             onerror: (err) => {
-                reject(err);
+                console.error(url, err);
+                resolve(null);
             }
         });
     });
@@ -115,9 +117,12 @@ function getLootLevel(id) {
 }
 
 function getDesiredLootLevelTs(data, id) {
-    if (!data.hosp_out[id]) return -1;
+    const hosp_out = data.hosp_out && data.hosp_out[id] || data.npcs && data.npcs[id] && data.npcs[id].hosp_out;
+    if (!hosp_out) {
+        return -1;
+    }
     const loot_level = getLootLevel(id);
-    return data.hosp_out[id] + TIMINGS[loot_level - 1];
+    return hosp_out + TIMINGS[loot_level - 1];
 }
 
 function isCachedDataValid(id = '') {
@@ -129,20 +134,18 @@ function isCachedDataValid(id = '') {
         return false;
     }
 
-    if (!data.next_update) {
-        return false;
-    }
-
     const now = new Date().getTime();
     const last_updated = GM_getValue('last_updated');
+    const next_update = data.next_update || Math.floor(now / 1000) + 1; // next_update doesn't exit in lzpt data
     // do not call the API too often
-    if ((now - last_updated < 10*60*1000) && (Math.floor(now / 1000) < data.next_update)) {
+    if ((now - last_updated < 10*60*1000) && (Math.floor(now / 1000) < next_update)) {
         return true;
     }
 
     if (id) {
         const loot_level = getLootLevel(id);
-        if (!loot_level || !data.hosp_out[id] || getDesiredLootLevelTs(data, id) * 1000 < now) {
+        const hosp_out = data.hosp_out && data.hosp_out[id] || data.npcs && data.npcs[id] && data.npcs[id].hosp_out;
+        if (!loot_level || !hosp_out || getDesiredLootLevelTs(data, id) * 1000 < now) {
             return false;
         }
     } else {
@@ -159,9 +162,14 @@ function isCachedDataValid(id = '') {
 async function getTimings(id) {
     if (!isCachedDataValid(id)) {
         log('Calling the API id=' + id);
-        const data = await call_api(YATA_API_URL);
-        GM_setValue('cached_data', JSON.stringify(data));
-        GM_setValue('last_updated', new Date().getTime());
+        let data = await call_api(YATA_API_URL);
+        if (!data) {
+            data = await call_api(ATTACK_TIMER_API_URL);
+        }
+        if (data) {
+            GM_setValue('cached_data', JSON.stringify(data));
+            GM_setValue('last_updated', new Date().getTime());
+        }
     }
 
     const cached_data = JSON.parse(GM_getValue('cached_data'));
@@ -170,7 +178,8 @@ async function getTimings(id) {
         return -1;
     }
     // no data on the id
-    if (!cached_data.hosp_out[id]) {
+    const hosp_out = data.hosp_out && data.hosp_out[id] || data.npcs && data.npcs[id] && data.npcs[id].hosp_out;
+    if (!hosp_out) {
         return -1;
     }
     // timestamp of desired loot level
@@ -180,9 +189,14 @@ async function getTimings(id) {
 async function getAllTimings() {
     if (!isCachedDataValid()) {
         log('Calling the API');
-        const data = await call_api(YATA_API_URL);
-        GM_setValue('cached_data', JSON.stringify(data));
-        GM_setValue('last_updated', new Date().getTime());
+        let data = await call_api(YATA_API_URL);
+        if (!data) {
+            data = await call_api(ATTACK_TIMER_API_URL);
+        }
+        if (data) {
+            GM_setValue('cached_data', JSON.stringify(data));
+            GM_setValue('last_updated', new Date().getTime());
+        }
     }
 
     const cached_data = JSON.parse(GM_getValue('cached_data'));
@@ -194,13 +208,14 @@ async function getAllTimings() {
 }
 
 function hideTimers(hide, yataData, sidebar = true) {
+    const hospOutDataExists = (id) => yataData.hosp_out && yataData.hosp_out[id] || yataData.npcs && yataData.npcs[id] && yataData.npcs[id].hosp_out;
     log(yataData);
     if (sidebar) {
-        Object.values(NPCS).forEach(npc => (hide || yataData.hosp_out[npc.id] === undefined) ? $(`#npcTimer${npc.id}`).hide() : $(`#npcTimer${npc.id}`).show());
+        Object.values(NPCS).forEach(npc => (hide || !hospOutDataExists(npc.id)) ? $(`#npcTimer${npc.id}`).hide() : $(`#npcTimer${npc.id}`).show());
         hide ? $('#npcTimerSideScheduledAttack').hide() : $('#npcTimerSideScheduledAttack').show();
         $('#showHideTimers').text(`[${hide ? 'show' : 'hide'}]`);
     } else {
-        Object.values(NPCS).forEach(npc => (hide || yataData.hosp_out[npc.id] === undefined) ? $(`#npcTimerTop${npc.id}`).hide() : $(`#npcTimerTop${npc.id}`).show());
+        Object.values(NPCS).forEach(npc => (hide || !hospOutDataExists(npc.id)) ? $(`#npcTimerTop${npc.id}`).hide() : $(`#npcTimerTop${npc.id}`).show());
         hide ? $('#npcTimerTopScheduledAttack').hide() : $('#npcTimerTopScheduledAttack').show();
         $('#showHideTopbarTimers').html(`[${hide ? 'show NPC timers' : 'hide'}]`);
     }
@@ -335,9 +350,10 @@ function addNpcTimers(data) {
     Object.keys(NPCS).forEach(name => {
         const id = NPCS[name].id;
         const loot_level = NPCS[name].loot_level;
+        const hosp_out = data.hosp_out && data.hosp_out[id] || data.npcs && data.npcs[id] && data.npcs[id].hosp_out;
         const pId = '#npcTimer' + id;
         const spanId = '#npcTimerTop' + id;
-        if (data.hosp_out[id]) {
+        if (hosp_out) {
             const ts = getDesiredLootLevelTs(data, id);
 
             // ts is s, Date is ms
@@ -352,7 +368,7 @@ function addNpcTimers(data) {
                     const span = $(pId).find('span');
                     let text;
                     if (left < 0) {
-                        const elapsed = Math.floor(now / 1000) - data.hosp_out[id];
+                        const elapsed = Math.floor(now / 1000) - hosp_out;
                         text = elapsed < 0 ? 'Hosp' : `Loot level ${getLl(elapsed)}`;
                     } else {
                         text = formatTimeSecWithLetters(left);
@@ -365,7 +381,7 @@ function addNpcTimers(data) {
                     const span = $(spanId).find('span');
                     let text;
                     if (left < 0) {
-                        const elapsed = Math.floor(now / 1000) - data.hosp_out[id];
+                        const elapsed = Math.floor(now / 1000) - hosp_out;
                         text = elapsed < 0 ? 'Hosp' : (isMobile() ? `LL ${getLl(elapsed)}` : `Loot lvl ${getLl(elapsed)}`);
                     } else {
                         text = isMobile() ? formatTimeSec(left) : formatTimeSecWithLettersShort(left);
