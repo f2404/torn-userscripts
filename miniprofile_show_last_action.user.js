@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Miniprofile: Show last action
 // @namespace    lugburz.miniprofile.show_last_action
-// @version      0.1.9
+// @version      0.1.10
 // @description  Show last action in miniprofile.
 // @author       Lugburz
 // @match        https://www.torn.com/*
@@ -33,7 +33,7 @@ const constantMock = unsafeWindow.fetch;
 unsafeWindow.fetch = function() {
     return new Promise((resolve, reject) => {
         constantMock.apply(this, arguments).then(async response => {
-            if (response.url.indexOf('/profiles.php?step=getMiniProfile') > -1) {
+            if (response.url.indexOf('/page.php?sid=UserMiniProfile') > -1) {
                 const text = await response.clone().text();
                 try {
                     const json = JSON.parse(text);
