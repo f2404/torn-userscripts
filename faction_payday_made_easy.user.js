@@ -14,6 +14,8 @@
 const TAX = 0.1;
 // Crimes to pay out: array of integers. PA is 8, PH is 7, etc.
 const CRIMES = [8];
+// Members that do not get paid: array of user ids
+const IGNORED = [];
 
 function findCash(result) {
     let cash = 0;
@@ -59,16 +61,23 @@ function parseResult() {
         return;
     }
 
-    const crime = result.attr('data-crime');
-    const criminals = result.attr('data-criminals');
-    const successDiv = result.find('div.success');
-    if (!CRIMES.includes(+crime) || !successDiv || !criminals) {
+    let crime, criminals, successDiv;
+    try {
+        crime = +result.attr('data-crime');
+        criminals = JSON.parse(result.attr('data-criminals')).filter(cr => !IGNORED.includes(cr));
+        successDiv = result.find('div.success');
+    } catch (e) {
+        console.error(e);
+        return;
+    }
+
+    if (!CRIMES.includes(crime) || !successDiv || !criminals) {
         return;
     }
 
     const cash = findCash(result);
-    const member_amount = JSON.parse(criminals).length;
-    const sum = cash * (1 - TAX) / member_amount;
+    const member_amount = criminals.length;
+    const sum = cash * (1 - TAX) / 4; // PA
     const total = sum * member_amount;
     const confirmText = `Are you sure you want to pay out <span class="bold">$${numberFormat(sum)}</span> to <span class="bold">${member_amount}</span> faction members (<span class="bold">$${numberFormat(total)}</span> total)?`;
     const span = `<span class="btn-wrap silver" style="padding: 10px;"><span class="btn"><button class="torn-btn" id="payBtn">PAY</button></span></span>
