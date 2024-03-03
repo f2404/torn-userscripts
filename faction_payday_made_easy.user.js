@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Faction: Payday made easy
 // @namespace    lugburz.faction.payday_made_easy
-// @version      0.2.1
+// @version      0.2.2
 // @description  Pay out PA cash directly from the crime results page.
 // @author       Lugburz [2386297]
 // @match        https://www.torn.com/factions.php?step=your*
@@ -93,8 +93,11 @@ function parseResult() {
     const member_amount = criminals.length;
     const sum = cash * (1 - TAX) / 4; // PA
     const total = sum * member_amount;
-    const payDayLink = `<span id="payDayLink" style="padding: 10px; line-height: 24px;">
-    <a class="t-blue c-pointer" href="https://www.torn.com/factions.php?step=your&type=1#/tab=controls&option=pay-day&select=${criminals}&pay=${sum}">Go to Pay Day to pay out $${numberFormat(total)}</a></span>`;
+    let payDayLink = `<div id="payDayLink" style="padding: 10px; line-height: 24px;">
+    <a class="t-blue c-pointer" href="https://www.torn.com/factions.php?step=your&type=1#/tab=controls&option=pay-day&select=${criminals}&pay=${sum}">Go to Pay Day to pay out $${numberFormat(total)}</a>
+    <br><span>OR adjust people's balances:</span>`;
+    criminals.forEach(id => payDayLink += `<br><a class="t-blue c-pointer" target="_blank" href="https://www.torn.com/factions.php?step=your#/tab=controls&addMoneyTo=${id}&money=${sum}">Add $${numberFormat(sum)} to ${id}'s balance</a>`);
+    payDayLink += '</div>';
     successDiv.prepend(payDayLink);
 }
 
