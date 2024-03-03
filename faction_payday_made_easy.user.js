@@ -4,7 +4,8 @@
 // @version      0.1
 // @description  Pay out PA cash directly from the crime results page.
 // @author       Lugburz [2386297]
-// @match        https://www.torn.com/factions.php?step=your
+// @match        https://www.torn.com/factions.php?step=your*
+// @require      https://raw.githubusercontent.com/f2404/torn-userscripts/e3bb87d75b44579cdb6f756435696960e009dc84/lib/lugburz_lib.js
 // @updateURL    https://github.com/f2404/torn-userscripts/raw/master/faction_payday_made_easy.user.js
 // @downloadURL  https://github.com/f2404/torn-userscripts/raw/master/faction_payday_made_easy.user.js
 // @grant        none
@@ -57,7 +58,7 @@ function onPayBtnClick(successDiv, cash, sum, criminals) {
 
 function parseResult() {
     const result = $('#faction-crimes').find('div.crime-result');
-    if (!result) {
+    if (!result || $('#payBtn').size()) {
         return;
     }
 
@@ -67,7 +68,6 @@ function parseResult() {
         criminals = JSON.parse(result.attr('data-criminals')).filter(cr => !IGNORED.includes(cr));
         successDiv = result.find('div.success');
     } catch (e) {
-        console.error(e);
         return;
     }
 
@@ -91,5 +91,7 @@ function parseResult() {
     'use strict';
 
     // Your code here...
-    setTimeout(() => parseResult(), 1000);
+    ajax(page => {
+        if (page === 'factions') parseResult();
+    });
 })();
