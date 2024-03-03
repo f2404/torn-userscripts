@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Faction: Payday made easy
 // @namespace    lugburz.faction.payday_made_easy
-// @version      0.2
+// @version      0.1.1
 // @description  Pay out PA cash directly from the crime results page.
 // @author       Lugburz [2386297]
 // @match        https://www.torn.com/factions.php?step=your*
@@ -57,10 +57,10 @@ function onPayBtnClick(successDiv, sum, criminals) {
 }
 
 function parseResult() {
-    const urlParams = new URLSearchParams(window.location.search);
-    if ($('#option-pay-day').size() && urlParams.has('lugCriminals') && urlParams.has('lugSum')) {
-        const criminals = JSON.parse(urlParams.get('lugCriminals'));
-        const sum = urlParams.get('lugSum');
+    const hash = new URLSearchParams(window.location.hash);
+    if ($('#option-pay-day').size() && hash.has('select') && hash.has('pay')) {
+        const criminals = hash.get('select').split(',');
+        const sum = hash.get('pay');
         const member_amount = criminals.length;
         const total = sum * member_amount;
         const confirmText = `Are you sure you want to pay out <span class="bold">$${numberFormat(sum)}</span> to <span class="bold">${member_amount}</span> faction members (<span class="bold">$${numberFormat(total)}</span> total)?`;
@@ -94,7 +94,7 @@ function parseResult() {
     const sum = cash * (1 - TAX) / 4; // PA
     const total = sum * member_amount;
     const payDayLink = `<span id="payDayLink" style="padding: 10px; line-height: 24px;">
-    <a class="t-blue c-pointer" href="https://www.torn.com/factions.php?step=your&type=1&lugCriminals=[${criminals}]&lugSum=${sum}#/tab=controls&option=pay-day">Go to Pay Day to pay out $${numberFormat(total)}</a></span>`;
+    <a class="t-blue c-pointer" href="https://www.torn.com/factions.php?step=your&type=1#/tab=controls&option=pay-day&select=${criminals}&pay=${sum}">Go to Pay Day to pay out $${numberFormat(total)}</a></span>`;
     successDiv.prepend(payDayLink);
 }
 
