@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Faction: Payday made easy
 // @namespace    lugburz.faction.payday_made_easy
-// @version      0.1.1
+// @version      0.2.1
 // @description  Pay out PA cash directly from the crime results page.
 // @author       Lugburz [2386297]
 // @match        https://www.torn.com/factions.php?step=your*
