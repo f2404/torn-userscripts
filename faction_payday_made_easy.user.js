@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Faction: Payday made easy
 // @namespace    lugburz.faction.payday_made_easy
-// @version      0.3.1
+// @version      0.3.2
 // @description  Pay out cash directly from the crime results page.
 // @author       Lugburz [2386297]
 // @match        https://www.torn.com/factions.php?step=your*
@@ -55,8 +55,8 @@ function addSettings(crime, criminals, successDiv) {
 
     div += '<label for="even-payouts"> Even payouts </label><input id="even-payouts" type="checkbox"><label for="show-payday"> Switch between pay day and add to balance links </label><input id="show-payday" type="checkbox"><div>';
     criminals.forEach((id, index) => {
-        const sum = calcPayout(successDiv, crimeSettings.tax, crimeSettings.percentages[index]);
-        const percSum = crimeSettings.percentages.reduce((x, y) => +x + +y);
+        const sum = calcPayout(successDiv, 0, crimeSettings.percentages[index]); // don't need to count faction tax here
+        const percSum = crimeSettings.percentages.reduce((x, y) => +x + +y) + +crimeSettings.tax;
         div += `<div>&nbsp;&nbsp;${findName(successDiv, id)}: <select name="percentage-${id}" ${crimeSettings.even ? 'disabled' : ''} ${percSum > 100 ? 'style="color: red"' : ''} value="${(100 - +crimeSettings.tax) / criminals.length}%">`;
         div += `<option value="none" selected disabled hidden>${(100 - +crimeSettings.tax) / criminals.length}%</option>`;
         for (let i = 0; i <= 100; i += 5) div += `<option value=${i} ${i === +crimeSettings.percentages[index] ? 'selected' : ''}>${i}%</option>`;
@@ -226,4 +226,3 @@ function parseResult() {
         if (page === 'factions') parseResult();
     });
 })();
-
