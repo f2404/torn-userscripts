@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Torn: Faction: Payday made easy
 // @namespace    lugburz.faction.payday_made_easy
-// @version      0.2.3
-// @description  Pay out PA cash directly from the crime results page.
+// @version      0.3.0
+// @description  Pay out cash directly from the crime results page.
 // @author       Lugburz [2386297]
 // @match        https://www.torn.com/factions.php?step=your*
 // @require      https://raw.githubusercontent.com/f2404/torn-userscripts/e3bb87d75b44579cdb6f756435696960e009dc84/lib/lugburz_lib.js
@@ -11,16 +11,127 @@
 // @grant        none
 // ==/UserScript==
 
-// Faction tax (fraction of total PA earnings)
-const TAX = 0.1;
 // Crimes to pay out: array of integers. PA is 8, PH is 7, etc.
 const CRIMES = [8, 7];
-// Members that do not get paid: array of user ids
-const IGNORED = [];
 
-function findCash(result) {
+// Default settings
+const DEFAULTS = {
+    8: { // PA
+        tax: 10, // faction tax (fraction of total PA earnings)
+        even: true, // even payouts, or
+        percentages: new Array(4).fill(100/4) // individual percentages
+    },
+    7: { // PH
+        tax: 10,
+        even: true,
+        percentages: new Array(8).fill(100/8)
+    },
+    ignored: [], // members that do not get paid: array of user ids
+    payday: true // pay day or add to balance links
+};
+
+function addSettings(crime, criminals, successDiv) {
+    let storage = window.localStorage.getItem('payDaySettings');
+    if (!storage) {
+        window.localStorage.setItem('payDaySettings', JSON.stringify(DEFAULTS));
+        storage = window.localStorage.getItem('payDaySettings');
+    }
+
+    const settings = JSON.parse(storage) || DEFAULTS;
+    const crimeSettings = settings[crime] || DEFAULTS[crime];
+    if (!crimeSettings) {
+        return;
+    }
+
+    if ($('#payDaySettings').size()) {
+        $('#payDaySettings').remove();
+    }
+
+    let div = '<div id="payDaySettings" style="padding: 10px; line-height: 24px;">';
+
+    div += '<label for="tax-select">Faction tax: </label><select name="factionTax" id="tax-select">';
+    for (let i = 0; i <= 50; i += 5) div += `<option value=${i} ${i === +crimeSettings.tax ? 'selected' : ''}>${i}%</option>`;
+    div += '</select>';
+
+    div += '<label for="even-payouts"> Even payouts </label><input id="even-payouts" type="checkbox"><label for="show-payday"> Switch between pay day and add to balance links </label><input id="show-payday" type="checkbox"><div>';
+    criminals.forEach((id, index) => {
+        const sum = calcPayout(successDiv, crimeSettings.tax, crimeSettings.percentages[index]);
+        const percSum = crimeSettings.percentages.reduce((x, y) => +x + +y);
+        div += `<div>&nbsp;&nbsp;${findName(successDiv, id)}: <select name="percentage-${id}" ${crimeSettings.even ? 'disabled' : ''} ${percSum > 100 ? 'style="color: red"' : ''}>`;
+        for (let i = 0; i <= 100; i += 2.5) div += `<option value=${i} ${i === +crimeSettings.percentages[index] ? 'selected' : ''}>${i}%</option>`;
+        div += `</select><label for="ignore-${id}"> Don't pay </label><input id="ignore-${id}" type="checkbox"><a class="t-blue c-pointer ${settings.ignored.includes(id) ? 'hide' : ''}" target="_blank" `;
+        if (settings.payday) {
+            div += `href="https://www.torn.com/factions.php?step=your&type=1#/tab=controls&option=pay-day&select=${id}&pay=${sum}"> Go to Pay Day to pay out $${numberFormat(sum)}`;
+        } else {
+            div += `href="https://www.torn.com/factions.php?step=your#/tab=controls&addMoneyTo=${id}&money=${sum}"> Add $${numberFormat(sum)} to the balance`;
+        }
+        div += '</a></div>';
+    });
+    div += '</div>';
+
+    if (crimeSettings.even && settings.payday) {
+        const payTo = criminals.filter(id => !settings.ignored.includes(id));
+        const sum = calcPayout(successDiv, crimeSettings.tax, 100 / criminals.length);
+        const total = sum * payTo.length;
+        div += `<div id="payDayLink">OR<br>
+            <a class="t-blue c-pointer" target="_blank" href="https://www.torn.com/factions.php?step=your&type=1#/tab=controls&option=pay-day&select=${payTo}&pay=${sum}">Go to Pay Day to pay out $${numberFormat(total)} total</a>
+            </div>`;
+    }
+
+    div += '</div';
+
+    successDiv.prepend(div);
+
+    $('#tax-select').change(function() {
+        crimeSettings.tax = $(this).val();
+        saveAndRedraw(successDiv, settings, crime, criminals);
+    });
+
+    $('#even-payouts').prop('checked', crimeSettings.even);
+    $('#even-payouts').change(function() {
+        crimeSettings.even = $(this).prop('checked');
+        if (crimeSettings.even) {
+            crimeSettings.percentages = new Array(criminals.length).fill(100 / criminals.length);
+        }
+        saveAndRedraw(successDiv, settings, crime, criminals);
+    });
+
+    $('#show-payday').prop('checked', settings.payday);
+    $('#show-payday').change(function() {
+        settings.payday = $(this).prop('checked');
+        saveAndRedraw(successDiv, settings, crime, criminals);
+    });
+
+    criminals.forEach((id, index) => {
+        $(`select[name=percentage-${id}]`).change(function() {
+            crimeSettings.percentages[index] = $(this).val();
+            saveAndRedraw(successDiv, settings, crime, criminals);
+        });
+
+        $(`#ignore-${id}`).prop('checked', settings.ignored.includes(id));
+        $(`#ignore-${id}`).change(function() {
+            const ignored = $(this).prop('checked');
+            if (ignored && !settings.ignored.includes(id)) settings.ignored.push(id);
+            else if (!ignored && settings.ignored.includes(id)) settings.ignored = settings.ignored.filter(ign => ign !== id);
+            saveAndRedraw(successDiv, settings, crime, criminals);
+        });
+    });
+}
+
+function saveAndRedraw(successDiv, settings, crime, criminals) {
+    window.localStorage.setItem('payDaySettings', JSON.stringify(settings));
+    addSettings(crime, criminals, successDiv);
+}
+
+function calcPayout(successDiv, tax, percentage) {
+    const cash = findCash(successDiv);
+    const payout = cash * (1 - tax / 100) * percentage / 100;
+    return payout;
+}
+
+function findCash(successDiv) {
     let cash = 0;
-    result.find('div.make-wrap').each((_, made) => {
+    successDiv.find('div.make-wrap').each((_, made) => {
         $(made).find('p').each((_, p) => {
             const text = $(p).text();
             if (/\+ \$\S+ made/.test(text)) {
@@ -83,14 +194,14 @@ function parseResult() {
     }
 
     const result = $('#faction-crimes').find('div.crime-result');
-    if (!result || $('#payBtn').size() || $('#payDayLink').size()) {
+    if (!result || $('#payBtn').size() || $('#payDaySettings').size()) {
         return;
     }
 
     let crime, criminals, successDiv;
     try {
         crime = +result.attr('data-crime');
-        criminals = JSON.parse(result.attr('data-criminals')).filter(cr => !IGNORED.includes(cr));
+        criminals = JSON.parse(result.attr('data-criminals'));
         successDiv = result.find('div.success');
     } catch (e) {
         return;
@@ -100,16 +211,7 @@ function parseResult() {
         return;
     }
 
-    const cash = findCash(result);
-    const member_amount = criminals.length;
-    const sum = cash * (1 - TAX) / 4; // PA
-    const total = sum * member_amount;
-    let payDayLink = `<div id="payDayLink" style="padding: 10px; line-height: 24px;">
-    <a class="t-blue c-pointer" href="https://www.torn.com/factions.php?step=your&type=1#/tab=controls&option=pay-day&select=${criminals}&pay=${sum}">Go to Pay Day to pay out $${numberFormat(total)}</a>
-    <br><span>OR adjust people's balances:</span>`;
-    criminals.forEach(id => payDayLink += `<br><a class="t-blue c-pointer" target="_blank" href="https://www.torn.com/factions.php?step=your#/tab=controls&addMoneyTo=${id}&money=${sum}">Add $${numberFormat(sum)} to ${findName(successDiv, id)}'s balance</a>`);
-    payDayLink += '</div>';
-    successDiv.prepend(payDayLink);
+    addSettings(crime, criminals, successDiv);
 }
 
 (function() {
