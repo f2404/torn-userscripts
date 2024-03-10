@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Faction: Payday made easy
 // @namespace    lugburz.faction.payday_made_easy
-// @version      0.3.2
+// @version      0.3.3
 // @description  Pay out cash directly from the crime results page.
 // @author       Lugburz [2386297]
 // @match        https://www.torn.com/factions.php?step=your*
@@ -184,7 +184,7 @@ function findName(successDiv, id) {
 
 function parseResult() {
     const hash = new URLSearchParams(window.location.hash);
-    if ($('#option-pay-day').size() && hash.has('select') && hash.has('pay')) {
+    if ($('#option-pay-day').size() && hash.has('select') && hash.has('pay') && !$('#payBtn').size()) {
         const criminals = hash.get('select').split(',');
         const sum = hash.get('pay');
         const member_amount = criminals.length;
@@ -225,4 +225,5 @@ function parseResult() {
     ajax(page => {
         if (page === 'factions') parseResult();
     });
+    setTimeout(() => parseResult(), 500);
 })();
