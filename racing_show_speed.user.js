@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Racing enhancements
 // @namespace    lugburz.racing_enhancements
-// @version      0.5.18
+// @version      0.5.19
 // @description  Show car's current speed, precise skill, official race penalty, racing skill of others and race car skins.
 // @author       Lugburz
 // @match        https://www.torn.com/*
@@ -372,7 +372,7 @@ function parseRacingData(data) {
     // display race link
     if ($('#raceLink').size() < 1) {
         RACE_ID = data.raceID;
-        const raceLink = `<a id="raceLink" href="https://www.torn.com/loader.php?sid=racing&tab=log&raceID=${RACE_ID}" style="float: right; margin-left: 12px;">Link to the race</a>`;
+        const raceLink = `<a id="raceLink" href="https://www.torn.com/page.php?sid=racing&tab=log&raceID=${RACE_ID}" style="float: right; margin-left: 12px;">Link to the race</a>`;
         $(raceLink).insertAfter('#racingEnhSettings');
     }
 
@@ -581,7 +581,7 @@ ${currentPoints ? currentPoints : 'N/A'} / Daily gain: ${currentPoints && oldPoi
 
 // Your code here...
 ajax((page, xhr) => {
-    if (page != "loader") return;
+    if (page != "page") return;
     $("#racingupdatesnew").ready(addSettingsDiv);
     $("#racingupdatesnew").ready(showSpeed);
     $('#racingAdditionalContainer').ready(showPenalty);

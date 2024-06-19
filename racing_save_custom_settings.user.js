@@ -1,10 +1,10 @@
 // ==UserScript==
 // @name         Torn: Racing: Save custom race settings
 // @namespace    lugburz.racing.save_custom_settings
-// @version      0.1.1
+// @version      0.1.2
 // @description  Saves and automatically loads custom race settings.
 // @author       Lugburz
-// @match        https://www.torn.com/loader.php?sid=racing*
+// @match        https://www.torn.com/page.php?sid=racing*
 // @require      https://raw.githubusercontent.com/f2404/torn-userscripts/master/lib/lugburz_lib.js
 // @grant        GM_setValue
 // @grant        GM_getValue
@@ -63,7 +63,7 @@ function loadSave() {
 
     // Your code here...
     ajax((page) => {
-        if (page != "loader") return;
+        if (page != "page") return;
         $("#racingAdditionalContainer").ready(loadSave);
     });
 
