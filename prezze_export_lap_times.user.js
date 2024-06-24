@@ -1,10 +1,10 @@
 // ==UserScript==
 // @name         Torn: Export lap times
 // @namespace    lugburz.prezze_export_lap_times
-// @version      0.1.3
+// @version      0.1.4
 // @description  Prezze is 40!
 // @author       Lugburz
-// @match        https://www.torn.com/page.php?sid=racing*
+// @match        https://www.torn.com/loader.php?sid=racing*
 // @require      https://github.com/f2404/torn-userscripts/raw/aa736a5fd7d4c54b5785ea6ed872ac02e3dbb866/lib/lugburz_lib.js
 // @updateURL    https://github.com/f2404/torn-userscripts/raw/master/prezze_export_lap_times.user.js
 // @downloadURL  https://github.com/f2404/torn-userscripts/raw/master/prezze_export_lap_times.user.js
@@ -100,7 +100,7 @@ function strictFormat(str) {
 
 // Your code here...
 ajax((page, xhr) => {
-    if (page !== 'page') return;
+    if (page !== 'loader') return;
     try {
         const json = JSON.parse(xhr.responseText);
         parseRacingData(json);

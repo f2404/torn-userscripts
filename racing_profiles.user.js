@@ -1,10 +1,10 @@
 // ==UserScript==
 // @name         Torn: Racing: Links to profiles
 // @namespace    lugburz.racing.profiles
-// @version      0.1.4
+// @version      0.1.5
 // @description  Adds links to player profiles to their names in the racing list.
 // @author       Lugburz
-// @match        https://www.torn.com/page.php?sid=racing*
+// @match        https://www.torn.com/loader.php?sid=racing*
 // @require      https://raw.githubusercontent.com/f2404/torn-userscripts/master/lib/lugburz_lib.js
 // @updateURL    https://github.com/f2404/torn-userscripts/raw/master/racing_profiles.user.js
 // @grant        none
@@ -27,7 +27,7 @@ function addLinks() {
 
     // Your code here...
     ajax((page) => {
-        if (page != 'page') return;
+        if (page != 'loader') return;
         $('ul.overview').ready(addLinks);
     });
 
