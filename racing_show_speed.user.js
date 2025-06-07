@@ -15,7 +15,7 @@
 // @grant        GM_notification
 // @grant        GM_xmlhttpRequest
 // @grant        GM_addStyle
-// @run-at       document-idle
+// @run-at       document-body
 // ==/UserScript==
 
 // Whether to show notifications.
