@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Racing enhancements
 // @namespace    lugburz.racing_enhancements
-// @version      0.5.24
+// @version      0.5.25
 // @description  Show car's current speed, precise skill, official race penalty, racing skill of others and race car skins.
 // @author       Lugburz
 // @match        https://www.torn.com/*
@@ -581,17 +581,23 @@ ${currentPoints ? currentPoints : 'N/A'} / Daily gain: ${currentPoints && oldPoi
 'use strict';
 
 // Your code here...
+const href = $(location).attr('href');
+const racingPage = ['sid=racing&tab=log&raceID=', 'page.php?sid=racing'].some(path => href.includes(path));
+
 ajax((page, xhr) => {
-    if (page != "loader") return;
+    if (page !== 'loader' && page !== 'page') return;
     $("#racingupdatesnew").ready(addSettingsDiv);
     $("#racingupdatesnew").ready(showSpeed);
     $('#racingAdditionalContainer').ready(showPenalty);
-    if ($(location).attr('href').includes('sid=racing&tab=log&raceID=')) {
+
+    if (racingPage) {
         $('#racingupdatesnew').ready(addPlaybackButton);
     }
     try {
         parseRacingData(JSON.parse(xhr.responseText));
-    } catch (e) {}
+    } catch (e) {
+        console.error('failed to parse racing data', xhr.responseText);
+    }
 
     const JltColor = '#fff200';
     if ($('#racingAdditionalContainer').size() > 0 && $('#racingAdditionalContainer').find('div.custom-events-wrap').size() > 0) {
@@ -609,11 +615,11 @@ $("#racingupdatesnew").ready(addSettingsDiv);
 $("#racingupdatesnew").ready(showSpeed);
 $('#racingAdditionalContainer').ready(showPenalty);
 
-if ($(location).attr('href').includes('index.php')) {
+if (href.includes('index.php')) {
     $('#mainContainer').ready(displayDailyGains);
 }
 
-if ($(location).attr('href').includes('sid=racing&tab=log&raceID=')) {
+if (racingPage) {
     $('#racingupdatesnew').ready(addPlaybackButton);
 }
 

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Racing enhancements (Indolent's copy)
 // @namespace    lugburz.racing_enhancements_indolent
-// @version      0.5.17
+// @version      0.5.18
 // @description  Show car's current speed, precise skill, official race penalty, racing skill of others and race car skins.
 // @author       Lugburz
 // @match        https://www.torn.com/*
@@ -576,12 +576,15 @@ ${currentPoints ? currentPoints : 'N/A'} / Daily gain: ${currentPoints && oldPoi
 'use strict';
 
 // Your code here...
+const href = $(location).attr('href');
+const racingPage = ['sid=racing&tab=log&raceID=', 'page.php?sid=racing'].some(path => href.includes(path));
+
 ajax((page, xhr) => {
-    if (page != "loader") return;
+    if (page !== 'loader' && page !== 'page') return;
     $("#racingupdatesnew").ready(addSettingsDiv);
     $("#racingupdatesnew").ready(showSpeed);
     $('#racingAdditionalContainer').ready(showPenalty);
-    if ($(location).attr('href').includes('sid=racing&tab=log&raceID=')) {
+    if (racingPage) {
         $('#racingupdatesnew').ready(addPlaybackButton);
     }
     try {
@@ -604,11 +607,11 @@ $("#racingupdatesnew").ready(addSettingsDiv);
 $("#racingupdatesnew").ready(showSpeed);
 $('#racingAdditionalContainer').ready(showPenalty);
 
-if ($(location).attr('href').includes('index.php')) {
+if (href.includes('index.php')) {
     $('#mainContainer').ready(displayDailyGains);
 }
 
-if ($(location).attr('href').includes('sid=racing&tab=log&raceID=')) {
+if (racingPage) {
     $('#racingupdatesnew').ready(addPlaybackButton);
 }
 
