@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn: Racing enhancements (Indolent's copy)
 // @namespace    lugburz.racing_enhancements_indolent
-// @version      0.5.18
+// @version      0.5.19
 // @description  Show car's current speed, precise skill, official race penalty, racing skill of others and race car skins.
 // @author       Lugburz
 // @match        https://www.torn.com/*
@@ -14,7 +14,6 @@
 // @grant        GM_notification
 // @grant        GM_xmlhttpRequest
 // @grant        GM_addStyle
-// @run-at       document-body
 // ==/UserScript==
 
 // Whether to show notifications.
